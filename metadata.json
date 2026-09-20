@@ -1,0 +1,6 @@
+{
+  "name": "Anime Studio AI",
+  "description": "AI Anime & Video Studio: Create anime, manga, and cartoon videos from text prompts, web links, or scanned images. Features character builder with voice styles, voice synchronization, dynamic background music, multilingual dubbing, and subscription controls.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
