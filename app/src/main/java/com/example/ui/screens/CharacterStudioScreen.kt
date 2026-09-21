@@ -83,6 +83,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.model.CharacterProfile
 import com.example.ui.AnimeViewModel
+import com.example.ui.AppTab
 import com.example.ui.components.ResourceHelpers
 import com.example.ui.theme.AnimeCyan
 import com.example.ui.theme.AnimeCyanLight
@@ -137,6 +138,41 @@ fun CharacterStudioScreen(viewModel: AnimeViewModel) {
                         )
                     }
                 }
+                Spacer(modifier = Modifier.height(10.dp))
+
+                // Quick Link to Character Builder
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { viewModel.setTab(AppTab.BUILDER) },
+                    colors = CardDefaults.cardColors(containerColor = AnimePurple.copy(alpha = 0.3f)),
+                    shape = RoundedCornerShape(12.dp),
+                    border = BorderStroke(1.dp, AnimePink.copy(alpha = 0.6f))
+                ) {
+                    Row(
+                        modifier = Modifier.padding(10.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
+                            Icon(Icons.Default.Palette, contentDescription = null, tint = AnimePink, modifier = Modifier.size(20.dp))
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Column {
+                                Text("🎨 करैक्टर बिल्डर (Character Builder)", color = TextPrimary, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                                Text("बाल, आँखों का रंग व पोशाक कस्टमाइज करें", color = TextSecondary, fontSize = 10.sp)
+                            }
+                        }
+                        Button(
+                            onClick = { viewModel.setTab(AppTab.BUILDER) },
+                            colors = ButtonDefaults.buttonColors(containerColor = AnimePink),
+                            shape = RoundedCornerShape(8.dp),
+                            contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 8.dp, vertical = 2.dp)
+                        ) {
+                            Text("बिल्डर खोलें", color = Color.Black, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                        }
+                    }
+                }
+
                 Spacer(modifier = Modifier.height(14.dp))
 
                 // Studio Navigation Tabs

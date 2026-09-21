@@ -136,10 +136,45 @@ enum class SubscriptionPlan(
     val planId: String,
     val title: String,
     val price: String,
-    val dailyCredits: Int,
-    val features: List<String>
+    val yearlyPrice: String = "Free",
+    val badge: String = "",
+    val dailyCredits: Int = 10,
+    val features: List<String> = emptyList()
 ) {
-    FREE("plan_free", "Free Explorer", "Free", 3, listOf("3 Anime scripts / day", "Standard TTS Voice", "720p Storyboard Video", "Community Support")),
-    CREATOR_PRO("plan_pro", "Creator Pro", "₹499 / mo", 50, listOf("50 Anime scripts / day", "All Voice Personas & Pitch Sync", "1080p HD Anime Visuals", "All Languages Translation", "Priority AI Render")),
-    STUDIO_OWNER("plan_vip", "Studio Master VIP", "Free for Owner", 999999, listOf("Unlimited Video & Anime Generation", "Admin Dashboard & User Access Control", "Decide Who Gets Free vs Paid", "Direct OTA Update Manager", "Lifetime Commercial Rights"))
+    FREE(
+        planId = "plan_free",
+        title = "Free Explorer",
+        price = "Free",
+        yearlyPrice = "Free",
+        badge = "स्टार्टर (Starter)",
+        dailyCredits = 3,
+        features = listOf("3 Anime scripts / day", "Standard TTS Voice", "720p Storyboard Video", "Community Support")
+    ),
+    CREATOR_PRO(
+        planId = "plan_pro",
+        title = "Creator Pro",
+        price = "₹499 / mo",
+        yearlyPrice = "₹399 / mo (₹4,788/yr)",
+        badge = "🔥 सबसे लोकप्रिय (Most Popular)",
+        dailyCredits = 50,
+        features = listOf("50 Anime scripts / day", "All Voice Styles & Audio FX", "1080p Full HD Anime Visuals", "All Languages Translation", "Priority AI Render", "Manga Sketch Camera Scan")
+    ),
+    STUDIO_ULTRA(
+        planId = "plan_ultra",
+        title = "Studio Ultra Pass",
+        price = "₹999 / mo",
+        yearlyPrice = "₹799 / mo (₹9,588/yr)",
+        badge = "⚡ अनलिमिटेड 4K (Ultra Power)",
+        dailyCredits = 999,
+        features = listOf("Unlimited Anime Scripts & Videos", "4K Ultra HD Export & Master Audio", "Custom Voice Cloning & Mic Input", "Full Commercial & YouTube Rights", "VIP Priority Pipeline")
+    ),
+    STUDIO_OWNER(
+        planId = "plan_vip",
+        title = "Studio Master VIP",
+        price = "Free for Owner",
+        yearlyPrice = "Free for Owner",
+        badge = "👑 ऐप ओनर (Lifetime VIP)",
+        dailyCredits = 999999,
+        features = listOf("Unlimited Video & Anime Generation", "Admin Dashboard & User Access Control", "Decide Who Gets Free vs Paid", "Direct OTA Update Manager", "Lifetime Commercial Rights")
+    )
 }

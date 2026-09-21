@@ -29,6 +29,7 @@ import kotlinx.coroutines.launch
 enum class AppTab(val title: String, val iconName: String) {
     STUDIO("Studio", "movie_filter"),
     PLAYER("Video Player", "play_circle"),
+    BUILDER("Character Builder", "brush"),
     CHARACTERS("Characters", "face"),
     SUBSCRIPTION("VIP & Admin", "workspace_premium"),
     UPDATES("Updates", "system_update")
@@ -276,6 +277,109 @@ class AnimeViewModel(application: Application) : AndroidViewModel(application) {
         )
         viewModelScope.launch {
             repository.saveCustomCharacter(draft)
+        }
+    }
+
+    fun randomizeCharacterDraft() {
+        val hairStyles = listOf(
+            "Spiky Shonen", "Kawaii Twin Tails", "Flowing Celestial",
+            "Samurai Ponytail", "Anime Bob", "Wolf Cut", "Braided Shinobi", "Pixie Cyber"
+        )
+        val hairColors = listOf(
+            "Silver Starlight", "Sakura Blossom Pink", "Electric Neon Cyan",
+            "Crimson Flame", "Midnight Obsidian", "Golden Sun", "Mystic Amethyst", "Emerald Shinobi"
+        )
+        val eyeColors = listOf(
+            "Sapphire Neon Blue", "Crimson Ruby", "Mystic Amethyst",
+            "Emerald Jade", "Golden Topaz", "Cyber Aqua", "Rose Quartz"
+        )
+        val expressions = listOf(
+            "Fierce Determined Stare", "Soft Kawaii Smile", "Tsundere Glare",
+            "Mysterious Smirk", "Heroic Combat Gaze", "Sparkling Wonder"
+        )
+        val outfits = listOf(
+            "Cyber Shinobi Exo-Suit", "Royal Astral Kimono", "High Academy Blazer",
+            "Shonen Battle Robes", "Astral Mage Robe", "Mecha Pilot Plugsuit", "Streetwear Neo-Samurai"
+        )
+        val outfitColors = listOf(
+            "Obsidian Black & Neon Cyan", "Crimson Scarlet & Gold", "Pastel Sakura & White",
+            "Shadow Violet & Silver", "Emerald Jade & Bronze", "Glacier Blue & White"
+        )
+        val auras = listOf(
+            "Crackling Blue Lightning Sparks", "Swirling Sakura Petal Blizzard",
+            "Dragon Flame Blaze", "Celestial Stardust Glow", "Cyber Matrix Grid", "Void Shadow Mist"
+        )
+        val personas = listOf(
+            Triple("Deep Shonen Hero", "Male", "char_shonen_hero"),
+            Triple("Sweet Kawaii Heroine", "Female", "char_anime_heroine"),
+            Triple("Wise Sensei Mentor", "Lady", "char_lady_mentor"),
+            Triple("Playful Chibi Mascot", "Mascot", "char_chibi_mascot"),
+            Triple("Stoic Anti-Hero", "Male", "char_shonen_hero")
+        )
+        val randomNames = listOf("Ren Kisaragi", "Aoi Hoshino", "Raiden Kurogane", "Sakura Minamoto", "Kenjiro Blaze", "Luna Takahashi", "Daiki Storm")
+
+        val randomPersona = personas.random()
+        val randomName = randomNames.random()
+        val randomStyle = hairStyles.random()
+        val randomColor = hairColors.random()
+        val randomEyes = eyeColors.random()
+        val randomExpr = expressions.random()
+        val randomOutfit = outfits.random()
+        val randomOutfitColor = outfitColors.random()
+        val randomAura = auras.random()
+
+        val updated = _uiState.value.characterDraft.copy(
+            id = "char_${System.currentTimeMillis()}",
+            name = randomName,
+            role = randomOutfit.take(20),
+            hairStyle = randomStyle,
+            hairColor = randomColor,
+            eyeColor = randomEyes,
+            expression = randomExpr,
+            outfit = randomOutfit,
+            outfitColor = randomOutfitColor,
+            accessoryAura = randomAura,
+            voicePersona = randomPersona.first,
+            voiceGender = if (randomPersona.second == "Female" || randomPersona.second == "Lady") "Female" else "Male",
+            avatarDrawableName = randomPersona.third,
+            sampleDialogue = "見せてやる、俺たちの絆の力！(I'll show you the power of our bonds!)"
+        )
+        _uiState.value = _uiState.value.copy(
+            characterDraft = updated,
+            statusMessage = "🎲 Randomized new anime character: $randomName!"
+        )
+    }
+
+    fun applyDraftToActiveScene() {
+        val script = _uiState.value.currentScript ?: return
+        val activeIdx = _uiState.value.activeSceneIndex
+        val draft = _uiState.value.characterDraft
+        if (activeIdx in script.scenes.indices) {
+            val scene = script.scenes[activeIdx]
+            val updatedDialogues = scene.dialogues.mapIndexed { idx, d ->
+                if (idx == 0) {
+                    d.copy(
+                        characterName = draft.name,
+                        voiceType = draft.voiceType,
+                        voicePitch = draft.voicePitch,
+                        voiceSpeed = draft.voiceSpeed,
+                        voiceAccent = draft.voiceAccent
+                    )
+                } else d
+            }
+            val updatedScenes = script.scenes.toMutableList().also {
+                it[activeIdx] = scene.copy(
+                    dialogues = updatedDialogues
+                )
+            }
+            _uiState.value = _uiState.value.copy(
+                currentScript = script.copy(
+                    scenes = updatedScenes,
+                    characters = (script.characters.filter { it.name != draft.name } + draft)
+                ),
+                activeSpeakerName = draft.name,
+                statusMessage = "Cast '${draft.name}' in Scene ${activeIdx + 1}!"
+            )
         }
     }
 

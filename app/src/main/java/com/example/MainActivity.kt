@@ -19,6 +19,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Face
+import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.PlayCircle
 import androidx.compose.material.icons.filled.Stars
 import androidx.compose.material.icons.filled.SystemUpdate
@@ -48,6 +49,7 @@ import androidx.compose.ui.unit.sp
 import com.example.ui.AnimeViewModel
 import com.example.ui.AppTab
 import com.example.ui.screens.AnimePlayerScreen
+import com.example.ui.screens.CharacterBuilderScreen
 import com.example.ui.screens.CharacterStudioScreen
 import com.example.ui.screens.StudioCreateScreen
 import com.example.ui.screens.SubscriptionAdminScreen
@@ -157,6 +159,23 @@ class MainActivity : ComponentActivity() {
                             )
 
                             NavigationBarItem(
+                                selected = state.currentTab == AppTab.BUILDER,
+                                onClick = { viewModel.setTab(AppTab.BUILDER) },
+                                icon = {
+                                    Icon(Icons.Default.Palette, contentDescription = "Builder", modifier = Modifier.size(20.dp))
+                                },
+                                label = { Text("बिल्डर", fontSize = 10.sp, fontWeight = FontWeight.SemiBold) },
+                                colors = NavigationBarItemDefaults.colors(
+                                    selectedIconColor = AnimePink,
+                                    selectedTextColor = AnimePink,
+                                    indicatorColor = AnimePink.copy(alpha = 0.2f),
+                                    unselectedIconColor = TextMuted,
+                                    unselectedTextColor = TextMuted
+                                ),
+                                modifier = Modifier.testTag("nav_builder")
+                            )
+
+                            NavigationBarItem(
                                 selected = state.currentTab == AppTab.CHARACTERS,
                                 onClick = { viewModel.setTab(AppTab.CHARACTERS) },
                                 icon = {
@@ -217,6 +236,7 @@ class MainActivity : ComponentActivity() {
                         when (state.currentTab) {
                             AppTab.STUDIO -> StudioCreateScreen(viewModel)
                             AppTab.PLAYER -> AnimePlayerScreen(viewModel)
+                            AppTab.BUILDER -> CharacterBuilderScreen(viewModel)
                             AppTab.CHARACTERS -> CharacterStudioScreen(viewModel)
                             AppTab.SUBSCRIPTION -> SubscriptionAdminScreen(viewModel)
                             AppTab.UPDATES -> UpdateSettingsScreen(viewModel)
