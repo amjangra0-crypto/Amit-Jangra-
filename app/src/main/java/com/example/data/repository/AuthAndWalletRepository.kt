@@ -3,8 +3,10 @@ package com.example.data.repository
 import android.content.Context
 import android.content.SharedPreferences
 import com.example.data.model.AuthProvider
+import com.example.data.model.CardPaymentDetails
 import com.example.data.model.CurrencyType
 import com.example.data.model.CurrencyWallet
+import com.example.data.model.OwnerBankAccount
 import com.example.data.model.PaymentGateway
 import com.example.data.model.TransactionType
 import com.example.data.model.UserProfile
@@ -27,6 +29,9 @@ class AuthAndWalletRepository(private val context: Context) {
 
     private val _currentUser = MutableStateFlow(loadUserProfile())
     val currentUser: StateFlow<UserProfile> = _currentUser.asStateFlow()
+
+    private val _connectedBankAccount = MutableStateFlow(loadBankAccount())
+    val connectedBankAccount: StateFlow<OwnerBankAccount> = _connectedBankAccount.asStateFlow()
 
     private val _wallets = MutableStateFlow(loadWallets())
     val wallets: StateFlow<Map<CurrencyType, CurrencyWallet>> = _wallets.asStateFlow()
@@ -415,15 +420,74 @@ class AuthAndWalletRepository(private val context: Context) {
         }
     }
 
+    fun updateBankAccount(account: OwnerBankAccount): Boolean {
+        _connectedBankAccount.value = account
+        saveBankAccount(account)
+        return true
+    }
+
+    fun disconnectBankAccount(): Boolean {
+        val disconnected = _connectedBankAccount.value.copy(isConnected = false)
+        _connectedBankAccount.value = disconnected
+        saveBankAccount(disconnected)
+        return true
+    }
+
+    private fun loadBankAccount(): OwnerBankAccount {
+        val json = prefs.getString("owner_bank_account_json", null)
+        if (!json.isNullOrBlank()) {
+            return try {
+                val obj = JSONObject(json)
+                OwnerBankAccount(
+                    holderName = obj.optString("holderName", "Aman Jangra"),
+                    bankName = obj.optString("bankName", "HDFC Bank"),
+                    accountNumber = obj.optString("accountNumber", "50100482194812"),
+                    ifscCode = obj.optString("ifscCode", "HDFC0001234"),
+                    accountType = obj.optString("accountType", "Savings"),
+                    branchName = obj.optString("branchName", "Connaught Place, New Delhi"),
+                    swiftBic = obj.optString("swiftBic", "HDFCINBB"),
+                    upiId = obj.optString("upiId", "amjangra0@okhdfcbank"),
+                    isConnected = obj.optBoolean("isConnected", true),
+                    lastUpdated = obj.optLong("lastUpdated", System.currentTimeMillis())
+                )
+            } catch (_: Exception) {
+                OwnerBankAccount()
+            }
+        }
+        return OwnerBankAccount()
+    }
+
+    private fun saveBankAccount(account: OwnerBankAccount) {
+        try {
+            val obj = JSONObject().apply {
+                put("holderName", account.holderName)
+                put("bankName", account.bankName)
+                put("accountNumber", account.accountNumber)
+                put("ifscCode", account.ifscCode)
+                put("accountType", account.accountType)
+                put("branchName", account.branchName)
+                put("swiftBic", account.swiftBic)
+                put("upiId", account.upiId)
+                put("isConnected", account.isConnected)
+                put("lastUpdated", account.lastUpdated)
+            }
+            prefs.edit().putString("owner_bank_account_json", obj.toString()).apply()
+        } catch (_: Exception) {}
+    }
+
     private fun loadWallets(): Map<CurrencyType, CurrencyWallet> {
         val inrBal = prefs.getFloat("wallet_inr_bal", 48500.0f).toDouble()
         val usdBal = prefs.getFloat("wallet_usd_bal", 620.0f).toDouble()
         val eurBal = prefs.getFloat("wallet_eur_bal", 450.0f).toDouble()
+        val gbpBal = prefs.getFloat("wallet_gbp_bal", 380.0f).toDouble()
+        val jpyBal = prefs.getFloat("wallet_jpy_bal", 48000.0f).toDouble()
 
         return mapOf(
             CurrencyType.INR to CurrencyWallet(CurrencyType.INR, inrBal, inrBal + 12000.0, 12000.0),
             CurrencyType.USD to CurrencyWallet(CurrencyType.USD, usdBal, usdBal + 200.0, 200.0),
-            CurrencyType.EUR to CurrencyWallet(CurrencyType.EUR, eurBal, eurBal + 150.0, 150.0)
+            CurrencyType.EUR to CurrencyWallet(CurrencyType.EUR, eurBal, eurBal + 150.0, 150.0),
+            CurrencyType.GBP to CurrencyWallet(CurrencyType.GBP, gbpBal, gbpBal + 100.0, 100.0),
+            CurrencyType.JPY to CurrencyWallet(CurrencyType.JPY, jpyBal, jpyBal + 15000.0, 15000.0)
         )
     }
 
@@ -432,6 +496,8 @@ class AuthAndWalletRepository(private val context: Context) {
             wallets[CurrencyType.INR]?.let { putFloat("wallet_inr_bal", it.balance.toFloat()) }
             wallets[CurrencyType.USD]?.let { putFloat("wallet_usd_bal", it.balance.toFloat()) }
             wallets[CurrencyType.EUR]?.let { putFloat("wallet_eur_bal", it.balance.toFloat()) }
+            wallets[CurrencyType.GBP]?.let { putFloat("wallet_gbp_bal", it.balance.toFloat()) }
+            wallets[CurrencyType.JPY]?.let { putFloat("wallet_jpy_bal", it.balance.toFloat()) }
             apply()
         }
     }

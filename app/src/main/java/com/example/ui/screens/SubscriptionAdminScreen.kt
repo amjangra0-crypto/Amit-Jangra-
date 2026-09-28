@@ -287,6 +287,8 @@ fun SubscriptionAdminScreen(viewModel: AnimeViewModel) {
                         CurrencyType.INR -> AnimeGreen
                         CurrencyType.USD -> AnimeCyan
                         CurrencyType.EUR -> AnimePink
+                        CurrencyType.GBP -> AnimeGold
+                        CurrencyType.JPY -> AnimePurple
                     }
                 )
             },
@@ -307,6 +309,8 @@ fun SubscriptionAdminScreen(viewModel: AnimeViewModel) {
                         CurrencyType.INR -> AnimeGreen
                         CurrencyType.USD -> AnimeCyan
                         CurrencyType.EUR -> AnimePink
+                        CurrencyType.GBP -> AnimeGold
+                        CurrencyType.JPY -> AnimePurple
                     },
                     unselectedContentColor = TextMuted
                 )

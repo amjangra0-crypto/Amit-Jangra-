@@ -38,7 +38,9 @@ data class UserProfile(
 enum class CurrencyType(val code: String, val symbol: String, val title: String, val exchangeToInr: Double) {
     INR("INR", "₹", "Indian Rupee", 1.0),
     USD("USD", "$", "US Dollar", 86.5),
-    EUR("EUR", "€", "Euro", 94.0)
+    EUR("EUR", "€", "Euro", 94.0),
+    GBP("GBP", "£", "British Pound", 110.0),
+    JPY("JPY", "¥", "Japanese Yen", 0.58)
 }
 
 data class CurrencyWallet(
@@ -49,16 +51,17 @@ data class CurrencyWallet(
 )
 
 enum class PaymentGateway(val title: String, val description: String) {
+    CARD("Debit / Credit Card (Global)", "Visa, MasterCard, RuPay, Amex & Discover"),
     UPI_GPAY("Google Pay (GPay)", "Instant UPI via Google Pay"),
     UPI_PHONEPE("PhonePe", "Instant UPI via PhonePe"),
     UPI_GENERIC("UPI ID / QR Code", "Scan & Pay with any UPI app"),
     PAYPAL("PayPal", "Fast global checkout for USD & EUR"),
-    BANK_TRANSFER("Direct Bank Transfer", "Direct NEFT / IMPS / SWIFT wire"),
-    CARD("Debit / Credit Card", "Visa, Mastercard, RuPay & Amex")
+    BANK_TRANSFER("Direct Bank Transfer", "Direct NEFT / IMPS / SWIFT wire")
 }
 
 enum class TransactionType(val title: String, val isCredit: Boolean) {
     SUBSCRIPTION_DEPOSIT("Subscription Received", true),
+    SUBSCRIPTION_CARD("Global Card Payment", true),
     WITHDRAWAL_BANK("Bank Transfer Withdrawal", false),
     WITHDRAWAL_PHONEPE("PhonePe Withdrawal", false),
     WITHDRAWAL_GPAY("Google Pay Withdrawal", false),
@@ -74,6 +77,36 @@ data class WalletTransaction(
     val amount: Double,
     val targetAccountOrUser: String,
     val description: String,
-    val status: String = "सफल (Completed)",
+    val status: String = "Completed",
     val referenceId: String
+)
+
+data class OwnerBankAccount(
+    val holderName: String = "Aman Jangra",
+    val bankName: String = "HDFC Bank",
+    val accountNumber: String = "50100482194812",
+    val ifscCode: String = "HDFC0001234",
+    val accountType: String = "Savings", // "Savings", "Current", "Business"
+    val branchName: String = "Connaught Place, New Delhi",
+    val swiftBic: String = "HDFCINBB",
+    val upiId: String = "amjangra0@okhdfcbank",
+    val isConnected: Boolean = true,
+    val lastUpdated: Long = System.currentTimeMillis()
+) {
+    val maskedAccountNumber: String
+        get() = if (accountNumber.length > 4) {
+            "•••• •••• •••• " + accountNumber.takeLast(4)
+        } else {
+            accountNumber
+        }
+}
+
+data class CardPaymentDetails(
+    val cardholderName: String = "",
+    val cardNumber: String = "",
+    val expiryMonthYear: String = "",
+    val cvv: String = "",
+    val cardBrand: String = "Visa", // "Visa", "MasterCard", "Amex", "RuPay", "Discover"
+    val billingCountry: String = "United States",
+    val saveCard: Boolean = true
 )

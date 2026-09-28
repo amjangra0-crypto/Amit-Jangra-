@@ -29,6 +29,8 @@ import com.example.data.model.CurrencyWallet
 import com.example.data.model.DialogueLine
 import com.example.data.model.MusicGeneratorData
 import com.example.data.model.MusicMood
+import com.example.data.model.CardPaymentDetails
+import com.example.data.model.OwnerBankAccount
 import com.example.data.model.PaymentGateway
 import com.example.data.model.PresentationSlideData
 import com.example.data.model.SocialPreviewData
@@ -72,6 +74,9 @@ data class AnimeStudioUiState(
     val currentTab: AppTab = AppTab.STUDIO,
     val isDarkMode: Boolean = false,
     val vibrantTheme: String = "CORAL", // "CORAL", "MANGO", "SPRING", "EMERALD", "AZURE"
+    val iconStyle: String = "NEON_GLOW", // "NEON_GLOW", "METALLIC_GOLD", "SAKURA_VIBRANT", "CYBER_AZURE", "EMERALD_MINT", "MINIMAL_CLEAN"
+    val appIconTheme: String = "SHONEN_HERO", // "SHONEN_HERO", "ANIME_HEROINE", "CYBER_MASCOT", "STUDIO_GOLD"
+    val iconShape: String = "ROUNDED_SQUIRCLE", // "ROUNDED_SQUIRCLE", "CAPSULE_PILL", "SMOOTH_CARD", "CIRCLE_ROUND"
     val promptInput: String = "Magical cherry blossom temple and cyber samurai legend",
     val linkInput: String = "https://animenews.org/legends/sakura-blade",
     val imageInputDescription: String = "Anime warrior under neon cherry blossoms",
@@ -214,6 +219,7 @@ class AnimeViewModel(application: Application) : AndroidViewModel(application) {
 
     private val authAndWalletRepo = AuthAndWalletRepository(application)
     val currentUser: StateFlow<UserProfile> = authAndWalletRepo.currentUser
+    val connectedBankAccount: StateFlow<OwnerBankAccount> = authAndWalletRepo.connectedBankAccount
     val wallets: StateFlow<Map<CurrencyType, CurrencyWallet>> = authAndWalletRepo.wallets
     val transactions: StateFlow<List<WalletTransaction>> = authAndWalletRepo.transactions
 
@@ -639,6 +645,15 @@ class AnimeViewModel(application: Application) : AndroidViewModel(application) {
         _uiState.value = _uiState.value.copy(
             vibrantTheme = theme,
             statusMessage = "🎨 Theme: $theme"
+        )
+    }
+
+    fun updateIconCustomization(styleKey: String, shapeKey: String, localIconKey: String) {
+        _uiState.value = _uiState.value.copy(
+            iconStyle = styleKey,
+            iconShape = shapeKey,
+            appIconTheme = localIconKey,
+            statusMessage = "✨ Icons Updated: $styleKey ($localIconKey)"
         )
     }
 
@@ -1773,6 +1788,54 @@ class AnimeViewModel(application: Application) : AndroidViewModel(application) {
             _uiState.value = _uiState.value.copy(statusMessage = res.second)
         }
         return res
+    }
+
+    fun updateOwnerBankAccount(bankAccount: OwnerBankAccount) {
+        authAndWalletRepo.updateBankAccount(bankAccount)
+        _uiState.value = _uiState.value.copy(
+            statusMessage = "🏦 Bank Account Connected: ${bankAccount.bankName}"
+        )
+    }
+
+    fun disconnectOwnerBankAccount() {
+        authAndWalletRepo.disconnectBankAccount()
+        _uiState.value = _uiState.value.copy(
+            statusMessage = "Bank Account Disconnected"
+        )
+    }
+
+    fun processSubscriptionCardPayment(
+        plan: com.example.data.model.SubscriptionPlan,
+        amount: Double,
+        currency: CurrencyType,
+        cardDetails: CardPaymentDetails,
+        subscriberEmail: String = "subscriber@animestudio.ai"
+    ): Boolean {
+        val success = authAndWalletRepo.recordSubscriptionDeposit(
+            planName = plan.title,
+            amount = amount,
+            currency = currency,
+            gateway = PaymentGateway.CARD,
+            subscriberEmailOrPhone = "${cardDetails.cardBrand} (••••${cardDetails.cardNumber.takeLast(4)}) - $subscriberEmail"
+        )
+        if (success) {
+            val current = authAndWalletRepo.currentUser.value
+            val newPlan = if (plan == com.example.data.model.SubscriptionPlan.STUDIO_OWNER) "VIP OWNER LIFETIME" else plan.title
+            authAndWalletRepo.updateProfile(
+                displayName = current.displayName,
+                bio = current.bio,
+                phone = current.phoneNumber,
+                email = current.email,
+                avatarDrawable = current.avatarDrawableName,
+                specialty = current.creatorSpecialty,
+                notifications = current.notificationEnabled,
+                autoSync = current.autoSyncDubbing
+            )
+            _uiState.value = _uiState.value.copy(
+                statusMessage = "✅ Global Card Payment Approved (${currency.symbol}$amount)! ${plan.title} Activated."
+            )
+        }
+        return success
     }
 
     override fun onCleared() {

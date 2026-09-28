@@ -28,6 +28,7 @@ import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.CurrencyExchange
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Payments
 import androidx.compose.material.icons.filled.PhoneAndroid
@@ -103,10 +104,12 @@ fun OwnerWalletBottomSheet(
     val currentUser by viewModel.currentUser.collectAsState()
     val wallets by viewModel.wallets.collectAsState()
     val transactions by viewModel.transactions.collectAsState()
+    val connectedBankAccount by viewModel.connectedBankAccount.collectAsState()
 
     var selectedCurrency by remember { mutableStateOf(CurrencyType.INR) }
     var showWithdrawModal by remember { mutableStateOf(false) }
     var showExchangeModal by remember { mutableStateOf(false) }
+    var showEditBankModal by remember { mutableStateOf(false) }
     var withdrawalFeedback by remember { mutableStateOf("") }
 
     ModalBottomSheet(
@@ -336,6 +339,102 @@ fun OwnerWalletBottomSheet(
                 )
             }
 
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // ---------------------------------------------------------------------------------
+            // OWNER CONNECTED BANK ACCOUNT CARD & CHANGE OPTION
+            // ---------------------------------------------------------------------------------
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(containerColor = AnimeSurfaceVariant),
+                shape = RoundedCornerShape(14.dp),
+                border = BorderStroke(1.dp, AnimeGold.copy(alpha = 0.5f))
+            ) {
+                Column(modifier = Modifier.padding(14.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            AppThemedIconBadge(
+                                imageVector = Icons.Default.AccountBalance,
+                                contentDescription = null,
+                                tint = AnimeGold,
+                                containerColor = AnimeGold.copy(alpha = 0.15f),
+                                borderColor = AnimeGold.copy(alpha = 0.3f),
+                                containerSize = 36.dp,
+                                iconSize = 18.dp
+                            )
+                            Spacer(modifier = Modifier.width(10.dp))
+                            Column {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Text(
+                                        text = connectedBankAccount.bankName,
+                                        color = TextPrimary,
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 14.sp
+                                    )
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Box(
+                                        modifier = Modifier
+                                            .clip(RoundedCornerShape(4.dp))
+                                            .background(if (connectedBankAccount.isConnected) AnimeGreen.copy(alpha = 0.2f) else TextMuted.copy(alpha = 0.2f))
+                                            .padding(horizontal = 5.dp, vertical = 1.dp)
+                                    ) {
+                                        Text(
+                                            text = if (connectedBankAccount.isConnected) "● CONNECTED" else "DISCONNECTED",
+                                            color = if (connectedBankAccount.isConnected) AnimeGreen else TextMuted,
+                                            fontSize = 9.sp,
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                    }
+                                }
+                                Text(
+                                    text = "A/C: ${connectedBankAccount.maskedAccountNumber} • IFSC: ${connectedBankAccount.ifscCode}",
+                                    color = TextSecondary,
+                                    fontSize = 11.sp
+                                )
+                            }
+                        }
+
+                        Button(
+                            onClick = { showEditBankModal = true },
+                            colors = ButtonDefaults.buttonColors(containerColor = AnimeGold.copy(alpha = 0.2f)),
+                            shape = RoundedCornerShape(8.dp),
+                            border = BorderStroke(1.dp, AnimeGold),
+                            contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 8.dp, vertical = 4.dp),
+                            modifier = Modifier.testTag("wallet_change_bank_btn")
+                        ) {
+                            Icon(Icons.Default.Edit, contentDescription = null, tint = AnimeGold, modifier = Modifier.size(12.dp))
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text("Change Bank", color = AnimeGold, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "Holder: ${connectedBankAccount.holderName} (${connectedBankAccount.accountType})",
+                            color = TextMuted,
+                            fontSize = 10.sp
+                        )
+                        if (connectedBankAccount.branchName.isNotBlank()) {
+                            Text(
+                                text = connectedBankAccount.branchName,
+                                color = AnimeCyan,
+                                fontSize = 10.sp
+                            )
+                        }
+                    }
+                }
+            }
+
             Spacer(modifier = Modifier.height(20.dp))
 
             // Supported Withdrawal Gateways info card
@@ -423,6 +522,18 @@ fun OwnerWalletBottomSheet(
                 showExchangeModal = false
             },
             onDismiss = { showExchangeModal = false }
+        )
+    }
+
+    if (showEditBankModal) {
+        OwnerBankDetailsDialog(
+            currentAccount = connectedBankAccount,
+            selectedLanguage = "English",
+            onSave = { updated ->
+                viewModel.updateOwnerBankAccount(updated)
+                showEditBankModal = false
+            },
+            onDismiss = { showEditBankModal = false }
         )
     }
 }
