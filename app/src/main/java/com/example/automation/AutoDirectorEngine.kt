@@ -469,9 +469,9 @@ object AutoDirectorEngine {
      * Procedural autonomous generation matching exact requested duration, scenes, languages, accents & effects
      */
     fun generateProceduralAutonomousScript(command: AutoDirectorCommand): AnimeScript {
-        val topic = command.corePrompt.ifBlank { if (isHindi) "रहस्यमयी एनिमे महागाथा" else "Mystical Anime Saga" }
         val lang = command.targetLanguage
         val isHindi = lang.equals("Hindi", ignoreCase = true)
+        val topic = command.corePrompt.ifBlank { if (isHindi) "रहस्यमयी एनिमे महागाथा" else "Mystical Anime Saga" }
         val isJapanese = lang.equals("Japanese", ignoreCase = true)
         val isKorean = lang.equals("Korean", ignoreCase = true)
         val isTamil = lang.equals("Tamil", ignoreCase = true)

@@ -203,7 +203,7 @@ fun ProjectHistoryScreen(viewModel: AnimeViewModel) {
                         }
                     }
                     Text(
-                        text = "${savedScripts.size} प्रोजेक्ट्स SQLite Room में सुरक्षित • टैप करके रिज्यूम करें",
+                        text = "${savedScripts.size} ${AppLocaleStrings.tr(state.selectedLanguage, "projects saved in SQLite • Tap to resume", "प्रोजेक्ट्स SQLite Room में सुरक्षित • टैप करके रिज्यूम करें")}",
                         fontSize = 11.sp,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -220,7 +220,7 @@ fun ProjectHistoryScreen(viewModel: AnimeViewModel) {
             ) {
                 Icon(Icons.Default.Add, contentDescription = null, tint = Color.Black, modifier = Modifier.size(16.dp))
                 Spacer(modifier = Modifier.width(4.dp))
-                Text(AppLocaleStrings.tr(state.selectedLanguage, "Create New", "नया बनाएं"), color = Color.Black, fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                Text("Create New", color = Color.Black, fontWeight = FontWeight.Bold, fontSize = 12.sp)
             }
         }
 
@@ -235,7 +235,7 @@ fun ProjectHistoryScreen(viewModel: AnimeViewModel) {
                 .testTag("project_history_search_input"),
             placeholder = {
                 Text(
-                    AppLocaleStrings.tr(state.selectedLanguage, "Search by title, genre, language or synopsis...", "प्रोजेक्ट शीर्षक, शैली, भाषा या सिनॉप्सिस खोजें..."),
+                    "Search by title, genre, language or synopsis...",
                     color = TextMuted,
                     fontSize = 13.sp
                 )
@@ -268,7 +268,7 @@ fun ProjectHistoryScreen(viewModel: AnimeViewModel) {
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalArrangement = Arrangement.spacedBy(4.dp)
         ) {
-            val genres = listOf("All" to "सभी", "Action" to "Action", "Cyberpunk" to "Cyberpunk", "Fantasy" to "Fantasy", "Romance" to "Romance")
+            val genres = listOf("All" to if (AppLocaleStrings.isHindi(state.selectedLanguage)) "सभी" else "All", "Action" to "Action", "Cyberpunk" to "Cyberpunk", "Fantasy" to "Fantasy", "Romance" to "Romance")
             genres.forEach { (key, label) ->
                 FilterChip(
                     selected = selectedGenreFilter == key,
@@ -364,7 +364,7 @@ fun ProjectHistoryScreen(viewModel: AnimeViewModel) {
                         ) {
                             Icon(Icons.Default.AutoAwesome, contentDescription = null, tint = Color.White, modifier = Modifier.size(16.dp))
                             Spacer(modifier = Modifier.width(6.dp))
-                            Text(AppLocaleStrings.tr(state.selectedLanguage, "🎬 Create New Anime", "🎬 नया एनिमे बनाएं"), color = Color.White, fontWeight = FontWeight.Bold)
+                            Text("🎬 Create New Anime", color = Color.White, fontWeight = FontWeight.Bold)
                         }
                     }
                 }
@@ -418,7 +418,7 @@ fun ProjectHistoryScreen(viewModel: AnimeViewModel) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Icon(Icons.Default.AutoAwesome, contentDescription = null, tint = AnimeCyan, modifier = Modifier.size(18.dp))
                             Spacer(modifier = Modifier.width(6.dp))
-                            Text("रिज्यूम प्रोजेक्ट (Resume Work)", fontSize = 16.sp, fontWeight = FontWeight.ExtraBold, color = AnimeCyan)
+                            Text(AppLocaleStrings.tr(state.selectedLanguage, "Resume Project", "रिज्यूम प्रोजेक्ट (Resume Work)"), fontSize = 16.sp, fontWeight = FontWeight.ExtraBold, color = AnimeCyan)
                         }
                         Text(
                             text = entity.title,
@@ -480,10 +480,10 @@ fun ProjectHistoryScreen(viewModel: AnimeViewModel) {
                     Spacer(modifier = Modifier.height(12.dp))
 
                     // Synopsis
-                    Text("📖 कहानी व सिनॉप्सिस (Synopsis):", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
+                    Text(AppLocaleStrings.tr(state.selectedLanguage, "📖 Story Synopsis:", "📖 कहानी व सिनॉप्सिस (Synopsis):"), fontSize = 12.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
-                        text = entity.synopsis.ifBlank { AppLocaleStrings.tr(state.selectedLanguage, "No synopsis available", "कोई सिनॉप्सिस उपलब्ध नहीं है") },
+                        text = entity.synopsis.ifBlank { "No synopsis available" },
                         fontSize = 12.sp,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         lineHeight = 18.sp
@@ -495,7 +495,7 @@ fun ProjectHistoryScreen(viewModel: AnimeViewModel) {
 
                     // Scenes List Preview
                     if (script != null && script.scenes.isNotEmpty()) {
-                        Text("🎬 सीन्स की सूची (${script.scenes.size} सीन्स):", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
+                        Text("${AppLocaleStrings.tr(state.selectedLanguage, "🎬 Storyboard Scenes", "🎬 सीन्स की सूची")} (${script.scenes.size}):", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
                         Spacer(modifier = Modifier.height(6.dp))
                         script.scenes.forEach { scene ->
                             Card(
@@ -511,7 +511,7 @@ fun ProjectHistoryScreen(viewModel: AnimeViewModel) {
                                         horizontalArrangement = Arrangement.SpaceBetween
                                     ) {
                                         Text(
-                                            text = "सीन ${scene.sceneNumber}: ${scene.title}",
+                                            text = "${AppLocaleStrings.tr(state.selectedLanguage, "Scene", "सीन")} ${scene.sceneNumber}: ${scene.title}",
                                             fontSize = 12.sp,
                                             fontWeight = FontWeight.Bold,
                                             color = AnimeCyan
@@ -553,7 +553,7 @@ fun ProjectHistoryScreen(viewModel: AnimeViewModel) {
                             modifier = Modifier.weight(1f),
                             shape = RoundedCornerShape(8.dp)
                         ) {
-                            Text(AppLocaleStrings.tr(state.selectedLanguage, "🎬 Preview", "🎬 प्रीव्यू"), fontSize = 11.sp, color = AnimeCyan)
+                            Text("🎬 Preview", fontSize = 11.sp, color = AnimeCyan)
                         }
                         OutlinedButton(
                             onClick = {
@@ -563,7 +563,7 @@ fun ProjectHistoryScreen(viewModel: AnimeViewModel) {
                             modifier = Modifier.weight(1f),
                             shape = RoundedCornerShape(8.dp)
                         ) {
-                            Text(AppLocaleStrings.tr(state.selectedLanguage, "📑 Subtitles", "📑 सबटाइटल्स"), fontSize = 11.sp)
+                            Text("📑 Subtitles", fontSize = 11.sp)
                         }
                         OutlinedButton(
                             onClick = {
@@ -573,7 +573,7 @@ fun ProjectHistoryScreen(viewModel: AnimeViewModel) {
                             modifier = Modifier.weight(1f),
                             shape = RoundedCornerShape(8.dp)
                         ) {
-                            Text(AppLocaleStrings.tr(state.selectedLanguage, "📤 Share", "📤 शेयर करें"), fontSize = 11.sp)
+                            Text("📤 Share", fontSize = 11.sp)
                         }
                     }
                 }
@@ -591,7 +591,7 @@ fun ProjectHistoryScreen(viewModel: AnimeViewModel) {
                 ) {
                     Icon(Icons.Default.EditNote, contentDescription = null, tint = Color.Black, modifier = Modifier.size(18.dp))
                     Spacer(modifier = Modifier.width(6.dp))
-                    Text(AppLocaleStrings.tr(state.selectedLanguage, "Resume in Studio", "स्टूडियो में रिज्यूम करें"), color = Color.Black, fontWeight = FontWeight.Bold)
+                    Text("Resume in Studio", color = Color.Black, fontWeight = FontWeight.Bold)
                 }
             },
             dismissButton = {
@@ -607,7 +607,7 @@ fun ProjectHistoryScreen(viewModel: AnimeViewModel) {
                 ) {
                     Icon(Icons.Default.PlayArrow, contentDescription = null, tint = Color.White, modifier = Modifier.size(18.dp))
                     Spacer(modifier = Modifier.width(6.dp))
-                    Text(AppLocaleStrings.tr(state.selectedLanguage, "Play in Player", "प्लेयर में चलाएं"), color = Color.White, fontWeight = FontWeight.Bold)
+                    Text("Play in Player", color = Color.White, fontWeight = FontWeight.Bold)
                 }
             }
         )
@@ -641,7 +641,7 @@ fun ProjectHistoryScreen(viewModel: AnimeViewModel) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(Icons.Default.Subtitles, contentDescription = null, tint = AnimeCyan)
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("SRT सबटाइटल्स: ${entity.title}", fontSize = 15.sp, fontWeight = FontWeight.Bold, maxLines = 1)
+                    Text("${AppLocaleStrings.tr(state.selectedLanguage, "SRT Subtitles", "SRT सबटाइटल्स")}: ${entity.title}", fontSize = 15.sp, fontWeight = FontWeight.Bold, maxLines = 1)
                 }
             },
             text = {
@@ -666,18 +666,18 @@ fun ProjectHistoryScreen(viewModel: AnimeViewModel) {
                     onClick = {
                         val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
                         clipboard.setPrimaryClip(ClipData.newPlainText("SRT Subtitles", srtContent))
-                        Toast.makeText(context, "SRT सबटाइटल्स क्लिपबोर्ड में कॉपी हो गए!", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, AppLocaleStrings.tr(state.selectedLanguage, "SRT subtitles copied to clipboard!", "SRT सबटाइटल्स क्लिपबोर्ड में कॉपी हो गए!"), Toast.LENGTH_SHORT).show()
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = AnimeCyan)
                 ) {
                     Icon(Icons.Default.ContentCopy, contentDescription = null, tint = Color.Black, modifier = Modifier.size(16.dp))
                     Spacer(modifier = Modifier.width(6.dp))
-                    Text(AppLocaleStrings.tr(state.selectedLanguage, "Copy", "कॉपी करें"), color = Color.Black, fontWeight = FontWeight.Bold)
+                    Text("Copy", color = Color.Black, fontWeight = FontWeight.Bold)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { selectedEntityForSrt = null }) {
-                    Text(AppLocaleStrings.tr(state.selectedLanguage, "Close", "बंद करें"))
+                    Text("Close")
                 }
             }
         )
@@ -691,7 +691,7 @@ fun ProjectHistoryScreen(viewModel: AnimeViewModel) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(Icons.Default.Description, contentDescription = null, tint = AnimeGold)
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("JSON प्रोजेक्ट बैकअप: ${entity.title}", fontSize = 15.sp, fontWeight = FontWeight.Bold, maxLines = 1)
+                    Text("${AppLocaleStrings.tr(state.selectedLanguage, "JSON Project Backup", "JSON प्रोजेक्ट बैकअप")}: ${entity.title}", fontSize = 15.sp, fontWeight = FontWeight.Bold, maxLines = 1)
                 }
             },
             text = {
@@ -716,18 +716,18 @@ fun ProjectHistoryScreen(viewModel: AnimeViewModel) {
                     onClick = {
                         val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
                         clipboard.setPrimaryClip(ClipData.newPlainText("JSON Data", entity.scriptJson))
-                        Toast.makeText(context, "JSON डेटा क्लिपबोर्ड में कॉपी हो गया!", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, AppLocaleStrings.tr(state.selectedLanguage, "JSON copied to clipboard!", "JSON डेटा क्लिपबोर्ड में कॉपी हो गया!"), Toast.LENGTH_SHORT).show()
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = AnimeGold)
                 ) {
                     Icon(Icons.Default.ContentCopy, contentDescription = null, tint = Color.Black, modifier = Modifier.size(16.dp))
                     Spacer(modifier = Modifier.width(6.dp))
-                    Text(AppLocaleStrings.tr(state.selectedLanguage, "Copy JSON", "JSON कॉपी करें"), color = Color.Black, fontWeight = FontWeight.Bold)
+                    Text("Copy JSON", color = Color.Black, fontWeight = FontWeight.Bold)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { selectedEntityForJson = null }) {
-                    Text(AppLocaleStrings.tr(state.selectedLanguage, "Close", "बंद करें"))
+                    Text("Close")
                 }
             }
         )
@@ -744,7 +744,7 @@ fun ProjectHistoryScreen(viewModel: AnimeViewModel) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(Icons.Default.Share, contentDescription = null, tint = AnimePink)
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text(AppLocaleStrings.tr(state.selectedLanguage, "Share to Social Media", "सोशल मीडिया शेयर करें"), fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                    Text("Share to Social Media", fontSize = 16.sp, fontWeight = FontWeight.Bold)
                 }
             },
             text = {
@@ -754,7 +754,7 @@ fun ProjectHistoryScreen(viewModel: AnimeViewModel) {
                         .verticalScroll(rememberScrollState())
                 ) {
                     Text(
-                        text = "'${entity.title}' को सीधे प्लेटफॉर्म पर पोस्ट व शेयर करें:",
+                        text = AppLocaleStrings.tr(state.selectedLanguage, "Share '${entity.title}' directly to social media:", "'${entity.title}' को सीधे प्लेटफॉर्म पर पोस्ट व शेयर करें:"),
                         fontSize = 12.sp,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -776,7 +776,7 @@ fun ProjectHistoryScreen(viewModel: AnimeViewModel) {
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Column(modifier = Modifier.weight(1f)) {
-                                    Text("▶️ वीडियो लिंक (Video Link):", fontSize = 10.sp, color = AnimeCyan, fontWeight = FontWeight.Bold)
+                                    Text(AppLocaleStrings.tr(state.selectedLanguage, "▶️ Video Link:", "▶️ वीडियो लिंक (Video Link):"), fontSize = 10.sp, color = AnimeCyan, fontWeight = FontWeight.Bold)
                                     Text(videoUrl, fontSize = 9.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
                                 }
                                 IconButton(
@@ -796,19 +796,19 @@ fun ProjectHistoryScreen(viewModel: AnimeViewModel) {
                             FilterChip(
                                 selected = historyShareMode == "DETAILS_AND_LINK",
                                 onClick = { historyShareMode = "DETAILS_AND_LINK" },
-                                label = { Text(AppLocaleStrings.tr(state.selectedLanguage, "🎬 Details+Link", "🎬 विवरण+लिंक"), fontSize = 10.sp) },
+                                label = { Text("🎬 Details+Link", fontSize = 10.sp) },
                                 modifier = Modifier.weight(1f).testTag("history_share_mode_details")
                             )
                             FilterChip(
                                 selected = historyShareMode == "LINK_ONLY",
                                 onClick = { historyShareMode = "LINK_ONLY" },
-                                label = { Text(AppLocaleStrings.tr(state.selectedLanguage, "🔗 Link Only", "🔗 केवल लिंक"), fontSize = 10.sp) },
+                                label = { Text("🔗 Link Only", fontSize = 10.sp) },
                                 modifier = Modifier.weight(1f).testTag("history_share_mode_link")
                             )
                             FilterChip(
                                 selected = historyShareMode == "FULL_SCRIPT",
                                 onClick = { historyShareMode = "FULL_SCRIPT" },
-                                label = { Text(AppLocaleStrings.tr(state.selectedLanguage, "📜 Script", "📜 स्क्रिप्ट"), fontSize = 10.sp) },
+                                label = { Text("📜 Script", fontSize = 10.sp) },
                                 modifier = Modifier.weight(1f).testTag("history_share_mode_script")
                             )
                         }
@@ -822,7 +822,7 @@ fun ProjectHistoryScreen(viewModel: AnimeViewModel) {
                         Triple("▶️ YouTube Shorts & Video", "youtube", Color(0xFFFF0000)),
                         Triple("👻 Snapchat Spotlight", "snapchat", Color(0xFFFFFC00)),
                         Triple("📁 Google Drive / Docs / Gmail", "google", Color(0xFF4285F4)),
-                        Triple(AppLocaleStrings.tr(state.selectedLanguage, "📲 Share to All Apps", "📲 सभी ऐप्स पर शेयर करें (System Share)"), "ALL", AnimePurple)
+                        Triple("📲 Share to All Apps", "ALL", AnimePurple)
                     )
 
                     platforms.forEach { (name, platformKey, brandColor) ->
@@ -851,7 +851,7 @@ fun ProjectHistoryScreen(viewModel: AnimeViewModel) {
             confirmButton = {},
             dismissButton = {
                 TextButton(onClick = { selectedEntityForShare = null }) {
-                    Text(AppLocaleStrings.tr(state.selectedLanguage, "Cancel", "रद्द करें"))
+                    Text("Cancel")
                 }
             }
         )
@@ -861,8 +861,8 @@ fun ProjectHistoryScreen(viewModel: AnimeViewModel) {
     itemToDelete?.let { entity ->
         AlertDialog(
             onDismissRequest = { itemToDelete = null },
-            title = { Text(AppLocaleStrings.tr(state.selectedLanguage, "Delete Project?", "प्रोजेक्ट हटाएं?"), fontWeight = FontWeight.Bold) },
-            text = { Text("'${entity.title}' को Room SQLite डेटाबेस से हमेशा के लिए हटा दिया जाएगा।") },
+            title = { Text("Delete Project?", fontWeight = FontWeight.Bold) },
+            text = { Text(AppLocaleStrings.tr(state.selectedLanguage, "'${entity.title}' will be permanently removed from SQLite database.", "'${entity.title}' को Room SQLite डेटाबेस से हमेशा के लिए हटा दिया जाएगा।")) },
             confirmButton = {
                 Button(
                     onClick = {
@@ -872,12 +872,12 @@ fun ProjectHistoryScreen(viewModel: AnimeViewModel) {
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFDC2626))
                 ) {
-                    Text(AppLocaleStrings.tr(state.selectedLanguage, "Delete", "हटाएं"), color = Color.White, fontWeight = FontWeight.Bold)
+                    Text("Delete", color = Color.White, fontWeight = FontWeight.Bold)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { itemToDelete = null }) {
-                    Text(AppLocaleStrings.tr(state.selectedLanguage, "Cancel", "रद्द करें"))
+                    Text("Cancel")
                 }
             }
         )
@@ -1014,7 +1014,7 @@ fun ProjectHistoryCard(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "🎬 ${sceneCount} सीन्स • ${entity.language}",
+                    text = "🎬 ${sceneCount} scenes • ${entity.language}",
                     fontSize = 11.sp,
                     color = AnimeCyan,
                     fontWeight = FontWeight.SemiBold
@@ -1076,7 +1076,7 @@ fun ProjectHistoryCard(
                             modifier = Modifier.size(13.dp)
                         )
                         Spacer(modifier = Modifier.width(3.dp))
-                        Text("प्रीव्यू", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = AnimeCyan)
+                        Text("Preview", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = AnimeCyan)
                     }
                 }
 
@@ -1123,7 +1123,7 @@ fun ProjectHistoryCard(
                 ) {
                     Icon(Icons.Default.EditNote, contentDescription = null, tint = Color.Black, modifier = Modifier.size(16.dp))
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text(AppLocaleStrings.tr(state.selectedLanguage, "Resume", "काम जारी रखें"), color = Color.Black, fontWeight = FontWeight.Bold, fontSize = 11.sp)
+                    Text("Resume", color = Color.Black, fontWeight = FontWeight.Bold, fontSize = 11.sp)
                 }
 
                 // Play in Player
@@ -1142,7 +1142,7 @@ fun ProjectHistoryCard(
                 ) {
                     Icon(Icons.Default.PlayArrow, contentDescription = null, tint = AnimePurple, modifier = Modifier.size(16.dp))
                     Spacer(modifier = Modifier.width(2.dp))
-                    Text(AppLocaleStrings.tr(state.selectedLanguage, "Play", "प्ले करें"), color = AnimePurple, fontWeight = FontWeight.Bold, fontSize = 11.sp)
+                    Text("Play", color = AnimePurple, fontWeight = FontWeight.Bold, fontSize = 11.sp)
                 }
             }
         }

@@ -207,6 +207,53 @@ fun StudioCreateScreen(viewModel: AnimeViewModel) {
             }
         }
 
+        Spacer(modifier = Modifier.height(8.dp))
+
+        // Quick Vibrant Theme Switcher Bar
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 4.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(Icons.Default.Palette, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(16.dp))
+                Spacer(modifier = Modifier.width(6.dp))
+                Text(
+                    text = AppLocaleStrings.tr(state.selectedLanguage, "Vibrant Themes:", "वाइब्रेंट थीम्स:"),
+                    color = MaterialTheme.colorScheme.onBackground,
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+            LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                items(com.example.ui.theme.VibrantThemePresets.all) { preset ->
+                    val isSelected = state.vibrantTheme.equals(preset.key, ignoreCase = true)
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(if (isSelected) preset.primaryColor else MaterialTheme.colorScheme.surfaceVariant)
+                            .border(1.dp, preset.primaryColor, RoundedCornerShape(8.dp))
+                            .clickable { viewModel.setVibrantTheme(preset.key) }
+                            .padding(horizontal = 7.dp, vertical = 4.dp)
+                            .testTag("studio_theme_${preset.key.lowercase()}")
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(text = preset.emoji, fontSize = 11.sp)
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = preset.nameEn.split(" ").first(),
+                                color = if (isSelected) Color.White else MaterialTheme.colorScheme.onSurface,
+                                fontSize = 10.sp,
+                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
+                            )
+                        }
+                    }
+                }
+            }
+        }
+
         Spacer(modifier = Modifier.height(10.dp))
 
         // 1-Click AI Autonomous Director Console (Command / Link Pipeline)

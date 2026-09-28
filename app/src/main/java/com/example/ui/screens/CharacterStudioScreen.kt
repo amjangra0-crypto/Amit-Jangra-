@@ -133,7 +133,7 @@ fun CharacterStudioScreen(viewModel: AnimeViewModel) {
                             fontWeight = FontWeight.ExtraBold
                         )
                         Text(
-                            text = "विजुअल एट्रिब्यूट्स और विविध AI आवाजों (Male, Female, Child, Accents) के साथ डिजाइन करें",
+                            text = AppLocaleStrings.tr(state.selectedLanguage, "Design with visual attributes and diverse AI voices (Male, Female, Child, Accents)", "विजुअल एट्रिब्यूट्स और विविध AI आवाजों (Male, Female, Child, Accents) के साथ डिजाइन करें"),
                             color = TextSecondary,
                             fontSize = 12.sp
                         )
@@ -160,7 +160,7 @@ fun CharacterStudioScreen(viewModel: AnimeViewModel) {
                             Spacer(modifier = Modifier.width(8.dp))
                             Column {
                                 Text(AppLocaleStrings.tr(state.selectedLanguage, "🎨 Character Builder", "🎨 करैक्टर बिल्डर (Character Builder)"), color = TextPrimary, fontSize = 12.sp, fontWeight = FontWeight.Bold)
-                                Text("बाल, आँखों का रंग व पोशाक कस्टमाइज करें", color = TextSecondary, fontSize = 10.sp)
+                                Text(AppLocaleStrings.tr(state.selectedLanguage, "Customize hair, eyes, outfit & aura", "बाल, आँखों का रंग व पोशाक कस्टमाइज करें"), color = TextSecondary, fontSize = 10.sp)
                             }
                         }
                         Button(
@@ -280,7 +280,7 @@ fun CharacterStudioScreen(viewModel: AnimeViewModel) {
                         Spacer(modifier = Modifier.height(10.dp))
 
                         // Quick Prompt Presets
-                        Text("त्वरित प्रॉम्प्ट्स (Quick Presets):", color = TextSecondary, fontSize = 11.sp)
+                        Text(AppLocaleStrings.tr(state.selectedLanguage, "Quick Presets:", "त्वरित प्रॉम्प्ट्स (Quick Presets):"), color = TextSecondary, fontSize = 11.sp)
                         FlowRow(
                             horizontalArrangement = Arrangement.spacedBy(6.dp),
                             verticalArrangement = Arrangement.spacedBy(6.dp),
@@ -461,7 +461,7 @@ fun CharacterStudioScreen(viewModel: AnimeViewModel) {
                         Spacer(modifier = Modifier.height(12.dp))
 
                         // 1. Voice Gender Selection
-                        Text("1. वॉइस जेंडर (Voice Gender):", color = TextSecondary, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                        Text(AppLocaleStrings.tr(state.selectedLanguage, "1. Voice Gender:", "1. वॉइस जेंडर (Voice Gender):"), color = TextSecondary, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(vertical = 4.dp)) {
                             listOf("Male", "Female", "Child").forEach { g ->
                                 val isSelected = draft.voiceGender.equals(g, ignoreCase = true)
@@ -517,7 +517,7 @@ fun CharacterStudioScreen(viewModel: AnimeViewModel) {
                         Spacer(modifier = Modifier.height(10.dp))
 
                         // 2. Voice Persona Options based on selected gender
-                        Text("2. AI वॉइस परसोना (Voice Persona):", color = TextSecondary, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                        Text(AppLocaleStrings.tr(state.selectedLanguage, "2. AI Voice Persona:", "2. AI वॉइस परसोना (Voice Persona):"), color = TextSecondary, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
                         val personas = when (draft.voiceGender) {
                             "Male" -> listOf(
                                 "Deep Shonen Hero" to 0.88f,
@@ -564,7 +564,7 @@ fun CharacterStudioScreen(viewModel: AnimeViewModel) {
                         Spacer(modifier = Modifier.height(10.dp))
 
                         // 3. Accent & Cadence selection
-                        Text("3. एक्सेंट और उच्चारण (Accent & Dialect):", color = TextSecondary, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                        Text(AppLocaleStrings.tr(state.selectedLanguage, "3. Accent & Dialect:", "3. एक्सेंट और उच्चारण (Accent & Dialect):"), color = TextSecondary, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
                         val accents = listOf(
                             "Standard Anime (Japanese Cadence)",
                             "English (British Posh)",
@@ -898,7 +898,7 @@ private fun LiveCharacterPreviewCard(
                     Icon(Icons.Default.GraphicEq, contentDescription = null, tint = AnimePink, modifier = Modifier.size(16.dp))
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = "आवाज़ सिंक्रोनाइज हो रही है: \"${character.sampleDialogue.take(35)}...\"",
+                        text = "Synchronizing voice: \"${character.sampleDialogue.take(35)}...\"",
                         color = TextPrimary,
                         fontSize = 11.sp,
                         maxLines = 1,
@@ -997,7 +997,7 @@ private fun RosterCharacterCard(
                     fontSize = 11.sp
                 )
                 Text(
-                    text = "🎙️ ${character.voiceAccent} | पिच: ${"%.2f".format(character.voicePitch)}x",
+                    text = "🎙️ ${character.voiceAccent} | Pitch: ${"%.2f".format(character.voicePitch)}x",
                     color = TextMuted,
                     fontSize = 10.sp
                 )

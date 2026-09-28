@@ -261,7 +261,7 @@ fun RecentVideoProjectsScreen(viewModel: AnimeViewModel) {
                     .testTag("recent_projects_search_input"),
                 placeholder = {
                     Text(
-                        text = AppLocaleStrings.tr(state.selectedLanguage, "Search by title, character, genre or language...", "प्रोजेक्ट शीर्षक, पात्र, शैली या भाषा से खोजें..."),
+                        text = "Search by title, character, genre or language...",
                         color = TextMuted,
                         fontSize = 13.sp
                     )
@@ -323,7 +323,7 @@ fun RecentVideoProjectsScreen(viewModel: AnimeViewModel) {
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text(
-                        text = AppLocaleStrings.tr(state.selectedLanguage, "Showing projects: ${filteredProjects.size} / $totalProjects", "दिखाए जा रहे प्रोजेक्ट्स: ${filteredProjects.size} / $totalProjects"),
+                        text = "Showing projects: ${filteredProjects.size} / $totalProjects",
                         color = TextSecondary,
                         fontSize = 11.sp,
                         fontWeight = FontWeight.SemiBold
@@ -435,14 +435,14 @@ fun RecentVideoProjectsScreen(viewModel: AnimeViewModel) {
             onDismissRequest = { itemToDelete = null },
             title = {
                 Text(
-                    text = AppLocaleStrings.tr(state.selectedLanguage, "Delete Project?", "प्रोजेक्ट हटाएं? (Delete Project)"),
+                    text = "Delete Project?",
                     fontWeight = FontWeight.Bold,
                     color = Color.White
                 )
             },
             text = {
                 Text(
-                    text = "'${entity.title}' को रूम डेटाबेस (Room SQLite) से हमेशा के लिए हटा दिया जाएगा।",
+                    text = AppLocaleStrings.tr(state.selectedLanguage, "'${entity.title}' will be permanently deleted from local SQLite storage.", "'${entity.title}' को रूम डेटाबेस (Room SQLite) से हमेशा के लिए हटा दिया जाएगा।"),
                     color = TextSecondary
                 )
             },
@@ -451,16 +451,16 @@ fun RecentVideoProjectsScreen(viewModel: AnimeViewModel) {
                     onClick = {
                         viewModel.deleteSavedScript(entity.id)
                         itemToDelete = null
-                        Toast.makeText(context, "प्रोजेक्ट हटा दिया गया", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, AppLocaleStrings.tr(state.selectedLanguage, "Project deleted", "प्रोजेक्ट हटा दिया गया"), Toast.LENGTH_SHORT).show()
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
                 ) {
-                    Text(AppLocaleStrings.tr(state.selectedLanguage, "Yes, Delete", "हाँ, हटाएं (Delete)"))
+                    Text("Yes, Delete")
                 }
             },
             dismissButton = {
                 TextButton(onClick = { itemToDelete = null }) {
-                    Text(AppLocaleStrings.tr(state.selectedLanguage, "Cancel", "रद्द करें (Cancel)"), color = TextPrimary)
+                    Text("Cancel", color = TextPrimary)
                 }
             },
             containerColor = AnimeSurface
@@ -527,7 +527,7 @@ private fun RecentProjectsHeader(
                     }
                 }
                 Text(
-                    text = AppLocaleStrings.tr(state.selectedLanguage, "Recent Saved Anime Video Projects ($totalCount)", "हालिया सेव किए गए एनिमे वीडियो प्रोजेक्ट्स ($totalCount)"),
+                    text = "Recent Saved Anime Video Projects ($totalCount)",
                     fontSize = 12.sp,
                     color = TextSecondary
                 )
@@ -550,7 +550,7 @@ private fun RecentProjectsHeader(
             )
             Spacer(modifier = Modifier.width(4.dp))
             Text(
-                text = AppLocaleStrings.tr(state.selectedLanguage, "Create New", "नया बनाएं"),
+                text = "Create New",
                 color = Color.Black,
                 fontSize = 12.sp,
                 fontWeight = FontWeight.Bold
@@ -576,7 +576,7 @@ private fun RoomStorageMetricsSection(
             modifier = Modifier.weight(1f),
             icon = Icons.Default.Movie,
             iconTint = AnimeCyan,
-            title = AppLocaleStrings.tr(state.selectedLanguage, "Total Videos", "कुल वीडियो"),
+            title = "Total Videos",
             value = "$totalProjects"
         )
 
@@ -588,7 +588,7 @@ private fun RoomStorageMetricsSection(
             modifier = Modifier.weight(1f),
             icon = Icons.Default.Timer,
             iconTint = AnimeGold,
-            title = AppLocaleStrings.tr(state.selectedLanguage, "Total Duration", "कुल अवधि"),
+            title = "Total Duration",
             value = durString
         )
 
@@ -596,7 +596,7 @@ private fun RoomStorageMetricsSection(
             modifier = Modifier.weight(1f),
             icon = Icons.Default.GraphicEq,
             iconTint = AnimePink,
-            title = AppLocaleStrings.tr(state.selectedLanguage, "Cast (Voice)", "पात्र (Voice)"),
+            title = "Cast (Voice)",
             value = "$totalCharacters"
         )
 
@@ -605,7 +605,7 @@ private fun RoomStorageMetricsSection(
             icon = Icons.Default.Storage,
             iconTint = AnimeGreen,
             title = "Room SQLite",
-            value = AppLocaleStrings.tr(state.selectedLanguage, "Synced", "सिंक")
+            value = "Synced"
         )
     }
 }
@@ -664,7 +664,7 @@ private fun RecentVideoProjectCard(
             val sdf = SimpleDateFormat("dd MMM, hh:mm a", Locale.getDefault())
             sdf.format(Date(entity.createdAt))
         } catch (_: Exception) {
-            AppLocaleStrings.tr(state.selectedLanguage, "Recently", "हाल ही में")
+            "Recently"
         }
     }
 
@@ -728,7 +728,7 @@ private fun RecentVideoProjectCard(
                         .padding(horizontal = 8.dp, vertical = 4.dp)
                 ) {
                     Text(
-                        text = "⏱️ ${totalDurationSec}s • $totalScenes सीन्स",
+                        text = "⏱️ ${totalDurationSec}s • $totalScenes Scenes",
                         color = AnimeGold,
                         fontSize = 10.sp,
                         fontWeight = FontWeight.Bold
@@ -888,7 +888,7 @@ private fun RecentVideoProjectCard(
                 if (characters.isNotEmpty()) {
                     Spacer(modifier = Modifier.height(10.dp))
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(text = AppLocaleStrings.tr(state.selectedLanguage, "Cast: ", "पात्र (Cast): "), fontSize = 11.sp, color = TextMuted)
+                        Text(text = "Cast: ", fontSize = 11.sp, color = TextMuted)
                         Spacer(modifier = Modifier.width(4.dp))
                         Row(horizontalArrangement = Arrangement.spacedBy((-6).dp)) {
                             characters.take(4).forEach { char ->
@@ -932,7 +932,7 @@ private fun RecentVideoProjectCard(
                         ) {
                             Icon(Icons.Default.PlayArrow, contentDescription = null, tint = Color.Black, modifier = Modifier.size(16.dp))
                             Spacer(modifier = Modifier.width(4.dp))
-                            Text(text = AppLocaleStrings.tr(state.selectedLanguage, "Play", "प्ले करें"), color = Color.Black, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                            Text(text = "Play", color = Color.Black, fontSize = 12.sp, fontWeight = FontWeight.Bold)
                         }
 
                         OutlinedButton(
@@ -945,7 +945,7 @@ private fun RecentVideoProjectCard(
                         ) {
                             Icon(Icons.Default.Edit, contentDescription = null, modifier = Modifier.size(14.dp))
                             Spacer(modifier = Modifier.width(4.dp))
-                            Text(text = AppLocaleStrings.tr(state.selectedLanguage, "Studio", "स्टूडियो"), fontSize = 12.sp)
+                            Text(text = "Studio", fontSize = 12.sp)
                         }
                     }
 
@@ -1049,7 +1049,7 @@ private fun EmptyProjectsCard(
             Spacer(modifier = Modifier.height(16.dp))
 
             Text(
-                text = if (isSearchActive) AppLocaleStrings.tr(state.selectedLanguage, "No projects found", "कोई प्रोजेक्ट नहीं मिला") else AppLocaleStrings.tr(state.selectedLanguage, "No saved video projects yet", "कोई सेव किया गया वीडियो प्रोजेक्ट नहीं है"),
+                text = if (isSearchActive) "No projects found" else "No saved video projects yet",
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Bold,
                 color = TextPrimary
@@ -1059,7 +1059,7 @@ private fun EmptyProjectsCard(
 
             Text(
                 text = if (isSearchActive) {
-                    "आपके सर्च या फ़िल्टर के अनुसार कोई वीडियो नहीं मिला। फ़िल्टर रीसेट करें।"
+                    "No videos matched your search or filters. Reset filters to see all."
                 } else {
                     "एआई ऑटोमेशन या स्टूडियो में जाकर अपना पहला एनिमे वीडियो बनाएं। यह स्वचालित रूप से रूम डेटाबेस में सुरक्षित रहेगा।"
                 },
@@ -1076,7 +1076,7 @@ private fun EmptyProjectsCard(
                     onClick = onClearFilter,
                     shape = RoundedCornerShape(12.dp)
                 ) {
-                    Text(AppLocaleStrings.tr(state.selectedLanguage, "Clear Filters", "फ़िल्टर रीसेट करें (Clear Filters)"), color = AnimeCyan)
+                    Text("Clear Filters", color = AnimeCyan)
                 }
             } else {
                 Button(
@@ -1087,7 +1087,7 @@ private fun EmptyProjectsCard(
                     Icon(Icons.Default.AutoAwesome, contentDescription = null, tint = Color.Black, modifier = Modifier.size(18.dp))
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = AppLocaleStrings.tr(state.selectedLanguage, "🚀 Create New Anime Video", "🚀 नया एनिमे वीडियो बनाएं (Create Video)"),
+                        text = "🚀 Create New Anime Video",
                         color = Color.Black,
                         fontWeight = FontWeight.Bold
                     )
@@ -1115,13 +1115,13 @@ private fun ExportProjectDialog(
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(Icons.Default.Download, contentDescription = null, tint = AnimeCyan)
                 Spacer(modifier = Modifier.width(8.dp))
-                Text(text = AppLocaleStrings.tr(state.selectedLanguage, "Export Project", "प्रोजेक्ट एक्सपोर्ट करें"), fontWeight = FontWeight.Bold, color = TextPrimary)
+                Text(text = "Export Project", fontWeight = FontWeight.Bold, color = TextPrimary)
             }
         },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 Text(
-                    text = "'${entity.title}' को अपनी डिवाइस पर सेव या कॉपी करें:",
+                    text = "Save or copy '${entity.title}' to your device:",
                     color = TextSecondary,
                     fontSize = 13.sp
                 )
@@ -1133,7 +1133,7 @@ private fun ExportProjectDialog(
                         .clickable {
                             val clip = context.getSystemService(Context.CLIPBOARD_SERVICE) as? ClipboardManager
                             clip?.setPrimaryClip(ClipData.newPlainText("Anime JSON", entity.scriptJson))
-                            Toast.makeText(context, "✅ JSON डेटा क्लिपबोर्ड में कॉपी हो गया", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, "✅ JSON copied to clipboard", Toast.LENGTH_SHORT).show()
                             onDismiss()
                         },
                     colors = CardDefaults.cardColors(containerColor = AnimeSurfaceVariant)
@@ -1145,8 +1145,8 @@ private fun ExportProjectDialog(
                         Icon(Icons.Default.Description, contentDescription = null, tint = AnimeCyan)
                         Spacer(modifier = Modifier.width(10.dp))
                         Column {
-                            Text(text = "JSON प्रोजेक्ट कॉपी करें", color = TextPrimary, fontWeight = FontWeight.Bold, fontSize = 13.sp)
-                            Text(text = AppLocaleStrings.tr(state.selectedLanguage, "Full script, scenes and dialogue backup", "संपूर्ण स्क्रिप्ट, दृश्य व संवाद बैकअप"), color = TextMuted, fontSize = 11.sp)
+                            Text(text = "Copy JSON Project", color = TextPrimary, fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                            Text(text = "Full script, scenes and dialogue backup", color = TextMuted, fontSize = 11.sp)
                         }
                     }
                 }
@@ -1160,7 +1160,7 @@ private fun ExportProjectDialog(
                                 val srt = viewModel.generateSrtForScript(script)
                                 val clip = context.getSystemService(Context.CLIPBOARD_SERVICE) as? ClipboardManager
                                 clip?.setPrimaryClip(ClipData.newPlainText("SRT Subtitles", srt))
-                                Toast.makeText(context, "✅ SRT सबटाइटल कॉपी हो गया", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, "✅ SRT subtitles copied", Toast.LENGTH_SHORT).show()
                             }
                             onDismiss()
                         },
@@ -1173,8 +1173,8 @@ private fun ExportProjectDialog(
                         Icon(Icons.Default.Subtitles, contentDescription = null, tint = AnimeGold)
                         Spacer(modifier = Modifier.width(10.dp))
                         Column {
-                            Text(text = "SRT सबटाइटल फाइल", color = TextPrimary, fontWeight = FontWeight.Bold, fontSize = 13.sp)
-                            Text(text = AppLocaleStrings.tr(state.selectedLanguage, "Timecoded subtitles for YouTube & Video players", "यूट्यूब / वीडियो प्लेयर हेतु टाइमकोडेड सबटाइटल"), color = TextMuted, fontSize = 11.sp)
+                            Text(text = "SRT Subtitles File", color = TextPrimary, fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                            Text(text = "Timecoded subtitles for YouTube & Video players", color = TextMuted, fontSize = 11.sp)
                         }
                     }
                 }
@@ -1196,8 +1196,8 @@ private fun ExportProjectDialog(
                         Icon(Icons.Default.Share, contentDescription = null, tint = AnimePink)
                         Spacer(modifier = Modifier.width(10.dp))
                         Column {
-                            Text(text = "वीडियो शेयर लिंक कॉपी करें", color = TextPrimary, fontWeight = FontWeight.Bold, fontSize = 13.sp)
-                            Text(text = AppLocaleStrings.tr(state.selectedLanguage, "Shareable direct video link", "सोशल मीडिया पर साझा करने योग्य डायरेक्ट लिंक"), color = TextMuted, fontSize = 11.sp)
+                            Text(text = "Copy Video Share Link", color = TextPrimary, fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                            Text(text = "Shareable direct video link", color = TextMuted, fontSize = 11.sp)
                         }
                     }
                 }
@@ -1205,7 +1205,7 @@ private fun ExportProjectDialog(
         },
         confirmButton = {
             TextButton(onClick = onDismiss) {
-                Text(AppLocaleStrings.tr(state.selectedLanguage, "Close", "बंद करें (Close)"), color = AnimeCyan)
+                Text("Close", color = AnimeCyan)
             }
         },
         containerColor = AnimeSurface

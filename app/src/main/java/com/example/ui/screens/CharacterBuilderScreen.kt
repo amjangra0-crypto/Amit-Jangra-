@@ -319,11 +319,11 @@ fun CharacterBuilderScreen(viewModel: AnimeViewModel) {
         listOf(
             Triple("Deep Shonen Hero", "Male", "Bold, heroic and determined protagonist"),
             Triple("Sweet Kawaii Heroine", "Female", "Sweet, gentle and empathetic anime heroine"),
-            Triple("Energetic Shonen Youth", "Male", "जोशीला युवा समुराई (Fiery Shonen Boy)"),
-            Triple("Stoic Anti-Hero", "Male", "शांत, गंभीर व रहस्यमयी प्रतिद्वंद्वी (Rival Anti-Hero)"),
-            Triple("Wise Sensei Mentor", "Female", "शांत, परिपक्व व अनुभवी मेंटर (Mentor / Sensei)"),
-            Triple("Playful Chibi Mascot", "Mascot", "चुलबुला, नटखट और फन स्पिरिट (Cute Spirit Guide)"),
-            Triple("Ethereal Princess", "Female", "शाही, सौम्य व जादुई राजकुमारी (Astral Princess)")
+            Triple("Energetic Shonen Youth", "Male", if (AppLocaleStrings.isHindi(state.selectedLanguage)) "जोशीला युवा समुराई (Fiery Shonen Boy)" else "Fiery Shonen Boy"),
+            Triple("Stoic Anti-Hero", "Male", if (AppLocaleStrings.isHindi(state.selectedLanguage)) "शांत, गंभीर व रहस्यमयी प्रतिद्वंद्वी (Rival Anti-Hero)" else "Rival Anti-Hero"),
+            Triple("Wise Sensei Mentor", "Female", if (AppLocaleStrings.isHindi(state.selectedLanguage)) "शांत, परिपक्व व अनुभवी मेंटर (Mentor / Sensei)" else "Mentor / Sensei"),
+            Triple("Playful Chibi Mascot", "Mascot", if (AppLocaleStrings.isHindi(state.selectedLanguage)) "चुलबुला, नटखट और फन स्पिरिट (Cute Spirit Guide)" else "Cute Spirit Guide"),
+            Triple("Ethereal Princess", "Female", if (AppLocaleStrings.isHindi(state.selectedLanguage)) "शाही, सौम्य व जादुई राजकुमारी (Astral Princess)" else "Astral Princess")
         )
     }
 
@@ -586,14 +586,14 @@ fun CharacterBuilderScreen(viewModel: AnimeViewModel) {
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            text = AppLocaleStrings.tr(state.selectedLanguage, "🎨 Character Builder", "🎨 करैक्टर बिल्डर (Character Builder)"),
+                            text = "🎨 Character Builder",
                             color = TextPrimary,
                             fontSize = 20.sp,
                             fontWeight = FontWeight.ExtraBold
                         )
                     }
                     Text(
-                        text = AppLocaleStrings.tr(state.selectedLanguage, "Customize hair style, eye color, outfit and aura (Live State Preview)", "हेयर स्टाइल, आँखों का रंग, पोशाक व ऑरा कस्टमाइज करें (Live State Preview)"),
+                        text = "Customize hair style, eye color, outfit and aura (Live State Preview)",
                         color = TextSecondary,
                         fontSize = 12.sp
                     )
@@ -608,7 +608,7 @@ fun CharacterBuilderScreen(viewModel: AnimeViewModel) {
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text(
-                    text = AppLocaleStrings.tr(state.selectedLanguage, "Quick Presets:", "क्विक प्रीसेट:"),
+                    text = "Quick Presets:",
                     color = AnimeGold,
                     fontSize = 11.sp,
                     fontWeight = FontWeight.Bold,
@@ -695,7 +695,7 @@ fun CharacterBuilderScreen(viewModel: AnimeViewModel) {
 
             // Builder Customization Category TabRow
             val tabs = if (AppLocaleStrings.isHindi(state.selectedLanguage)) {
-                listOf("💇 बाल (Hair)", "👁️ आँखें (Eyes)", "👘 पोशाक (Outfit)", "✨ ऑरा व स्टाइल", "🎙️ आवाज व नाम")
+                if (AppLocaleStrings.isHindi(state.selectedLanguage)) listOf("💇 बाल (Hair)", "👁️ आँखें (Eyes)", "👘 पोशाक (Outfit)", "✨ ऑरा व स्टाइल", "🎙️ आवाज व नाम") else listOf("💇 Hair", "👁️ Eyes", "👘 Outfit", "✨ Aura & FX", "🎙️ Voice & Identity")
             } else {
                 listOf("💇 Hair", "👁️ Eyes", "👘 Outfit", "✨ Aura & FX", "🎙️ Voice & Name")
             }
@@ -865,7 +865,7 @@ fun CharacterBuilderScreen(viewModel: AnimeViewModel) {
             ) {
                 Column(modifier = Modifier.padding(14.dp)) {
                     Text(
-                        text = AppLocaleStrings.tr(state.selectedLanguage, "🚀 Apply & Save Character:", "🚀 करैक्टर उपयोग (Apply & Export):"),
+                        text = "🚀 Apply & Save Character:",
                         color = TextPrimary,
                         fontSize = 13.sp,
                         fontWeight = FontWeight.Bold
@@ -883,7 +883,7 @@ fun CharacterBuilderScreen(viewModel: AnimeViewModel) {
                         ) {
                             Icon(Icons.Default.Save, contentDescription = null, modifier = Modifier.size(16.dp))
                             Spacer(modifier = Modifier.width(6.dp))
-                            Text(AppLocaleStrings.tr(state.selectedLanguage, "Save to Roster", "रोस्टर में सेव करें"), fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                            Text("Save to Roster", fontSize = 12.sp, fontWeight = FontWeight.Bold)
                         }
 
                         Button(
@@ -894,7 +894,7 @@ fun CharacterBuilderScreen(viewModel: AnimeViewModel) {
                         ) {
                             Icon(Icons.Default.Movie, contentDescription = null, tint = Color.Black, modifier = Modifier.size(16.dp))
                             Spacer(modifier = Modifier.width(6.dp))
-                            Text(AppLocaleStrings.tr(state.selectedLanguage, "Cast in Active Scene", "सक्रिय सीन में कास्ट करें"), color = Color.Black, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                            Text("Cast in Active Scene", color = Color.Black, fontSize = 12.sp, fontWeight = FontWeight.Bold)
                         }
                     }
                 }
@@ -1088,7 +1088,7 @@ fun CharacterVisualizerCard(
                         ) {
                             Icon(Icons.AutoMirrored.Filled.VolumeUp, contentDescription = null, tint = Color.Black, modifier = Modifier.size(13.dp))
                             Spacer(modifier = Modifier.width(4.dp))
-                            Text(if (isSpeaking) AppLocaleStrings.tr(state.selectedLanguage, "Speaking...", "बोल रहा है...") else AppLocaleStrings.tr(state.selectedLanguage, "Test Voice", "आवाज टेस्ट"), color = Color.Black, fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                            Text(if (isSpeaking) "Speaking..." else "Test Voice", color = Color.Black, fontSize = 10.sp, fontWeight = FontWeight.Bold)
                         }
 
                         OutlinedButton(
@@ -1100,7 +1100,7 @@ fun CharacterVisualizerCard(
                         ) {
                             Icon(Icons.Default.Casino, contentDescription = null, tint = AnimePink, modifier = Modifier.size(13.dp))
                             Spacer(modifier = Modifier.width(4.dp))
-                            Text(AppLocaleStrings.tr(state.selectedLanguage, "🎲 Random", "🎲 रैंडम"), color = AnimePink, fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                            Text("🎲 Random", color = AnimePink, fontSize = 10.sp, fontWeight = FontWeight.Bold)
                         }
                     }
                 }
@@ -1127,7 +1127,7 @@ fun HairCustomizationPanel(
             Icon(Icons.Default.Palette, contentDescription = null, tint = AnimePink, modifier = Modifier.size(18.dp))
             Spacer(modifier = Modifier.width(6.dp))
             Text(
-                text = AppLocaleStrings.tr(state.selectedLanguage, "Select Hair Color Palette:", "बालों का रंग चुनें (Hair Color Palette):"),
+                text = "Select Hair Color Palette:",
                 color = TextPrimary,
                 fontSize = 13.sp,
                 fontWeight = FontWeight.Bold
@@ -1182,7 +1182,7 @@ fun HairCustomizationPanel(
             Icon(Icons.Default.Face, contentDescription = null, tint = AnimeCyan, modifier = Modifier.size(18.dp))
             Spacer(modifier = Modifier.width(6.dp))
             Text(
-                text = AppLocaleStrings.tr(state.selectedLanguage, "Select Anime Hair Style:", "हेयर स्टाइल चुनें (Anime Hair Style):"),
+                text = "Select Anime Hair Style:",
                 color = TextPrimary,
                 fontSize = 13.sp,
                 fontWeight = FontWeight.Bold
@@ -1257,7 +1257,7 @@ fun EyesCustomizationPanel(
             Icon(Icons.Default.Visibility, contentDescription = null, tint = AnimeCyan, modifier = Modifier.size(18.dp))
             Spacer(modifier = Modifier.width(6.dp))
             Text(
-                text = AppLocaleStrings.tr(state.selectedLanguage, "Anime Eye Color:", "आँखों का रंग (Anime Eye Color):"),
+                text = "Anime Eye Color:",
                 color = TextPrimary,
                 fontSize = 13.sp,
                 fontWeight = FontWeight.Bold
@@ -1312,7 +1312,7 @@ fun EyesCustomizationPanel(
             Icon(Icons.Default.Face, contentDescription = null, tint = AnimeGold, modifier = Modifier.size(18.dp))
             Spacer(modifier = Modifier.width(6.dp))
             Text(
-                text = AppLocaleStrings.tr(state.selectedLanguage, "Expression & Gaze:", "चेहरे का भाव व आँखों की दृष्टि (Expression & Gaze):"),
+                text = "Expression & Gaze:",
                 color = TextPrimary,
                 fontSize = 13.sp,
                 fontWeight = FontWeight.Bold
@@ -1375,7 +1375,7 @@ fun OutfitsCustomizationPanel(
             Icon(Icons.Default.Palette, contentDescription = null, tint = AnimePink, modifier = Modifier.size(18.dp))
             Spacer(modifier = Modifier.width(6.dp))
             Text(
-                text = AppLocaleStrings.tr(state.selectedLanguage, "Outfit Color Accents:", "पोशाक का रंग संयोजन (Outfit Color Accents):"),
+                text = "Outfit Color Accents:",
                 color = TextPrimary,
                 fontSize = 13.sp,
                 fontWeight = FontWeight.Bold
@@ -1411,7 +1411,7 @@ fun OutfitsCustomizationPanel(
             Icon(Icons.Default.Shield, contentDescription = null, tint = AnimeCyan, modifier = Modifier.size(18.dp))
             Spacer(modifier = Modifier.width(6.dp))
             Text(
-                text = AppLocaleStrings.tr(state.selectedLanguage, "Anime Outfit & Armor:", "एनिमे पोशाक व वस्त्र (Anime Outfit & Armor):"),
+                text = "Anime Outfit & Armor:",
                 color = TextPrimary,
                 fontSize = 13.sp,
                 fontWeight = FontWeight.Bold
@@ -1484,7 +1484,7 @@ fun AuraAccessoriesPanel(
             Icon(Icons.Default.AutoAwesome, contentDescription = null, tint = AnimeGold, modifier = Modifier.size(18.dp))
             Spacer(modifier = Modifier.width(6.dp))
             Text(
-                text = AppLocaleStrings.tr(state.selectedLanguage, "Elemental Aura FX:", "एलिमेंटल ऑरा व पावर सर्ज (Elemental Aura FX):"),
+                text = "Elemental Aura FX:",
                 color = TextPrimary,
                 fontSize = 13.sp,
                 fontWeight = FontWeight.Bold
@@ -1534,7 +1534,7 @@ fun AuraAccessoriesPanel(
             Icon(Icons.Default.AutoAwesome, contentDescription = null, tint = AnimeCyan, modifier = Modifier.size(18.dp))
             Spacer(modifier = Modifier.width(6.dp))
             Text(
-                text = AppLocaleStrings.tr(state.selectedLanguage, "Headgear & Accessories:", "एक्सेसरी व हेडगियर (Headgear & Accessories):"),
+                text = "Headgear & Accessories:",
                 color = TextPrimary,
                 fontSize = 13.sp,
                 fontWeight = FontWeight.Bold
@@ -1630,13 +1630,13 @@ fun AiVoiceProfileSelector(
                     Spacer(modifier = Modifier.width(8.dp))
                     Column {
                         Text(
-                            text = AppLocaleStrings.tr(state.selectedLanguage, "🎙️ AI Voice Profiles", "🎙️ AI वॉइस प्रोफाइल (AI Voice Profiles)"),
+                            text = "🎙️ AI Voice Profiles",
                             color = TextPrimary,
                             fontSize = 14.sp,
                             fontWeight = FontWeight.Bold
                         )
                         Text(
-                            text = AppLocaleStrings.tr(state.selectedLanguage, "Male, Female, Child Voice Profiles", "पुरुष, महिला व बाल प्रोफाइल (Male, Female, Child)"),
+                            text = "Male, Female, Child Voice Profiles",
                             color = TextSecondary,
                             fontSize = 10.sp
                         )
@@ -1660,7 +1660,7 @@ fun AiVoiceProfileSelector(
                             .testTag("mode_dropdown_btn")
                     ) {
                         Text(
-                            text = "🔽 ड्रॉपडाउन",
+                            text = "🔽 Dropdown",
                             color = if (isDropdownMode) Color.Black else TextSecondary,
                             fontSize = 10.sp,
                             fontWeight = FontWeight.Bold
@@ -1675,7 +1675,7 @@ fun AiVoiceProfileSelector(
                             .testTag("mode_radio_btn")
                     ) {
                         Text(
-                            text = "🔘 रेडियो ग्रुप",
+                            text = "🔘 Radio Group",
                             color = if (!isDropdownMode) Color.Black else TextSecondary,
                             fontSize = 10.sp,
                             fontWeight = FontWeight.Bold
@@ -1688,7 +1688,7 @@ fun AiVoiceProfileSelector(
 
             // 1. Radio Button Group for Category Filter (Male, Female, Child, All)
             Text(
-                text = AppLocaleStrings.tr(state.selectedLanguage, "Select Voice Category:", "आवाज श्रेणी चुनें (Select Voice Category):"),
+                text = "Select Voice Category:",
                 color = AnimeGold,
                 fontSize = 11.sp,
                 fontWeight = FontWeight.SemiBold
@@ -1696,10 +1696,10 @@ fun AiVoiceProfileSelector(
             Spacer(modifier = Modifier.height(6.dp))
 
             val categories = listOf(
-                "All" to "🌐 सभी (All)",
-                "Male" to "👨 पुरुष (Male)",
-                "Female" to "👩 महिला (Female)",
-                "Child" to "🧒 बच्चा (Child)"
+                "All" to "🌐 All",
+                "Male" to "👨 Male",
+                "Female" to "👩 Female",
+                "Child" to "🧒 Child"
             )
 
             LazyRow(
@@ -1830,7 +1830,7 @@ fun AiVoiceProfileSelector(
                                 ) {
                                     Icon(Icons.Default.PlayArrow, contentDescription = "Play Sample", tint = Color.Black, modifier = Modifier.size(16.dp))
                                     Spacer(modifier = Modifier.width(3.dp))
-                                    Text(AppLocaleStrings.tr(state.selectedLanguage, "Sample", "सैंपल"), color = Color.Black, fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                                    Text("Sample", color = Color.Black, fontSize = 10.sp, fontWeight = FontWeight.Bold)
                                 }
                                 Spacer(modifier = Modifier.width(6.dp))
                                 Icon(
@@ -1893,7 +1893,7 @@ fun AiVoiceProfileSelector(
                                                 modifier = Modifier.padding(top = 2.dp)
                                             ) {
                                                 Text(
-                                                    text = "पिच: ${profile.defaultPitch}x • गति: ${profile.defaultSpeed}x",
+                                                    text = "Pitch: ${profile.defaultPitch}x • Speed: ${profile.defaultSpeed}x",
                                                     color = AnimePink,
                                                     fontSize = 9.sp
                                                 )
@@ -2004,7 +2004,7 @@ fun AiVoiceProfileSelector(
                                 ) {
                                     Icon(Icons.Default.PlayArrow, contentDescription = "Play Sample", tint = Color.Black, modifier = Modifier.size(16.dp))
                                     Spacer(modifier = Modifier.width(3.dp))
-                                    Text(AppLocaleStrings.tr(state.selectedLanguage, "Sample", "सैंपल"), color = Color.Black, fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                                    Text("Sample", color = Color.Black, fontSize = 10.sp, fontWeight = FontWeight.Bold)
                                 }
                             }
                         }
@@ -2034,7 +2034,7 @@ fun AiVoiceProfileSelector(
                     Spacer(modifier = Modifier.width(6.dp))
                     Column {
                         Text(
-                            text = if (isSpeaking) "🔊 AI आवाज बोल रही है..." else "सक्रिय AI आवाज: ${currentProfile.name}",
+                            text = if (isSpeaking) "🔊 AI Voice Speaking..." else "Active AI Voice: ${currentProfile.name}",
                             color = if (isSpeaking) AnimePink else TextPrimary,
                             fontSize = 11.sp,
                             fontWeight = FontWeight.SemiBold
@@ -2056,7 +2056,7 @@ fun AiVoiceProfileSelector(
                 ) {
                     Icon(Icons.AutoMirrored.Filled.VolumeUp, contentDescription = null, tint = Color.Black, modifier = Modifier.size(14.dp))
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text(if (isSpeaking) AppLocaleStrings.tr(state.selectedLanguage, "Speaking", "बोल रहे हैं") else AppLocaleStrings.tr(state.selectedLanguage, "Audition", "आवाज सुनें"), color = Color.Black, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                    Text(if (isSpeaking) "Speaking" else "Audition", color = Color.Black, fontSize = 11.sp, fontWeight = FontWeight.Bold)
                 }
             }
         }
@@ -2084,7 +2084,7 @@ fun IdentityVoicePanel(
 
     Column(modifier = Modifier.fillMaxWidth()) {
         // Name Input with Random Generator
-        Text(AppLocaleStrings.tr(state.selectedLanguage, "Character Name:", "करैक्टर का नाम:"), color = TextSecondary, fontSize = 12.sp)
+        Text("Character Name:", color = TextSecondary, fontSize = 12.sp)
         Spacer(modifier = Modifier.height(6.dp))
         Row(
             verticalAlignment = Alignment.CenterVertically,
@@ -2107,14 +2107,14 @@ fun IdentityVoicePanel(
                 colors = ButtonDefaults.buttonColors(containerColor = AnimeSurfaceVariant),
                 shape = RoundedCornerShape(10.dp)
             ) {
-                Text(AppLocaleStrings.tr(state.selectedLanguage, "🎲 Name", "🎲 नाम"), color = AnimeGold, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                Text("🎲 Name", color = AnimeGold, fontSize = 11.sp, fontWeight = FontWeight.Bold)
             }
         }
 
         Spacer(modifier = Modifier.height(14.dp))
 
         // Gender & Archetype Category Chips
-        Text(AppLocaleStrings.tr(state.selectedLanguage, "Gender / Role Archetype:", "लिंग व श्रेणी:"), color = TextSecondary, fontSize = 12.sp)
+        Text("Gender / Role Archetype:", color = TextSecondary, fontSize = 12.sp)
         Spacer(modifier = Modifier.height(6.dp))
         LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
             val genderOptions = listOf("Boy / Youth", "Girl / Female", "Adult Male", "Lady / Sensei", "Chibi Mascot")
@@ -2153,7 +2153,7 @@ fun IdentityVoicePanel(
         Spacer(modifier = Modifier.height(16.dp))
 
         // Fine-Tuning Pitch & Speed Sliders
-        Text("आवाज की पिच फाइन-ट्यून करें (Fine-Tune Pitch: ${"%.2f".format(draft.voicePitch)}x):", color = TextSecondary, fontSize = 12.sp)
+        Text("Fine-Tune Voice Pitch (${"%.2f".format(draft.voicePitch)}x):", color = TextSecondary, fontSize = 12.sp)
         Slider(
             value = draft.voicePitch,
             onValueChange = onPitchChanged,
@@ -2162,7 +2162,7 @@ fun IdentityVoicePanel(
         )
 
         Spacer(modifier = Modifier.height(8.dp))
-        Text("आवाज की गति फाइन-ट्यून करें (Fine-Tune Speed: ${"%.2f".format(draft.voiceSpeed)}x):", color = TextSecondary, fontSize = 12.sp)
+        Text("Fine-Tune Voice Speed (${"%.2f".format(draft.voiceSpeed)}x):", color = TextSecondary, fontSize = 12.sp)
         Slider(
             value = draft.voiceSpeed,
             onValueChange = onSpeedChanged,
@@ -2173,7 +2173,7 @@ fun IdentityVoicePanel(
         Spacer(modifier = Modifier.height(14.dp))
 
         // Sample Audition Dialogue
-        Text(AppLocaleStrings.tr(state.selectedLanguage, "Custom Audition Dialogue:", "कस्टम टेस्ट डायलॉग:"), color = TextSecondary, fontSize = 12.sp)
+        Text("Custom Audition Dialogue:", color = TextSecondary, fontSize = 12.sp)
         Spacer(modifier = Modifier.height(6.dp))
         OutlinedTextField(
             value = draft.sampleDialogue,
@@ -2197,7 +2197,7 @@ fun IdentityVoicePanel(
         ) {
             Icon(Icons.AutoMirrored.Filled.VolumeUp, contentDescription = null, tint = Color.Black, modifier = Modifier.size(16.dp))
             Spacer(modifier = Modifier.width(8.dp))
-            Text("डायलॉग आवाज में सुनें (Audition Voice)", color = Color.Black, fontWeight = FontWeight.Bold, fontSize = 13.sp)
+            Text("Audition Voice Sample", color = Color.Black, fontWeight = FontWeight.Bold, fontSize = 13.sp)
         }
     }
 }

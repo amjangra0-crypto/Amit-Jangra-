@@ -92,6 +92,7 @@ import com.example.ui.theme.AnimeSurfaceVariant
 import com.example.ui.theme.TextMuted
 import com.example.ui.theme.TextPrimary
 import com.example.ui.theme.TextSecondary
+import com.example.ui.theme.VibrantThemePresets
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalLayoutApi::class)
@@ -563,6 +564,63 @@ fun AppSettingsScreen(
                         colors = SwitchDefaults.colors(checkedThumbColor = AnimeGold, checkedTrackColor = AnimeGold.copy(alpha = 0.3f)),
                         modifier = Modifier.testTag("settings_theme_switch")
                     )
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Text(
+                    text = AppLocaleStrings.tr(lang, "Vibrant & Colourful Page Themes:", "वाइब्रेंट रंगीन पेज थीम्स:"),
+                    color = TextPrimary,
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Bold
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                FlowRow(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    VibrantThemePresets.all.forEach { preset ->
+                        val isSelected = state.vibrantTheme.equals(preset.key, ignoreCase = true)
+                        val themeName = if (AppLocaleStrings.isHindi(lang)) preset.nameHi else preset.nameEn
+
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(10.dp))
+                                .background(if (isSelected) preset.primaryColor.copy(alpha = 0.25f) else AnimeSurfaceVariant)
+                                .border(
+                                    1.5.dp,
+                                    if (isSelected) preset.primaryColor else AnimePurple.copy(alpha = 0.2f),
+                                    RoundedCornerShape(10.dp)
+                                )
+                                .clickable {
+                                    viewModel.setVibrantTheme(preset.key)
+                                    Toast.makeText(context, "🎨 Vibrant Theme: ${preset.nameEn}", Toast.LENGTH_SHORT).show()
+                                }
+                                .padding(horizontal = 10.dp, vertical = 7.dp)
+                                .testTag("settings_vibrant_${preset.key.lowercase()}")
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text(text = preset.emoji, fontSize = 14.sp)
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text(
+                                    text = themeName,
+                                    color = if (isSelected) preset.primaryColor else TextPrimary,
+                                    fontWeight = if (isSelected) FontWeight.ExtraBold else FontWeight.Medium,
+                                    fontSize = 11.sp
+                                )
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Box(
+                                    modifier = Modifier
+                                        .size(10.dp)
+                                        .clip(CircleShape)
+                                        .background(preset.primaryColor)
+                                )
+                            }
+                        }
+                    }
                 }
             }
         }

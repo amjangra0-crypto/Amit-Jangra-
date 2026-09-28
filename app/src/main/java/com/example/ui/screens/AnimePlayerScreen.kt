@@ -930,9 +930,9 @@ fun AnimePlayerScreen(viewModel: AnimeViewModel) {
                         SubtitleMode.values().forEach { mode ->
                             val isSel = state.subtitleMode == mode
                             val modeLabel = when (mode) {
-                                SubtitleMode.TRANSLATED_ONLY -> "अनुवादित"
-                                SubtitleMode.BILINGUAL_DUAL -> "🎌+🌐 द्विभाषी"
-                                SubtitleMode.ORIGINAL_ONLY -> "मूल"
+                                SubtitleMode.TRANSLATED_ONLY -> AppLocaleStrings.tr(state.selectedLanguage, "Translated", "अनुवादित")
+                                SubtitleMode.BILINGUAL_DUAL -> AppLocaleStrings.tr(state.selectedLanguage, "🎌+🌐 Dual", "🎌+🌐 द्विभाषी")
+                                SubtitleMode.ORIGINAL_ONLY -> AppLocaleStrings.tr(state.selectedLanguage, "Original", "मूल")
                             }
                             Box(
                                 modifier = Modifier
@@ -1287,12 +1287,12 @@ fun AnimePlayerScreen(viewModel: AnimeViewModel) {
                 Spacer(modifier = Modifier.height(6.dp))
 
                 val exportDurations = listOf(
-                    30 to "30s (प्रोमो)",
-                    60 to "1m (सीन)",
-                    300 to "5m (मिनी)",
-                    1800 to "30m (एपिसोड)",
-                    3600 to "1 Hour (फिल्म)",
-                    7200 to "2 Hours (महागाथा)"
+                    30 to AppLocaleStrings.tr(state.selectedLanguage, "30s (Promo)", "30s (प्रोमो)"),
+                    60 to AppLocaleStrings.tr(state.selectedLanguage, "1m (Scene)", "1m (सीन)"),
+                    300 to AppLocaleStrings.tr(state.selectedLanguage, "5m (Mini)", "5m (मिनी)"),
+                    1800 to AppLocaleStrings.tr(state.selectedLanguage, "30m (Episode)", "30m (एपिसोड)"),
+                    3600 to AppLocaleStrings.tr(state.selectedLanguage, "1 Hour (Film)", "1 Hour (फिल्म)"),
+                    7200 to AppLocaleStrings.tr(state.selectedLanguage, "2 Hours (Epic)", "2 Hours (महागाथा)")
                 )
                 LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                     items(exportDurations) { (sec, label) ->
@@ -1412,7 +1412,7 @@ fun AnimePlayerScreen(viewModel: AnimeViewModel) {
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
                             Text(
-                                text = "सीन: ${exportProgress.currentScene}/${exportProgress.totalScenes} • 720p HD",
+                                text = AppLocaleStrings.tr(state.selectedLanguage, "Scene: ${exportProgress.currentScene}/${exportProgress.totalScenes} • 720p HD", "सीन: ${exportProgress.currentScene}/${exportProgress.totalScenes} • 720p HD"),
                                 color = TextMuted,
                                 fontSize = 10.sp
                             )
@@ -1449,7 +1449,7 @@ fun AnimePlayerScreen(viewModel: AnimeViewModel) {
                                     onClick = {
                                         val intent = viewModel.createShareVideoIntent(exportProgress.outputFilePath)
                                         if (intent != null) {
-                                            context.startActivity(Intent.createChooser(intent, "MP4 वीडियो शेयर करें"))
+                                            context.startActivity(Intent.createChooser(intent, AppLocaleStrings.tr(state.selectedLanguage, "Share MP4 Video", "MP4 वीडियो शेयर करें")))
                                         }
                                     },
                                     modifier = Modifier.weight(1f).height(38.dp).testTag("share_exported_mp4_btn"),
@@ -1615,7 +1615,7 @@ fun AnimePlayerScreen(viewModel: AnimeViewModel) {
                         }
                         val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
                         clipboard.setPrimaryClip(ClipData.newPlainText("Anime Script", fullText))
-                        Toast.makeText(context, "स्क्रिप्ट क्लिपबोर्ड पर कॉपी हो गई!", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, AppLocaleStrings.tr(state.selectedLanguage, "Script copied to clipboard!", "स्क्रिप्ट क्लिपबोर्ड पर कॉपी हो गई!"), Toast.LENGTH_SHORT).show()
                     }) {
                         Icon(Icons.Default.Share, contentDescription = "Share", tint = AnimeCyan)
                     }
@@ -1625,13 +1625,13 @@ fun AnimePlayerScreen(viewModel: AnimeViewModel) {
                 Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
                     script.scenes.forEach { s ->
                         Text(
-                            text = "सीन ${s.sceneNumber}: ${s.title}",
+                            text = "${AppLocaleStrings.tr(state.selectedLanguage, "Scene", "सीन")} ${s.sceneNumber}: ${s.title}",
                             color = AnimeCyan,
                             fontSize = 13.sp,
                             fontWeight = FontWeight.Bold
                         )
                         Text(
-                            text = "बैकग्राउंड: ${s.backgroundType} (${s.bgMood})",
+                            text = "${AppLocaleStrings.tr(state.selectedLanguage, "Background", "बैकग्राउंड")}: ${s.backgroundType} (${s.bgMood})",
                             color = AnimeGold,
                             fontSize = 11.sp
                         )

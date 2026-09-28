@@ -71,6 +71,7 @@ enum class AppTab(val title: String, val iconName: String) {
 data class AnimeStudioUiState(
     val currentTab: AppTab = AppTab.STUDIO,
     val isDarkMode: Boolean = false,
+    val vibrantTheme: String = "CORAL", // "CORAL", "MANGO", "SPRING", "EMERALD", "AZURE"
     val promptInput: String = "Magical cherry blossom temple and cyber samurai legend",
     val linkInput: String = "https://animenews.org/legends/sakura-blade",
     val imageInputDescription: String = "Anime warrior under neon cherry blossoms",
@@ -631,6 +632,13 @@ class AnimeViewModel(application: Application) : AndroidViewModel(application) {
         _uiState.value = _uiState.value.copy(
             selectedVoiceAccent = country.defaultVoiceAccent,
             statusMessage = "🌍 ${country.flagEmoji} ${country.name}: ${country.nativeLanguageName} (${country.primaryLanguage})"
+        )
+    }
+
+    fun setVibrantTheme(theme: String) {
+        _uiState.value = _uiState.value.copy(
+            vibrantTheme = theme,
+            statusMessage = "🎨 Theme: $theme"
         )
     }
 

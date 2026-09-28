@@ -110,6 +110,7 @@ class MainActivity : ComponentActivity() {
             val selectedCountry by viewModel.selectedCountry.collectAsState()
             var isShowingProfileSettings by remember { mutableStateOf(false) }
             var showCountryPickerSheet by remember { mutableStateOf(false) }
+            var showThemeSheet by remember { mutableStateOf(false) }
             var showPermissionsDialog by remember {
                 val prefs = getSharedPreferences("anime_app_permissions_prefs", Context.MODE_PRIVATE)
                 val hasShown = prefs.getBoolean("permissions_requested_on_install", false)
@@ -118,7 +119,7 @@ class MainActivity : ComponentActivity() {
                 mutableStateOf(!hasShown || (!cameraGranted && !micGranted))
             }
 
-            MyApplicationTheme(darkTheme = state.isDarkMode) {
+            MyApplicationTheme(darkTheme = state.isDarkMode, vibrantTheme = state.vibrantTheme) {
                 Scaffold(
                     modifier = Modifier.fillMaxSize(),
                     topBar = {
@@ -213,6 +214,16 @@ class MainActivity : ComponentActivity() {
                                     }
                                 }
 
+                                IconButton(
+                                    onClick = { showThemeSheet = true },
+                                    modifier = Modifier.testTag("top_bar_palette_btn")
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Palette,
+                                        contentDescription = "Vibrant Themes",
+                                        tint = MaterialTheme.colorScheme.primary
+                                    )
+                                }
                                 IconButton(
                                     onClick = { viewModel.toggleTheme() },
                                     modifier = Modifier.testTag("top_bar_theme_toggle_btn")
@@ -458,6 +469,16 @@ class MainActivity : ComponentActivity() {
                                 showCountryPickerSheet = false
                             },
                             onDismiss = { showCountryPickerSheet = false }
+                        )
+                    }
+
+                    if (showThemeSheet) {
+                        com.example.ui.components.VibrantThemePickerSheet(
+                            viewModel = viewModel,
+                            selectedTheme = state.vibrantTheme,
+                            isDarkMode = state.isDarkMode,
+                            selectedLanguage = state.selectedLanguage,
+                            onDismiss = { showThemeSheet = false }
                         )
                     }
 

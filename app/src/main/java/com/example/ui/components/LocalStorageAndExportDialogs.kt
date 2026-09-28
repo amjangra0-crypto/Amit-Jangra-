@@ -127,13 +127,13 @@ fun ExportShareSheetDialog(
                     Spacer(modifier = Modifier.width(10.dp))
                     Column {
                         Text(
-                            text = AppLocaleStrings.tr(language, "Export & Share", "एक्सपोर्ट व शेयर (Export & Share)"),
+                            text = AppLocaleStrings.tr(state.selectedLanguage, "Export & Share", "एक्सपोर्ट व शेयर (Export & Share)"),
                             fontSize = 16.sp,
                             fontWeight = FontWeight.Bold,
                             color = TextPrimary
                         )
                         Text(
-                            text = script?.title ?: AppLocaleStrings.tr(language, "Anime Project", "एनिमे प्रोजेक्ट"),
+                            text = script?.title ?: AppLocaleStrings.tr(state.selectedLanguage, "Anime Project", "एनिमे प्रोजेक्ट"),
                             fontSize = 11.sp,
                             color = AnimeCyanLight,
                             maxLines = 1,
@@ -153,7 +153,7 @@ fun ExportShareSheetDialog(
                     .verticalScroll(rememberScrollState())
             ) {
                 if (script == null) {
-                    Text(AppLocaleStrings.tr(language, "No active anime project available.", "कोई सक्रिय एनिमे प्रोजेक्ट उपलब्ध नहीं है।"), color = TextSecondary)
+                    Text(AppLocaleStrings.tr(state.selectedLanguage, "No active anime project available.", "कोई सक्रिय एनिमे प्रोजेक्ट उपलब्ध नहीं है।"), color = TextSecondary)
                 } else {
                     // Project Info Badge
                     Card(
@@ -210,7 +210,7 @@ fun ExportShareSheetDialog(
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Text(
-                                    text = AppLocaleStrings.tr(language, "▶️ Generated Video Link:", "▶️ जनरेटेड वीडियो लिंक (Watch Link):"),
+                                    text = AppLocaleStrings.tr(state.selectedLanguage, "▶️ Generated Video Link:", "▶️ जनरेटेड वीडियो लिंक (Watch Link):"),
                                     fontSize = 11.sp,
                                     fontWeight = FontWeight.Bold,
                                     color = AnimeCyan
@@ -241,7 +241,7 @@ fun ExportShareSheetDialog(
 
                     // Share Mode Selector
                     Text(
-                        text = AppLocaleStrings.tr(language, "📋 Choose Share Format:", "📋 शेयरिंग फॉर्मेट चुनें (Share Format Mode):"),
+                        text = AppLocaleStrings.tr(state.selectedLanguage, "📋 Choose Share Format:", "📋 शेयरिंग फॉर्मेट चुनें (Share Format Mode):"),
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Bold,
                         color = AnimeGold
@@ -255,19 +255,19 @@ fun ExportShareSheetDialog(
                         FilterChip(
                             selected = shareMode == "DETAILS_AND_LINK",
                             onClick = { shareMode = "DETAILS_AND_LINK" },
-                            label = { Text("🎬 विवरण + लिंक", fontSize = 10.sp) },
+                            label = { Text(AppLocaleStrings.tr(state.selectedLanguage, "🎬 Details + Link", "🎬 विवरण + लिंक"), fontSize = 10.sp) },
                             modifier = Modifier.weight(1f).testTag("share_mode_details_chip")
                         )
                         FilterChip(
                             selected = shareMode == "LINK_ONLY",
                             onClick = { shareMode = "LINK_ONLY" },
-                            label = { Text("🔗 केवल लिंक", fontSize = 10.sp) },
+                            label = { Text(AppLocaleStrings.tr(state.selectedLanguage, "🔗 Link Only", "🔗 केवल लिंक"), fontSize = 10.sp) },
                             modifier = Modifier.weight(1f).testTag("share_mode_link_chip")
                         )
                         FilterChip(
                             selected = shareMode == "FULL_SCRIPT",
                             onClick = { shareMode = "FULL_SCRIPT" },
-                            label = { Text("📜 पूरी स्क्रिप्ट", fontSize = 10.sp) },
+                            label = { Text(AppLocaleStrings.tr(state.selectedLanguage, "📜 Full Script", "📜 पूरी स्क्रिप्ट"), fontSize = 10.sp) },
                             modifier = Modifier.weight(1f).testTag("share_mode_script_chip")
                         )
                     }
@@ -289,7 +289,7 @@ fun ExportShareSheetDialog(
                     ) {
                         Icon(Icons.Default.FileDownload, contentDescription = null, tint = Color.Black, modifier = Modifier.size(18.dp))
                         Spacer(modifier = Modifier.width(6.dp))
-                        Text("⬇️ डिवाइस में डाउनलोड करें (Download Video/Script)", color = Color.Black, fontWeight = FontWeight.ExtraBold, fontSize = 12.sp)
+                        Text(AppLocaleStrings.tr(state.selectedLanguage, "⬇️ Download to Device", "⬇️ डिवाइस में डाउनलोड करें (Download Video/Script)"), color = Color.Black, fontWeight = FontWeight.ExtraBold, fontSize = 12.sp)
                     }
 
                     Spacer(modifier = Modifier.height(8.dp))
@@ -308,14 +308,14 @@ fun ExportShareSheetDialog(
                     ) {
                         Icon(Icons.Default.Share, contentDescription = null, tint = Color.White, modifier = Modifier.size(18.dp))
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text(AppLocaleStrings.tr(language, "📲 Share to All Installed Apps", "📲 सभी इंस्टॉल ऐप्स पर शेयर करें (System Share Sheet)"), color = Color.White, fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                        Text(AppLocaleStrings.tr(state.selectedLanguage, "📲 Share to All Installed Apps", "📲 सभी इंस्टॉल ऐप्स पर शेयर करें (System Share Sheet)"), color = Color.White, fontWeight = FontWeight.Bold, fontSize = 12.sp)
                     }
 
                     Spacer(modifier = Modifier.height(12.dp))
 
                     // Social Media Direct Integration Options
                     Text(
-                        text = AppLocaleStrings.tr(language, "🌐 Direct Social Media Share:", "🌐 डायरेक्ट सोशल मीडिया शेयर (Direct Social Media Share):"),
+                        text = AppLocaleStrings.tr(state.selectedLanguage, "🌐 Direct Social Media Share:", "🌐 डायरेक्ट सोशल मीडिया शेयर (Direct Social Media Share):"),
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Bold,
                         color = AnimeCyanLight
@@ -395,7 +395,7 @@ fun ExportShareSheetDialog(
                     OutlinedButton(
                         onClick = {
                             val path = viewModel.exportScriptToSrt()
-                            Toast.makeText(context, "SRT सबटाइटल्स फाइल सेव हो गई!", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, AppLocaleStrings.tr(state.selectedLanguage, "SRT subtitles file saved!", "SRT सबटाइटल्स फाइल सेव हो गई!"), Toast.LENGTH_SHORT).show()
                         },
                         modifier = Modifier
                             .fillMaxWidth()
@@ -406,7 +406,7 @@ fun ExportShareSheetDialog(
                     ) {
                         Icon(Icons.Default.Subtitles, contentDescription = null, tint = AnimeCyan, modifier = Modifier.size(18.dp))
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text(AppLocaleStrings.tr(language, "📑 Export SRT Subtitles (.srt File)", "📑 SRT सबटाइटल्स एक्सपोर्ट करें (.srt File)"), color = AnimeCyan, fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                        Text(AppLocaleStrings.tr(state.selectedLanguage, "📑 Export SRT Subtitles (.srt File)", "📑 SRT सबटाइटल्स एक्सपोर्ट करें (.srt File)"), color = AnimeCyan, fontWeight = FontWeight.Bold, fontSize = 12.sp)
                     }
 
                     Spacer(modifier = Modifier.height(10.dp))
@@ -415,7 +415,7 @@ fun ExportShareSheetDialog(
                     Button(
                         onClick = {
                             viewModel.saveCurrentScriptToLocalStorage()
-                            Toast.makeText(context, "लोकल डेटाबेस में सुरक्षित सेव हो गया!", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, AppLocaleStrings.tr(state.selectedLanguage, "Saved to local database!", "लोकल डेटाबेस में सुरक्षित सेव हो गया!"), Toast.LENGTH_SHORT).show()
                         },
                         modifier = Modifier
                             .fillMaxWidth()
@@ -426,7 +426,7 @@ fun ExportShareSheetDialog(
                     ) {
                         Icon(Icons.Default.Save, contentDescription = null, tint = Color.Black, modifier = Modifier.size(18.dp))
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text("💾 लोकल स्टोरेज में सेव करें (Save to SQLite)", color = Color.Black, fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                        Text(AppLocaleStrings.tr(state.selectedLanguage, "💾 Save to Local SQLite Storage", "💾 लोकल स्टोरेज में सेव करें (Save to SQLite)"), color = Color.Black, fontWeight = FontWeight.Bold, fontSize = 13.sp)
                     }
 
                     Spacer(modifier = Modifier.height(10.dp))
@@ -435,7 +435,7 @@ fun ExportShareSheetDialog(
                     OutlinedButton(
                         onClick = {
                             val path = viewModel.exportScriptToFile(asJson = false)
-                            Toast.makeText(context, "स्क्रिप्ट फाइल एक्सपोर्ट हो गई!", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, AppLocaleStrings.tr(state.selectedLanguage, "Script file exported!", "स्क्रिप्ट फाइल एक्सपोर्ट हो गई!"), Toast.LENGTH_SHORT).show()
                         },
                         modifier = Modifier
                             .fillMaxWidth()
@@ -446,7 +446,7 @@ fun ExportShareSheetDialog(
                     ) {
                         Icon(Icons.Default.Description, contentDescription = null, tint = AnimePink, modifier = Modifier.size(18.dp))
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text(AppLocaleStrings.tr(language, "📄 Export Text Script (.txt File)", "📄 टेक्स्ट स्क्रिप्ट एक्सपोर्ट करें (.txt File)"), color = AnimePink, fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                        Text(AppLocaleStrings.tr(state.selectedLanguage, "📄 Export Text Script (.txt File)", "📄 टेक्स्ट स्क्रिप्ट एक्सपोर्ट करें (.txt File)"), color = AnimePink, fontWeight = FontWeight.Bold, fontSize = 12.sp)
                     }
 
                     Spacer(modifier = Modifier.height(10.dp))
@@ -455,7 +455,7 @@ fun ExportShareSheetDialog(
                     OutlinedButton(
                         onClick = {
                             val path = viewModel.exportScriptToFile(asJson = true)
-                            Toast.makeText(context, "प्रोजेक्ट JSON बैकअप एक्सपोर्ट हो गया!", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, AppLocaleStrings.tr(state.selectedLanguage, "Project JSON backup exported!", "प्रोजेक्ट JSON बैकअप एक्सपोर्ट हो गया!"), Toast.LENGTH_SHORT).show()
                         },
                         modifier = Modifier
                             .fillMaxWidth()
@@ -466,7 +466,7 @@ fun ExportShareSheetDialog(
                     ) {
                         Icon(Icons.Default.Archive, contentDescription = null, tint = AnimeGold, modifier = Modifier.size(18.dp))
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text(AppLocaleStrings.tr(language, "📦 Export Project Backup (.json File)", "📦 प्रोजेक्ट बैकअप एक्सपोर्ट करें (.json File)"), color = AnimeGold, fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                        Text(AppLocaleStrings.tr(state.selectedLanguage, "📦 Export Project Backup (.json File)", "📦 प्रोजेक्ट बैकअप एक्सपोर्ट करें (.json File)"), color = AnimeGold, fontWeight = FontWeight.Bold, fontSize = 12.sp)
                     }
 
                     Spacer(modifier = Modifier.height(10.dp))
@@ -477,7 +477,7 @@ fun ExportShareSheetDialog(
                             val text = viewModel.getScriptAsFormattedText()
                             val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
                             clipboard.setPrimaryClip(ClipData.newPlainText("Anime Script", text))
-                            Toast.makeText(context, "📋 पूरी स्क्रिप्ट क्लिपबोर्ड में कॉपी हो गई!", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, AppLocaleStrings.tr(state.selectedLanguage, "📋 Full script copied to clipboard!", "📋 पूरी स्क्रिप्ट क्लिपबोर्ड में कॉपी हो गई!"), Toast.LENGTH_SHORT).show()
                         },
                         modifier = Modifier
                             .fillMaxWidth()
@@ -488,7 +488,7 @@ fun ExportShareSheetDialog(
                     ) {
                         Icon(Icons.Default.ContentCopy, contentDescription = null, tint = AnimeCyan, modifier = Modifier.size(18.dp))
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text(AppLocaleStrings.tr(language, "📋 Copy Full Script to Clipboard", "📋 पूरी स्क्रिप्ट क्लिपबोर्ड में कॉपी करें"), color = AnimeCyan, fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                        Text(AppLocaleStrings.tr(state.selectedLanguage, "📋 Copy Full Script to Clipboard", "📋 पूरी स्क्रिप्ट क्लिपबोर्ड में कॉपी करें"), color = AnimeCyan, fontWeight = FontWeight.Bold, fontSize = 12.sp)
                     }
 
                     // Status / Feedback Card
@@ -513,7 +513,7 @@ fun ExportShareSheetDialog(
         },
         confirmButton = {
             TextButton(onClick = onDismiss) {
-                Text(AppLocaleStrings.tr(language, "Done", "पूर्ण (Done)"), color = AnimeCyan, fontWeight = FontWeight.Bold)
+                Text(AppLocaleStrings.tr(state.selectedLanguage, "Done", "पूर्ण (Done)"), color = AnimeCyan, fontWeight = FontWeight.Bold)
             }
         },
         containerColor = AnimeSurface,
@@ -539,7 +539,7 @@ fun LocalStorageVaultDialog(
     ) { uri ->
         if (uri != null) {
             viewModel.importScriptFromUri(uri)
-            Toast.makeText(context, "फाइल अपलोड की जा रही है...", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, AppLocaleStrings.tr(state.selectedLanguage, "Uploading file...", "फाइल अपलोड की जा रही है..."), Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -621,7 +621,7 @@ fun LocalStorageVaultDialog(
                     Button(
                         onClick = {
                             viewModel.saveCurrentScriptToLocalStorage()
-                            Toast.makeText(context, "सक्रिय प्रोजेक्ट लोकल स्टोरेज में सेव हो गया!", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, AppLocaleStrings.tr(state.selectedLanguage, "Active project saved to local storage!", "सक्रिय प्रोजेक्ट लोकल स्टोरेज में सेव हो गया!"), Toast.LENGTH_SHORT).show()
                         },
                         modifier = Modifier.weight(1f).height(38.dp).testTag("vault_save_current_btn"),
                         colors = ButtonDefaults.buttonColors(containerColor = AnimePurple),
@@ -640,7 +640,7 @@ fun LocalStorageVaultDialog(
                     ) {
                         Icon(Icons.Default.Upload, contentDescription = null, tint = AnimeCyan, modifier = Modifier.size(14.dp))
                         Spacer(modifier = Modifier.width(4.dp))
-                        Text(if (isImportBoxExpanded) "बंद करें" else "इम्पोर्ट JSON", fontSize = 11.sp, color = AnimeCyan, fontWeight = FontWeight.Bold)
+                        Text(if (isImportBoxExpanded) AppLocaleStrings.tr(state.selectedLanguage, "Close", "बंद करें") else AppLocaleStrings.tr(state.selectedLanguage, "Import JSON", "इम्पोर्ट JSON"), fontSize = 11.sp, color = AnimeCyan, fontWeight = FontWeight.Bold)
                     }
                 }
 
@@ -654,7 +654,7 @@ fun LocalStorageVaultDialog(
                             .background(AnimeSurfaceVariant)
                             .padding(10.dp)
                     ) {
-                        Text("बैकअप JSON पेस्ट करें:", color = AnimeCyanLight, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                        Text(AppLocaleStrings.tr(state.selectedLanguage, "Paste Backup JSON:", "बैकअप JSON पेस्ट करें:"), color = AnimeCyanLight, fontSize = 11.sp, fontWeight = FontWeight.Bold)
                         Spacer(modifier = Modifier.height(6.dp))
                         OutlinedTextField(
                             value = importJsonText,
@@ -682,7 +682,7 @@ fun LocalStorageVaultDialog(
                                     if (ok) {
                                         importJsonText = ""
                                         isImportBoxExpanded = false
-                                        Toast.makeText(context, "सफलतापूर्वक इम्पोर्ट हो गया!", Toast.LENGTH_SHORT).show()
+                                        Toast.makeText(context, AppLocaleStrings.tr(state.selectedLanguage, "Successfully imported!", "सफलतापूर्वक इम्पोर्ट हो गया!"), Toast.LENGTH_SHORT).show()
                                     }
                                 }
                             },
@@ -704,7 +704,7 @@ fun LocalStorageVaultDialog(
                         ) {
                             Icon(Icons.Default.FileUpload, contentDescription = null, tint = AnimeGold, modifier = Modifier.size(16.dp))
                             Spacer(modifier = Modifier.width(6.dp))
-                            Text("📂 डिवाइस से फाइल अपलोड करें (.json/.txt)", color = AnimeGold, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                            Text(AppLocaleStrings.tr(state.selectedLanguage, "📂 Upload File from Device (.json/.txt)", "📂 डिवाइस से फाइल अपलोड करें (.json/.txt)"), color = AnimeGold, fontSize = 11.sp, fontWeight = FontWeight.Bold)
                         }
                     }
                 }
@@ -712,7 +712,7 @@ fun LocalStorageVaultDialog(
                 Spacer(modifier = Modifier.height(10.dp))
 
                 Text(
-                    text = "सेव्ड प्रोजेक्ट्स सूची (${savedScripts.size}):",
+                    text = "${AppLocaleStrings.tr(state.selectedLanguage, "Saved Projects List", "सेव्ड प्रोजेक्ट्स सूची")} (${savedScripts.size}):",
                     color = TextPrimary,
                     fontSize = 12.sp,
                     fontWeight = FontWeight.Bold
@@ -731,8 +731,8 @@ fun LocalStorageVaultDialog(
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
                             Icon(Icons.Default.Folder, contentDescription = null, tint = TextMuted, modifier = Modifier.size(40.dp))
                             Spacer(modifier = Modifier.height(6.dp))
-                            Text("लोकल स्टोरेज में कोई प्रोजेक्ट सुरक्षित नहीं है।", color = TextMuted, fontSize = 11.sp)
-                            Text("ऊपर 'प्रोजेक्ट सेव करें' बटन दबाएं।", color = AnimeCyanLight, fontSize = 10.sp)
+                            Text(AppLocaleStrings.tr(state.selectedLanguage, "No projects in local storage.", "लोकल स्टोरेज में कोई प्रोजेक्ट सुरक्षित नहीं है."), color = TextMuted, fontSize = 11.sp)
+                            Text(AppLocaleStrings.tr(state.selectedLanguage, "Tap 'Save Project' button above.", "ऊपर 'प्रोजेक्ट सेव करें' बटन दबाएं."), color = AnimeCyanLight, fontSize = 10.sp)
                         }
                     }
                 } else {
@@ -753,7 +753,7 @@ fun LocalStorageVaultDialog(
                                 },
                                 onDelete = {
                                     viewModel.deleteSavedScript(item.id)
-                                    Toast.makeText(context, "प्रोजेक्ट हटा दिया गया", Toast.LENGTH_SHORT).show()
+                                    Toast.makeText(context, AppLocaleStrings.tr(state.selectedLanguage, "Project deleted", "प्रोजेक्ट हटा दिया गया"), Toast.LENGTH_SHORT).show()
                                 }
                             )
                         }
@@ -844,7 +844,7 @@ private fun SavedScriptItemCard(
                 ) {
                     Icon(Icons.Default.PlayArrow, contentDescription = null, tint = Color.Black, modifier = Modifier.size(14.dp))
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text(AppLocaleStrings.tr(state.selectedLanguage, "Play in Player", "प्लेयर में चलाएं"), color = Color.Black, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                    Text("Play in Player", color = Color.Black, fontSize = 11.sp, fontWeight = FontWeight.Bold)
                 }
             }
         }
@@ -881,13 +881,13 @@ fun DownloadProjectDialog(
                     Spacer(modifier = Modifier.width(10.dp))
                     Column {
                         Text(
-                            text = AppLocaleStrings.tr(language, "📥 Download & Save", "📥 डाउनलोड व सेव (Download)"),
+                            text = AppLocaleStrings.tr(state.selectedLanguage, "📥 Download & Save", "📥 डाउनलोड व सेव (Download)"),
                             fontSize = 16.sp,
                             fontWeight = FontWeight.Bold,
                             color = TextPrimary
                         )
                         Text(
-                            text = AppLocaleStrings.tr(language, "Save project to phone Downloads folder", "प्रोजेक्ट को फोन के Downloads फोल्डर में सेव करें"),
+                            text = AppLocaleStrings.tr(state.selectedLanguage, "Save project to phone Downloads folder", "प्रोजेक्ट को फोन के Downloads फोल्डर में सेव करें"),
                             fontSize = 10.sp,
                             color = AnimeCyanLight
                         )
@@ -905,7 +905,7 @@ fun DownloadProjectDialog(
                     .verticalScroll(rememberScrollState())
             ) {
                 if (script == null) {
-                    Text("डाउनलोड करने के लिए कोई सक्रिय स्क्रिप्ट नहीं है।", color = TextSecondary)
+                    Text(AppLocaleStrings.tr(state.selectedLanguage, "No active script to download.", "डाउनलोड करने के लिए कोई सक्रिय स्क्रिप्ट नहीं है."), color = TextSecondary)
                 } else {
                     Card(
                         modifier = Modifier.fillMaxWidth(),
@@ -940,7 +940,7 @@ fun DownloadProjectDialog(
                                 .padding(12.dp),
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
-                            Text("डाउनलोड हो रहा है...", color = AnimeCyan, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                            Text(AppLocaleStrings.tr(state.selectedLanguage, "Downloading...", "डाउनलोड हो रहा है..."), color = AnimeCyan, fontSize = 12.sp, fontWeight = FontWeight.Bold)
                             Spacer(modifier = Modifier.height(8.dp))
                             LinearProgressIndicator(
                                 progress = { state.downloadProgress },
@@ -959,7 +959,7 @@ fun DownloadProjectDialog(
                     Button(
                         onClick = {
                             viewModel.downloadProjectFile("JSON")
-                            Toast.makeText(context, "प्रोजेक्ट डाउनलोड शुरू हो गया...", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, AppLocaleStrings.tr(state.selectedLanguage, "Project download started...", "प्रोजेक्ट डाउनलोड शुरू हो गया..."), Toast.LENGTH_SHORT).show()
                         },
                         modifier = Modifier
                             .fillMaxWidth()
@@ -971,8 +971,8 @@ fun DownloadProjectDialog(
                         Icon(Icons.Default.Archive, contentDescription = null, tint = Color.White, modifier = Modifier.size(18.dp))
                         Spacer(modifier = Modifier.width(8.dp))
                         Column(modifier = Modifier.weight(1f)) {
-                            Text("वीडियो प्रोजेक्ट डाउनलोड करें (.JSON)", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 12.sp)
-                            Text("सीन टाइमिंग, करैक्टर आवाज़ और विजुअल प्रॉम्प्ट्स", color = Color.White.copy(alpha = 0.7f), fontSize = 9.sp)
+                            Text(AppLocaleStrings.tr(state.selectedLanguage, "Download Video Project (.JSON)", "वीडियो प्रोजेक्ट डाउनलोड करें (.JSON)"), color = Color.White, fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                            Text(AppLocaleStrings.tr(state.selectedLanguage, "Scene timings, character voices & visual prompts", "सीन टाइमिंग, करैक्टर आवाज़ और विजुअल प्रॉम्प्ट्स"), color = Color.White.copy(alpha = 0.7f), fontSize = 9.sp)
                         }
                     }
 
@@ -982,7 +982,7 @@ fun DownloadProjectDialog(
                     OutlinedButton(
                         onClick = {
                             viewModel.downloadProjectFile("TXT")
-                            Toast.makeText(context, "स्क्रीनप्ले टेक्स्ट डाउनलोड शुरू...", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, AppLocaleStrings.tr(state.selectedLanguage, "Screenplay text download started...", "स्क्रीनप्ले टेक्स्ट डाउनलोड शुरू..."), Toast.LENGTH_SHORT).show()
                         },
                         modifier = Modifier
                             .fillMaxWidth()
@@ -994,8 +994,8 @@ fun DownloadProjectDialog(
                         Icon(Icons.Default.Description, contentDescription = null, tint = AnimePink, modifier = Modifier.size(18.dp))
                         Spacer(modifier = Modifier.width(8.dp))
                         Column(modifier = Modifier.weight(1f)) {
-                            Text("स्क्रीनप्ले स्क्रिप्ट डाउनलोड करें (.TXT)", color = AnimePink, fontWeight = FontWeight.Bold, fontSize = 12.sp)
-                            Text("रीडिंग व डबिंग के लिए पूर्ण डायलॉग शीट", color = TextSecondary, fontSize = 9.sp)
+                            Text(AppLocaleStrings.tr(state.selectedLanguage, "Download Screenplay Script (.TXT)", "स्क्रीनप्ले स्क्रिप्ट डाउनलोड करें (.TXT)"), color = AnimePink, fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                            Text(AppLocaleStrings.tr(state.selectedLanguage, "Complete dialogue sheet for reading & dubbing", "रीडिंग व डबिंग के लिए पूर्ण डायलॉग शीट"), color = TextSecondary, fontSize = 9.sp)
                         }
                     }
 
@@ -1005,7 +1005,7 @@ fun DownloadProjectDialog(
                     OutlinedButton(
                         onClick = {
                             viewModel.downloadProjectFile("SRT")
-                            Toast.makeText(context, "सबटाइटल डाउनलोड शुरू...", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, AppLocaleStrings.tr(state.selectedLanguage, "Subtitle download started...", "सबटाइटल डाउनलोड शुरू..."), Toast.LENGTH_SHORT).show()
                         },
                         modifier = Modifier
                             .fillMaxWidth()
@@ -1017,8 +1017,8 @@ fun DownloadProjectDialog(
                         Icon(Icons.Default.Subtitles, contentDescription = null, tint = AnimeCyan, modifier = Modifier.size(18.dp))
                         Spacer(modifier = Modifier.width(8.dp))
                         Column(modifier = Modifier.weight(1f)) {
-                            Text("सबटाइटल डाउनलोड करें (.SRT)", color = AnimeCyan, fontWeight = FontWeight.Bold, fontSize = 12.sp)
-                            Text("वीडियो एडिटर्स (Premiere, CapCut) के लिए टाइमकोड", color = TextSecondary, fontSize = 9.sp)
+                            Text(AppLocaleStrings.tr(state.selectedLanguage, "Download Subtitles (.SRT)", "सबटाइटल डाउनलोड करें (.SRT)"), color = AnimeCyan, fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                            Text(AppLocaleStrings.tr(state.selectedLanguage, "Timecodes for video editors (Premiere, CapCut)", "वीडियो एडिटर्स (Premiere, CapCut) के लिए टाइमकोड"), color = TextSecondary, fontSize = 9.sp)
                         }
                     }
 
@@ -1035,7 +1035,7 @@ fun DownloadProjectDialog(
                                 Icon(Icons.Default.Check, contentDescription = null, tint = AnimeCyan, modifier = Modifier.size(16.dp))
                                 Spacer(modifier = Modifier.width(6.dp))
                                 Text(
-                                    text = "सेव किया गया: ${state.lastDownloadedFileName}",
+                                    text = "${AppLocaleStrings.tr(state.selectedLanguage, "Saved", "सेव किया गया")}: ${state.lastDownloadedFileName}",
                                     color = AnimeCyanLight,
                                     fontSize = 11.sp,
                                     fontWeight = FontWeight.SemiBold
@@ -1048,7 +1048,7 @@ fun DownloadProjectDialog(
         },
         confirmButton = {
             TextButton(onClick = onDismiss) {
-                Text("बंद करें", color = AnimeCyan, fontWeight = FontWeight.Bold)
+                Text(AppLocaleStrings.tr(state.selectedLanguage, "Close", "बंद करें"), color = AnimeCyan, fontWeight = FontWeight.Bold)
             }
         },
         containerColor = AnimeSurface,
