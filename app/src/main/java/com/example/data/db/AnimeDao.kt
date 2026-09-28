@@ -11,6 +11,9 @@ interface AnimeDao {
     @Query("SELECT * FROM saved_scripts ORDER BY createdAt DESC")
     fun getAllScripts(): Flow<List<SavedScriptEntity>>
 
+    @Query("SELECT * FROM saved_scripts ORDER BY createdAt DESC")
+    suspend fun getAllScriptsOnce(): List<SavedScriptEntity>
+
     @Query("SELECT * FROM saved_scripts WHERE id = :id LIMIT 1")
     suspend fun getScriptById(id: String): SavedScriptEntity?
 
@@ -46,4 +49,22 @@ interface AnimeDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun saveAdminSettings(settings: AdminAccessEntity)
+
+    @Query("SELECT * FROM exported_videos ORDER BY createdAt DESC")
+    fun getAllExportedVideos(): Flow<List<ExportedVideoEntity>>
+
+    @Query("SELECT * FROM exported_videos ORDER BY createdAt DESC")
+    suspend fun getAllExportedVideosOnce(): List<ExportedVideoEntity>
+
+    @Query("SELECT * FROM exported_videos WHERE id = :id LIMIT 1")
+    suspend fun getExportedVideoById(id: String): ExportedVideoEntity?
+
+    @Query("SELECT * FROM exported_videos WHERE scriptId = :scriptId LIMIT 1")
+    suspend fun getExportedVideoByScriptId(scriptId: String): ExportedVideoEntity?
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertExportedVideo(video: ExportedVideoEntity)
+
+    @Query("DELETE FROM exported_videos WHERE id = :id")
+    suspend fun deleteExportedVideoById(id: String)
 }

@@ -1,4 +1,5 @@
 package com.example.ui.screens
+import com.example.localization.AppLocaleStrings
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.LinearEasing
@@ -126,7 +127,7 @@ fun CharacterStudioScreen(viewModel: AnimeViewModel) {
                 ) {
                     Column {
                         Text(
-                            text = "🎭 एनिमे करैक्टर क्रिएटर (Character Studio)",
+                            text = AppLocaleStrings.tr(state.selectedLanguage, "🎭 Anime Character Studio", "🎭 एनिमे करैक्टर क्रिएटर (Character Studio)"),
                             color = TextPrimary,
                             fontSize = 20.sp,
                             fontWeight = FontWeight.ExtraBold
@@ -158,7 +159,7 @@ fun CharacterStudioScreen(viewModel: AnimeViewModel) {
                             Icon(Icons.Default.Palette, contentDescription = null, tint = AnimePink, modifier = Modifier.size(20.dp))
                             Spacer(modifier = Modifier.width(8.dp))
                             Column {
-                                Text("🎨 करैक्टर बिल्डर (Character Builder)", color = TextPrimary, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                                Text(AppLocaleStrings.tr(state.selectedLanguage, "🎨 Character Builder", "🎨 करैक्टर बिल्डर (Character Builder)"), color = TextPrimary, fontSize = 12.sp, fontWeight = FontWeight.Bold)
                                 Text("बाल, आँखों का रंग व पोशाक कस्टमाइज करें", color = TextSecondary, fontSize = 10.sp)
                             }
                         }
@@ -168,7 +169,7 @@ fun CharacterStudioScreen(viewModel: AnimeViewModel) {
                             shape = RoundedCornerShape(8.dp),
                             contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 8.dp, vertical = 2.dp)
                         ) {
-                            Text("बिल्डर खोलें", color = Color.Black, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                            Text(AppLocaleStrings.tr(state.selectedLanguage, "Open Builder", "बिल्डर खोलें"), color = Color.Black, fontSize = 11.sp, fontWeight = FontWeight.Bold)
                         }
                     }
                 }
@@ -194,7 +195,7 @@ fun CharacterStudioScreen(viewModel: AnimeViewModel) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Icon(Icons.Default.Palette, contentDescription = null, modifier = Modifier.size(14.dp))
                                 Spacer(modifier = Modifier.width(4.dp))
-                                Text("विजुअल डिजाइन", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                                Text(AppLocaleStrings.tr(state.selectedLanguage, "Visual Design", "विजुअल डिजाइन"), fontSize = 12.sp, fontWeight = FontWeight.Bold)
                             }
                         }
                     )
@@ -205,7 +206,7 @@ fun CharacterStudioScreen(viewModel: AnimeViewModel) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Icon(Icons.Default.RecordVoiceOver, contentDescription = null, modifier = Modifier.size(14.dp))
                                 Spacer(modifier = Modifier.width(4.dp))
-                                Text("AI वॉइस व लिप-सिंक", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                                Text(AppLocaleStrings.tr(state.selectedLanguage, "AI Voice & Lip-Sync", "AI वॉइस व लिप-सिंक"), fontSize = 12.sp, fontWeight = FontWeight.Bold)
                             }
                         }
                     )
@@ -214,7 +215,7 @@ fun CharacterStudioScreen(viewModel: AnimeViewModel) {
                         onClick = { selectedTab = 2 },
                         text = {
                             Row(verticalAlignment = Alignment.CenterVertically) {
-                                Text("रोस्टर (${state.customCharacters.size})", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                                Text(AppLocaleStrings.tr(state.selectedLanguage, "Roster (${state.customCharacters.size})", "रोस्टर (${state.customCharacters.size})"), fontSize = 12.sp, fontWeight = FontWeight.Bold)
                             }
                         }
                     )
@@ -252,7 +253,7 @@ fun CharacterStudioScreen(viewModel: AnimeViewModel) {
                             Icon(Icons.Default.AutoAwesome, contentDescription = null, tint = AnimeGold, modifier = Modifier.size(18.dp))
                             Spacer(modifier = Modifier.width(6.dp))
                             Text(
-                                text = "✨ AI विजुअल प्रॉम्प्ट से करैक्टर बनाएं (Text Prompt to Visuals)",
+                                text = AppLocaleStrings.tr(state.selectedLanguage, "✨ Create Character from Text Prompt (AI Visuals)", "✨ AI विजुअल प्रॉम्प्ट से करैक्टर बनाएं (Text Prompt to Visuals)"),
                                 color = TextPrimary,
                                 fontSize = 14.sp,
                                 fontWeight = FontWeight.Bold
@@ -318,11 +319,11 @@ fun CharacterStudioScreen(viewModel: AnimeViewModel) {
                             if (state.isAiDesigningCharacter) {
                                 CircularProgressIndicator(color = Color.White, modifier = Modifier.size(16.dp), strokeWidth = 2.dp)
                                 Spacer(modifier = Modifier.width(8.dp))
-                                Text("AI विजुअल और वॉइस तैयार कर रहा है...", fontSize = 13.sp)
+                                Text(AppLocaleStrings.tr(state.selectedLanguage, "AI is creating visuals and voice...", "AI विजुअल और वॉइस तैयार कर रहा है..."), fontSize = 13.sp)
                             } else {
                                 Icon(Icons.Default.AutoAwesome, contentDescription = null, modifier = Modifier.size(16.dp))
                                 Spacer(modifier = Modifier.width(6.dp))
-                                Text("✨ AI से विजुअल व वॉइस जनरेट करें", fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                                Text(AppLocaleStrings.tr(state.selectedLanguage, "✨ Generate Visuals & Voice with AI", "✨ AI से विजुअल व वॉइस जनरेट करें"), fontSize = 13.sp, fontWeight = FontWeight.Bold)
                             }
                         }
                     }
@@ -340,7 +341,7 @@ fun CharacterStudioScreen(viewModel: AnimeViewModel) {
                 ) {
                     Column(modifier = Modifier.padding(16.dp)) {
                         Text(
-                            text = "🎨 करैक्टर विजुअल एट्रिब्यूट्स कस्टमाइज करें (Visual Attributes)",
+                            text = AppLocaleStrings.tr(state.selectedLanguage, "🎨 Customize Character Visual Attributes", "🎨 करैक्टर विजुअल एट्रिब्यूट्स कस्टमाइज करें (Visual Attributes)"),
                             color = AnimeCyan,
                             fontSize = 14.sp,
                             fontWeight = FontWeight.Bold
@@ -352,7 +353,7 @@ fun CharacterStudioScreen(viewModel: AnimeViewModel) {
                             OutlinedTextField(
                                 value = draft.name,
                                 onValueChange = { viewModel.updateCharacterDraft(draft.copy(name = it)) },
-                                label = { Text("नाम") },
+                                label = { Text(AppLocaleStrings.tr(state.selectedLanguage, "Name", "नाम")) },
                                 modifier = Modifier.weight(1f).testTag("draft_char_name"),
                                 colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = AnimeCyan, focusedTextColor = TextPrimary, unfocusedTextColor = TextPrimary),
                                 shape = RoundedCornerShape(10.dp)
@@ -360,7 +361,7 @@ fun CharacterStudioScreen(viewModel: AnimeViewModel) {
                             OutlinedTextField(
                                 value = draft.role,
                                 onValueChange = { viewModel.updateCharacterDraft(draft.copy(role = it)) },
-                                label = { Text("रोल / क्लास") },
+                                label = { Text(AppLocaleStrings.tr(state.selectedLanguage, "Role / Class", "रोल / क्लास")) },
                                 modifier = Modifier.weight(1f),
                                 colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = AnimeCyan, focusedTextColor = TextPrimary, unfocusedTextColor = TextPrimary),
                                 shape = RoundedCornerShape(10.dp)
@@ -371,7 +372,7 @@ fun CharacterStudioScreen(viewModel: AnimeViewModel) {
 
                         // Hair Style
                         VisualAttributeSelector(
-                            title = "हेयर स्टाइल (Hair Style)",
+                            title = AppLocaleStrings.tr(state.selectedLanguage, "Hair Style", "हेयर स्टाइल (Hair Style)"),
                             options = listOf("Spiky Shonen Action", "Kawaii Twin Tails", "Long Flowing Celestial", "Modern Anime Bob", "Samurai Ponytail"),
                             selected = draft.hairStyle,
                             onSelect = { viewModel.updateCharacterDraft(draft.copy(hairStyle = it)) }
@@ -379,7 +380,7 @@ fun CharacterStudioScreen(viewModel: AnimeViewModel) {
 
                         // Hair Color
                         VisualAttributeSelector(
-                            title = "हेयर कलर (Hair Color)",
+                            title = AppLocaleStrings.tr(state.selectedLanguage, "Hair Color", "हेयर कलर (Hair Color)"),
                             options = listOf("Silver Starlight", "Sakura Rose Pink", "Neon Electric Cyan", "Crimson Blaze", "Golden Celestial Amber", "Obsidian Midnight Black"),
                             selected = draft.hairColor,
                             onSelect = { viewModel.updateCharacterDraft(draft.copy(hairColor = it)) }
@@ -387,7 +388,7 @@ fun CharacterStudioScreen(viewModel: AnimeViewModel) {
 
                         // Eye Color
                         VisualAttributeSelector(
-                            title = "आंखों का रंग (Eye Color)",
+                            title = AppLocaleStrings.tr(state.selectedLanguage, "Eye Color", "आंखों का रंग (Eye Color)"),
                             options = listOf("Sapphire Neon Blue", "Crimson Ruby Flame", "Amethyst Mystic Violet", "Emerald Forest Glow", "Golden Topaz"),
                             selected = draft.eyeColor,
                             onSelect = { viewModel.updateCharacterDraft(draft.copy(eyeColor = it)) }
@@ -395,7 +396,7 @@ fun CharacterStudioScreen(viewModel: AnimeViewModel) {
 
                         // Outfit
                         VisualAttributeSelector(
-                            title = "कॉस्ट्यूम / आउटफिट (Outfit)",
+                            title = AppLocaleStrings.tr(state.selectedLanguage, "Outfit", "कॉस्ट्यूम / आउटफिट (Outfit)"),
                             options = listOf("Cyber Shinobi Exo-Suit", "Traditional Ronin Kimono", "High Academy Uniform", "Enchanted Starlight Cloak", "Battle Armor"),
                             selected = draft.outfit,
                             onSelect = { viewModel.updateCharacterDraft(draft.copy(outfit = it)) }
@@ -403,7 +404,7 @@ fun CharacterStudioScreen(viewModel: AnimeViewModel) {
 
                         // Accessory Aura
                         VisualAttributeSelector(
-                            title = "औरा / इफेक्ट (Accessory & Aura)",
+                            title = AppLocaleStrings.tr(state.selectedLanguage, "Accessory & Aura", "औरा / इफेक्ट (Accessory & Aura)"),
                             options = listOf("Crackling Blue Lightning Sparks", "Dancing Sakura Blossom Blizzard", "Swirling Dragon Fire Aura", "Holographic Glitch Particles", "Celestial Golden Particles"),
                             selected = draft.accessoryAura,
                             onSelect = { viewModel.updateCharacterDraft(draft.copy(accessoryAura = it)) }
@@ -411,7 +412,7 @@ fun CharacterStudioScreen(viewModel: AnimeViewModel) {
 
                         // Expression
                         VisualAttributeSelector(
-                            title = "चेहरे का भाव (Expression)",
+                            title = AppLocaleStrings.tr(state.selectedLanguage, "Expression", "चेहरे का भाव (Expression)"),
                             options = listOf("Fierce Determined Stare", "Warm Confident Smile", "Calm Mysterious Smirk", "Playful Kawaii Winking"),
                             selected = draft.expression,
                             onSelect = { viewModel.updateCharacterDraft(draft.copy(expression = it)) }
@@ -430,7 +431,7 @@ fun CharacterStudioScreen(viewModel: AnimeViewModel) {
                         ) {
                             Icon(Icons.Default.Save, contentDescription = null, modifier = Modifier.size(16.dp))
                             Spacer(modifier = Modifier.width(6.dp))
-                            Text("करैक्टर सेव करें (Save to Anime Roster)", fontWeight = FontWeight.Bold)
+                            Text(AppLocaleStrings.tr(state.selectedLanguage, "Save to Anime Roster", "करैक्टर सेव करें (Save to Anime Roster)"), fontWeight = FontWeight.Bold)
                         }
                     }
                 }
@@ -451,7 +452,7 @@ fun CharacterStudioScreen(viewModel: AnimeViewModel) {
                             Icon(Icons.Default.RecordVoiceOver, contentDescription = null, tint = AnimePink, modifier = Modifier.size(20.dp))
                             Spacer(modifier = Modifier.width(6.dp))
                             Text(
-                                text = "🎙️ AI वॉइस चयन (Diverse Voices: Male, Female, Child, Accents)",
+                                text = AppLocaleStrings.tr(state.selectedLanguage, "🎙️ AI Voice Selection (Diverse Voices: Male, Female, Child, Accents)", "🎙️ AI वॉइस चयन (Diverse Voices: Male, Female, Child, Accents)"),
                                 color = TextPrimary,
                                 fontSize = 14.sp,
                                 fontWeight = FontWeight.Bold
@@ -616,13 +617,13 @@ fun CharacterStudioScreen(viewModel: AnimeViewModel) {
                         Spacer(modifier = Modifier.height(14.dp))
 
                         // Dialogue Sync Test Section
-                        Text("4. डायलॉग सिंक्रोनाइजेशन टेस्ट (Dialogue Sync Audition):", color = TextPrimary, fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                        Text(AppLocaleStrings.tr(state.selectedLanguage, "4. Dialogue Sync Audition:", "4. डायलॉग सिंक्रोनाइजेशन टेस्ट:"), color = TextPrimary, fontSize = 13.sp, fontWeight = FontWeight.Bold)
                         Spacer(modifier = Modifier.height(6.dp))
 
                         OutlinedTextField(
                             value = draft.sampleDialogue,
                             onValueChange = { viewModel.updateCharacterDraft(draft.copy(sampleDialogue = it)) },
-                            label = { Text("टेस्ट डायलॉग (डायलॉग यहां टाइप करें या प्रीसेट चुनें)") },
+                            label = { Text(AppLocaleStrings.tr(state.selectedLanguage, "Test Dialogue (Type here or select preset)", "टेस्ट डायलॉग (डायलॉग यहां टाइप करें या प्रीसेट चुनें)")) },
                             modifier = Modifier.fillMaxWidth().testTag("char_dialogue_test_input"),
                             colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = AnimePurple, focusedTextColor = TextPrimary, unfocusedTextColor = TextPrimary),
                             shape = RoundedCornerShape(10.dp),
@@ -673,7 +674,7 @@ fun CharacterStudioScreen(viewModel: AnimeViewModel) {
                             ) {
                                 Icon(Icons.Default.RecordVoiceOver, contentDescription = null, modifier = Modifier.size(16.dp))
                                 Spacer(modifier = Modifier.width(6.dp))
-                                Text("🎙️ वॉइस सिंक सुनें", fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                                Text(AppLocaleStrings.tr(state.selectedLanguage, "🎙️ Audition Voice Sync", "🎙️ वॉइस सिंक सुनें"), fontWeight = FontWeight.Bold, fontSize = 13.sp)
                             }
 
                             Button(
@@ -687,7 +688,7 @@ fun CharacterStudioScreen(viewModel: AnimeViewModel) {
                             ) {
                                 Icon(Icons.Default.Save, contentDescription = null, modifier = Modifier.size(16.dp))
                                 Spacer(modifier = Modifier.width(6.dp))
-                                Text("करैक्टर सेव करें", fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                                Text(AppLocaleStrings.tr(state.selectedLanguage, "Save Character", "करैक्टर सेव करें"), fontWeight = FontWeight.Bold, fontSize = 13.sp)
                             }
                         }
                     }
@@ -704,7 +705,7 @@ fun CharacterStudioScreen(viewModel: AnimeViewModel) {
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "सेव किए गए एनिमे करैक्टर्स (Saved Anime Roster)",
+                        text = AppLocaleStrings.tr(state.selectedLanguage, "Saved Anime Roster", "सेव किए गए एनिमे करैक्टर्स (Saved Anime Roster)"),
                         color = TextPrimary,
                         fontSize = 15.sp,
                         fontWeight = FontWeight.Bold
@@ -714,7 +715,7 @@ fun CharacterStudioScreen(viewModel: AnimeViewModel) {
                         colors = ButtonDefaults.buttonColors(containerColor = AnimePurple),
                         shape = RoundedCornerShape(8.dp)
                     ) {
-                        Text("+ नया डिजाइन", fontSize = 11.sp)
+                        Text(AppLocaleStrings.tr(state.selectedLanguage, "+ New Design", "+ नया डिजाइन"), fontSize = 11.sp)
                     }
                 }
                 Spacer(modifier = Modifier.height(12.dp))

@@ -31,4 +31,53 @@ class ExampleUnitTest {
     assertTrue(females.first().defaultPitch > 1.0f)
     assertTrue(children.first().defaultPitch > 1.5f)
   }
+
+  @Test
+  fun testCountryCodeProviderGlobalAccess() {
+    val countries = com.example.data.model.CountryCodeProvider.countries
+    assertTrue("Should have over 40 global countries", countries.size >= 40)
+
+    // Test finding default country
+    assertEquals("+91", com.example.data.model.CountryCodeProvider.defaultCountry.dialCode)
+
+    // Test finding by dial code
+    val us = com.example.data.model.CountryCodeProvider.findByDialCode("+1")
+    assertNotNull(us)
+    assertEquals("US", us?.isoCode)
+
+    val jp = com.example.data.model.CountryCodeProvider.findByDialCode("+81")
+    assertNotNull(jp)
+    assertEquals("Japan", jp?.name)
+
+    val gb = com.example.data.model.CountryCodeProvider.findByDialCode("+44")
+    assertNotNull(gb)
+    assertEquals("United Kingdom", gb?.name)
+
+    // Test searching by query
+    val searchResults = com.example.data.model.CountryCodeProvider.search("Japan")
+    assertTrue(searchResults.any { it.dialCode == "+81" })
+
+    val codeSearch = com.example.data.model.CountryCodeProvider.search("+49")
+    assertTrue(codeSearch.any { it.name == "Germany" })
+  }
+
+  @Test
+  fun testSavedScriptEntityRoomData() {
+    val entity = com.example.data.db.SavedScriptEntity(
+      id = "test_script_1",
+      title = "Solo Hunter Resurrection",
+      originalPrompt = "Shadow hunter with glowing blue eyes",
+      inputSourceType = "Prompt",
+      genre = "Shonen Fantasy",
+      artStyle = "Manhwa Webtoon",
+      language = "Hindi",
+      synopsis = "A hunter awakens shadow monarch aura",
+      scriptJson = "{}"
+    )
+
+    assertEquals("test_script_1", entity.id)
+    assertEquals("Solo Hunter Resurrection", entity.title)
+    assertEquals("Manhwa Webtoon", entity.artStyle)
+    assertTrue(entity.createdAt > 0)
+  }
 }

@@ -1,0 +1,1062 @@
+package com.example.ui.screens
+import com.example.localization.AppLocaleStrings
+
+import android.widget.Toast
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.AutoAwesome
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.CloudUpload
+import androidx.compose.material.icons.filled.ContentCopy
+import androidx.compose.material.icons.filled.ContentPaste
+import androidx.compose.material.icons.filled.GraphicEq
+import androidx.compose.material.icons.filled.Link
+import androidx.compose.material.icons.filled.LockClock
+import androidx.compose.material.icons.filled.Movie
+import androidx.compose.material.icons.filled.MusicNote
+import androidx.compose.material.icons.filled.NotificationsActive
+import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Public
+import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Schedule
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Tv
+import androidx.compose.material.icons.filled.VideoLibrary
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.example.data.engine.AutomationChannelManager
+import com.example.data.engine.LyriaMusicEngine
+import com.example.data.model.AutomatedEpisode
+import com.example.data.model.ChannelPlatform
+import com.example.data.model.EpisodeReviewStatus
+import com.example.data.model.MusicMood
+import com.example.ui.AnimeViewModel
+import com.example.ui.components.AudioWaveformCanvas
+import com.example.ui.theme.AnimeCyan
+import com.example.ui.theme.AnimeCyanLight
+import com.example.ui.theme.AnimeGold
+import com.example.ui.theme.AnimeGreen
+import com.example.ui.theme.AnimePink
+import com.example.ui.theme.AnimePurple
+import com.example.ui.theme.AnimeSurface
+import com.example.ui.theme.AnimeSurfaceVariant
+import com.example.ui.theme.TextMuted
+import com.example.ui.theme.TextPrimary
+import com.example.ui.theme.TextSecondary
+import kotlinx.coroutines.launch
+
+/**
+ * Automation & YouTube / Instagram Publishing Hub Screen
+ * Features:
+ * 1. Personal YouTube channel connection via copied link / URL
+ * 2. Daily Web Series episode generation command (1, 2, or 3 episodes/day)
+ * 3. Notification & Review Gate: Preview video & give Green Signal (OK) before upload
+ * 4. Scheduled Fallback Auto-Upload: Automatically uploads at scheduled time if not reviewed
+ * 5. Lyria AI Music & Soundtrack Generator
+ * 6. Multi-App API Integration (YouTube API v3, Instagram Reels, Webhooks)
+ */
+@Composable
+fun AutomationHubScreen(
+    viewModel: AnimeViewModel,
+    onNavigateBack: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
+    val automationManager = remember { AutomationChannelManager.getInstance(context) }
+    val lyriaMusicEngine = remember { LyriaMusicEngine.getInstance(context) }
+
+    val connectedChannel by automationManager.connectedChannel.collectAsState()
+    val webSeriesSchedule by automationManager.webSeriesSchedule.collectAsState()
+    val episodesQueue by automationManager.episodesQueue.collectAsState()
+    val statusMessage by automationManager.automationStatusMessage.collectAsState()
+    val state by viewModel.uiState.collectAsState()
+
+    var channelUrlInput by remember { mutableStateOf(connectedChannel.channelUrl) }
+    var channelNameInput by remember { mutableStateOf(connectedChannel.channelName) }
+    var seriesTitleInput by remember { mutableStateOf(webSeriesSchedule.seriesTitle) }
+    var episodesPerDaySelected by remember { mutableIntStateOf(webSeriesSchedule.episodesPerDay) }
+    var isGeneratingDailyBatch by remember { mutableStateOf(false) }
+
+    // Lyria Music Generator States
+    var musicPromptInput by remember { mutableStateOf("Epic Shonen battle theme with traditional Japanese shamisen and cyber synth") }
+    var selectedMusicMood by remember { mutableStateOf(MusicMood.EPIC_BATTLE) }
+    var isGeneratingMusic by remember { mutableStateOf(false) }
+    var lastGeneratedMusicTitle by remember { mutableStateOf("") }
+    var musicWaveformData by remember { mutableStateOf<List<Float>>(emptyList()) }
+
+    var activeTab by remember { mutableIntStateOf(0) } // 0: Channel & Web Series, 1: Review & Green Signal, 2: Lyria AI Music, 3: Multi-App APIs
+
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
+            .verticalScroll(rememberScrollState())
+            .padding(16.dp)
+            .padding(bottom = 88.dp)
+    ) {
+        // Navigation Header
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            IconButton(onClick = onNavigateBack, modifier = Modifier.testTag("automation_back_btn")) {
+                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = AnimePurple)
+            }
+            Spacer(modifier = Modifier.width(6.dp))
+            Column {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = AppLocaleStrings.tr(state.selectedLanguage, "Automation & YouTube Hub", "ऑटोमेशन व YouTube हब"),
+                        color = TextPrimary,
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.ExtraBold
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(6.dp))
+                            .background(Color(0xFFFF0000))
+                            .padding(horizontal = 6.dp, vertical = 2.dp)
+                    ) {
+                        Text("YOUTUBE AUTO", color = Color.White, fontSize = 9.sp, fontWeight = FontWeight.Bold)
+                    }
+                }
+                Text(
+                    text = AppLocaleStrings.tr(state.selectedLanguage, "Automated video creation, review & upload on green signal", "ऑटोमेटिक वीडियो निर्माण, रिव्यू व ग्रीन सिग्नल पर चैनल अपलोड"),
+                    color = TextSecondary,
+                    fontSize = 12.sp
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(14.dp))
+
+        // System Live Status Message Banner
+        if (statusMessage.isNotBlank()) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(10.dp))
+                    .background(AnimeSurfaceVariant)
+                    .border(1.dp, AnimeCyan.copy(alpha = 0.5f), RoundedCornerShape(10.dp))
+                    .padding(10.dp)
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Default.NotificationsActive, contentDescription = null, tint = AnimeCyan, modifier = Modifier.size(16.dp))
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(text = statusMessage, color = AnimeCyanLight, fontSize = 11.sp, fontWeight = FontWeight.Medium)
+                }
+            }
+            Spacer(modifier = Modifier.height(14.dp))
+        }
+
+        // Section Tabs
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(12.dp))
+                .background(AnimeSurfaceVariant)
+                .padding(4.dp)
+        ) {
+            val tabs = listOf(
+                Pair(AppLocaleStrings.tr(state.selectedLanguage, "📺 Channel & Series", "📺 चैनल व सीरीज"), 0),
+                Pair(AppLocaleStrings.tr(state.selectedLanguage, "🟢 Review & Green Signal", "🟢 रिव्यू व ग्रीन सिग्नल"), 1),
+                Pair(AppLocaleStrings.tr(state.selectedLanguage, "🎵 AI Music", "🎵 AI म्यूजिक"), 2),
+                Pair("🔌 Multi APIs", 3)
+            )
+            tabs.forEach { (label, idx) ->
+                val isSelected = activeTab == idx
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(if (isSelected) AnimePurple else Color.Transparent)
+                        .clickable { activeTab = idx }
+                        .padding(vertical = 8.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = label,
+                        color = if (isSelected) Color.White else TextMuted,
+                        fontSize = 11.sp,
+                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
+                    )
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        when (activeTab) {
+            0 -> {
+                // TAB 0: YouTube Channel Link & Web Series Command Hub
+                ChannelConnectionCard(
+                    connectedChannel = connectedChannel,
+                    channelUrlInput = channelUrlInput,
+                    channelNameInput = channelNameInput,
+                    onUrlChange = { channelUrlInput = it },
+                    onNameChange = { channelNameInput = it },
+                    onSaveChannel = {
+                        automationManager.connectChannelByLink(channelUrlInput, channelNameInput)
+                        Toast.makeText(context, AppLocaleStrings.tr(state.selectedLanguage, "✅ Channel link connected successfully!", "✅ चैनल लिंक सफलतापूर्वक जुड़ गया!"), Toast.LENGTH_SHORT).show()
+                    }
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                WebSeriesAutomationCard(
+                    schedule = webSeriesSchedule,
+                    seriesTitle = seriesTitleInput,
+                    episodesPerDay = episodesPerDaySelected,
+                    onTitleChange = { seriesTitleInput = it },
+                    onEpisodesPerDayChange = {
+                        episodesPerDaySelected = it
+                        automationManager.setSeriesEpisodesPerDay(it, seriesTitleInput)
+                    },
+                    onToggleAutoPublishFallback = { enabled ->
+                        automationManager.setAutoPublishFallback(enabled, webSeriesSchedule.fallbackTimerHours)
+                    },
+                    isGenerating = isGeneratingDailyBatch,
+                    onTriggerDailyGeneration = {
+                        coroutineScope.launch {
+                            isGeneratingDailyBatch = true
+                            automationManager.triggerDailyEpisodeGeneration(episodesPerDaySelected)
+                            isGeneratingDailyBatch = false
+                            activeTab = 1 // Switch to Review & Green Signal tab
+                        }
+                    }
+                )
+            }
+
+            1 -> {
+                // TAB 1: Review & Green Signal (OK) Upload Gate
+                ReviewAndGreenSignalCard(
+                    episodes = episodesQueue,
+                    onGreenSignalAndUpload = { episodeId ->
+                        coroutineScope.launch {
+                            automationManager.giveGreenSignalAndUpload(episodeId)
+                            Toast.makeText(context, AppLocaleStrings.tr(state.selectedLanguage, "🟢 Green signal received! Video uploaded to YouTube!", "🟢 ग्रीन सिग्नल मिला! वीडियो YouTube पर अपलोड हो गया!"), Toast.LENGTH_LONG).show()
+                        }
+                    },
+                    onRejectEpisode = { episodeId ->
+                        automationManager.rejectEpisode(episodeId)
+                        Toast.makeText(context, AppLocaleStrings.tr(state.selectedLanguage, "❌ Episode rejected", "❌ एपिसोड अस्वीकृत"), Toast.LENGTH_SHORT).show()
+                    }
+                )
+            }
+
+            2 -> {
+                // TAB 2: Lyria AI Generative Music & Soundtrack Engine
+                LyriaMusicGeneratorCard(
+                    musicPrompt = musicPromptInput,
+                    selectedMood = selectedMusicMood,
+                    isGenerating = isGeneratingMusic,
+                    lastGeneratedTitle = lastGeneratedMusicTitle,
+                    waveformData = musicWaveformData,
+                    onPromptChange = { musicPromptInput = it },
+                    onMoodChange = { selectedMusicMood = it },
+                    onGenerateMusic = {
+                        coroutineScope.launch {
+                            isGeneratingMusic = true
+                            val result = lyriaMusicEngine.generateSoundtrack(
+                                prompt = musicPromptInput,
+                                mood = selectedMusicMood,
+                                durationSeconds = 30
+                            )
+                            lastGeneratedMusicTitle = result.title
+                            musicWaveformData = result.waveformData
+                            isGeneratingMusic = false
+                            Toast.makeText(context, AppLocaleStrings.tr(state.selectedLanguage, "🎵 New AI soundtrack ready: ${result.title}", "🎵 नया AI साउंडट्रैक तैयार: ${result.title}"), Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                )
+            }
+
+            3 -> {
+                // TAB 3: Multi-App API Integration Console
+                MultiAppApiConnectCard(
+                    connectedChannel = connectedChannel
+                )
+            }
+        }
+    }
+}
+
+/**
+ * YouTube Channel Connection Card via Link Copy-Paste
+ */
+@Composable
+private fun ChannelConnectionCard(
+    connectedChannel: com.example.data.model.ConnectedChannel,
+    channelUrlInput: String,
+    channelNameInput: String,
+    onUrlChange: (String) -> Unit,
+    onNameChange: (String) -> Unit,
+    onSaveChannel: () -> Unit
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = AnimeSurface),
+        shape = RoundedCornerShape(16.dp),
+        border = BorderStroke(1.dp, Color(0xFFFF0000).copy(alpha = 0.6f))
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Box(
+                        modifier = Modifier
+                            .size(36.dp)
+                            .clip(CircleShape)
+                            .background(Color(0xFFFF0000).copy(alpha = 0.2f)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(Icons.Default.Tv, contentDescription = null, tint = Color(0xFFFF0000), modifier = Modifier.size(20.dp))
+                    }
+                    Spacer(modifier = Modifier.width(10.dp))
+                    Column {
+                        Text(AppLocaleStrings.tr(state.selectedLanguage, "Connect YouTube Channel Link", "YouTube चैनल कनेक्ट लिंक"), color = TextPrimary, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                        Text(AppLocaleStrings.tr(state.selectedLanguage, "Add your personal channel link and enable auto-upload", "अपना व्यक्तिगत चैनल लिंक जोड़ें और ऑटो-अपलोड सक्षम करें"), color = TextSecondary, fontSize = 11.sp)
+                    }
+                }
+
+                if (connectedChannel.isConnected) {
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(6.dp))
+                            .background(AnimeGreen.copy(alpha = 0.2f))
+                            .padding(horizontal = 8.dp, vertical = 3.dp)
+                    ) {
+                        Text("CONNECTED", color = AnimeGreen, fontSize = 9.sp, fontWeight = FontWeight.ExtraBold)
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(14.dp))
+
+            // Channel Link Input Field
+            Text(AppLocaleStrings.tr(state.selectedLanguage, "Paste personal channel link here:", "पर्सनल चैनल का लिंक यहाँ पेस्ट करें:"), color = TextMuted, fontSize = 11.sp)
+            Spacer(modifier = Modifier.height(6.dp))
+            OutlinedTextField(
+                value = channelUrlInput,
+                onValueChange = onUrlChange,
+                placeholder = { Text("उदा: https://youtube.com/@MyAnimeChannel", color = TextMuted, fontSize = 12.sp) },
+                leadingIcon = {
+                    Icon(Icons.Default.Link, contentDescription = null, tint = Color(0xFFFF0000), modifier = Modifier.size(18.dp))
+                },
+                trailingIcon = {
+                    IconButton(onClick = {
+                        // Example paste fallback
+                        onUrlChange("https://youtube.com/@AmanAnimeStudioOfficial")
+                    }) {
+                        Icon(Icons.Default.ContentPaste, contentDescription = "Paste", tint = AnimeCyan, modifier = Modifier.size(18.dp))
+                    }
+                },
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth().testTag("youtube_channel_link_input"),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = Color(0xFFFF0000),
+                    focusedTextColor = TextPrimary,
+                    unfocusedTextColor = TextPrimary
+                ),
+                shape = RoundedCornerShape(10.dp)
+            )
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            // Channel Name Input
+            Text(AppLocaleStrings.tr(state.selectedLanguage, "Channel Display Name:", "चैनल का नाम:"), color = TextMuted, fontSize = 11.sp)
+            Spacer(modifier = Modifier.height(6.dp))
+            OutlinedTextField(
+                value = channelNameInput,
+                onValueChange = onNameChange,
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth().testTag("youtube_channel_name_input"),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = AnimeCyan,
+                    focusedTextColor = TextPrimary,
+                    unfocusedTextColor = TextPrimary
+                ),
+                shape = RoundedCornerShape(10.dp)
+            )
+
+            Spacer(modifier = Modifier.height(14.dp))
+
+            // Connected Channel Status Summary
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(10.dp))
+                    .background(AnimeSurfaceVariant)
+                    .padding(10.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column {
+                    Text(connectedChannel.channelName, color = AnimeGold, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                    Text("${connectedChannel.channelHandle} • ${connectedChannel.subscriberCount}", color = TextSecondary, fontSize = 10.sp)
+                }
+
+                Button(
+                    onClick = onSaveChannel,
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF0000)),
+                    shape = RoundedCornerShape(8.dp),
+                    contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 12.dp, vertical = 6.dp),
+                    modifier = Modifier.testTag("save_channel_link_btn")
+                ) {
+                    Icon(Icons.Default.Check, contentDescription = null, tint = Color.White, modifier = Modifier.size(14.dp))
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(AppLocaleStrings.tr(state.selectedLanguage, "Save Channel", "चैनल सेव करें"), color = Color.White, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                }
+            }
+        }
+    }
+}
+
+/**
+ * Web Series Daily Generation & Command Card
+ */
+@Composable
+private fun WebSeriesAutomationCard(
+    schedule: com.example.data.model.WebSeriesSchedule,
+    seriesTitle: String,
+    episodesPerDay: Int,
+    onTitleChange: (String) -> Unit,
+    onEpisodesPerDayChange: (Int) -> Unit,
+    onToggleAutoPublishFallback: (Boolean) -> Unit,
+    isGenerating: Boolean,
+    onTriggerDailyGeneration: () -> Unit
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = AnimeSurface),
+        shape = RoundedCornerShape(16.dp),
+        border = BorderStroke(1.dp, AnimePurple.copy(alpha = 0.6f))
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Default.Movie, contentDescription = null, tint = AnimePink, modifier = Modifier.size(20.dp))
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(AppLocaleStrings.tr(state.selectedLanguage, "Web Series Daily Command (Automation)", "वेब सीरीज डेली कमांड (Web Series Automation)"), color = TextPrimary, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                }
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(6.dp))
+                        .background(AnimePink.copy(alpha = 0.2f))
+                        .padding(horizontal = 8.dp, vertical = 3.dp)
+                ) {
+                    Text("EPISODIC", color = AnimePink, fontSize = 9.sp, fontWeight = FontWeight.Bold)
+                }
+            }
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            Text(
+                text = AppLocaleStrings.tr(state.selectedLanguage, "Create 1, 2, or 3 episodes daily per your command. The app will notify you when ready and upload to YouTube upon your green signal review.", "कमांड के अनुसार प्रतिदिन 1, 2 या 3 एपिसोड तैयार करें। एपिसोड बनने के बाद ऐप आपको नोटिफाई करेगा और रिव्यू के बाद ग्रीन सिग्नल मिलते ही YouTube पर अपलोड कर देगा।"),
+                color = TextSecondary,
+                fontSize = 11.sp,
+                lineHeight = 16.sp
+            )
+
+            Spacer(modifier = Modifier.height(14.dp))
+
+            // Web Series Title Input
+            Text(AppLocaleStrings.tr(state.selectedLanguage, "Web Series Title:", "वेब सीरीज का नाम:"), color = TextMuted, fontSize = 11.sp)
+            Spacer(modifier = Modifier.height(6.dp))
+            OutlinedTextField(
+                value = seriesTitle,
+                onValueChange = onTitleChange,
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth(),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = AnimePurple,
+                    focusedTextColor = TextPrimary,
+                    unfocusedTextColor = TextPrimary
+                ),
+                shape = RoundedCornerShape(10.dp)
+            )
+
+            Spacer(modifier = Modifier.height(14.dp))
+
+            // Episodes per day Command Selector (1, 2, 3)
+            Text(AppLocaleStrings.tr(state.selectedLanguage, "How many episodes to make per day? (Daily Command):", "प्रतिदिन कितने एपिसोड बनाएं?:"), color = TextMuted, fontSize = 11.sp)
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                listOf(1, 2, 3).forEach { count ->
+                    val isSelected = episodesPerDay == count
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .clip(RoundedCornerShape(10.dp))
+                            .background(if (isSelected) AnimePurple else AnimeSurfaceVariant)
+                            .border(1.dp, if (isSelected) AnimePink else Color.Transparent, RoundedCornerShape(10.dp))
+                            .clickable { onEpisodesPerDayChange(count) }
+                            .padding(vertical = 10.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text(
+                                text = AppLocaleStrings.tr(state.selectedLanguage, "$count ep/day", "$count एपिसोड/दिन"),
+                                color = if (isSelected) Color.White else TextPrimary,
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Text(
+                                text = if (AppLocaleStrings.isHindi(state.selectedLanguage)) { if (count == 1) "दैनिक रिलीज" else if (count == 2) "दोपहर व शाम" else "त्रि-दैनिक महागाथा" } else { if (count == 1) "Daily Release" else if (count == 2) "Noon & Evening" else "Tri-Daily Saga" },
+                                color = if (isSelected) AnimeCyanLight else TextMuted,
+                                fontSize = 9.sp
+                            )
+                        }
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(14.dp))
+
+            // Scheduled Fallback Toggle
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(10.dp))
+                    .background(AnimeSurfaceVariant)
+                    .padding(12.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(modifier = Modifier.weight(1f).padding(end = 8.dp)) {
+                    Text(AppLocaleStrings.tr(state.selectedLanguage, "Scheduled Time Auto-Upload Backup", "शेड्यूल टाइम ऑटो-अपलोड बैकअप"), color = TextPrimary, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                    Text(AppLocaleStrings.tr(state.selectedLanguage, "If you are busy and unable to review, it will auto-upload to YouTube after 2 hours.", "यदि आप व्यस्त हैं और रिव्यू न दे पाएं, तो 2 घंटे बाद स्वतः YouTube पर अपलोड होगा।"), color = TextSecondary, fontSize = 10.sp)
+                }
+                Switch(
+                    checked = schedule.autoPublishIfNoReview,
+                    onCheckedChange = onToggleAutoPublishFallback,
+                    colors = SwitchDefaults.colors(checkedThumbColor = AnimeGold, checkedTrackColor = AnimeGold.copy(alpha = 0.3f))
+                )
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Trigger Daily Generation Button
+            Button(
+                onClick = onTriggerDailyGeneration,
+                enabled = !isGenerating,
+                colors = ButtonDefaults.buttonColors(containerColor = AnimePurple),
+                shape = RoundedCornerShape(12.dp),
+                modifier = Modifier.fillMaxWidth().height(48.dp).testTag("trigger_daily_episodes_btn")
+            ) {
+                if (isGenerating) {
+                    CircularProgressIndicator(modifier = Modifier.size(16.dp), color = Color.White, strokeWidth = 2.dp)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(AppLocaleStrings.tr(state.selectedLanguage, "Generating episodes...", "एपिसोड्स जनरेट हो रहे हैं..."), color = Color.White, fontSize = 13.sp)
+                } else {
+                    Icon(Icons.Default.AutoAwesome, contentDescription = null, tint = AnimeGold, modifier = Modifier.size(16.dp))
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(AppLocaleStrings.tr(state.selectedLanguage, "⚡ Generate today's $episodesPerDay episode(s) & send for review", "⚡ आज के $episodesPerDay एपिसोड बनाएं व रिव्यू के लिए भेजें"), color = Color.White, fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                }
+            }
+        }
+    }
+}
+
+/**
+ * Review & Green Signal (OK) Approval Gate Card
+ */
+@Composable
+private fun ReviewAndGreenSignalCard(
+    episodes: List<AutomatedEpisode>,
+    onGreenSignalAndUpload: (String) -> Unit,
+    onRejectEpisode: (String) -> Unit
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = AnimeSurface),
+        shape = RoundedCornerShape(16.dp),
+        border = BorderStroke(1.dp, AnimeGreen.copy(alpha = 0.6f))
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Default.CheckCircle, contentDescription = null, tint = AnimeGreen, modifier = Modifier.size(20.dp))
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(AppLocaleStrings.tr(state.selectedLanguage, "Review & Green Signal Gate (Approval Gate)", "रिव्यू व ग्रीन सिग्नल गेट (Approval Gate)"), color = TextPrimary, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                }
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(6.dp))
+                        .background(AnimeGreen.copy(alpha = 0.2f))
+                        .padding(horizontal = 8.dp, vertical = 3.dp)
+                ) {
+                    Text("${episodes.count { it.status == EpisodeReviewStatus.PENDING_REVIEW }} PENDING", color = AnimeGreen, fontSize = 9.sp, fontWeight = FontWeight.Bold)
+                }
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Text(
+                text = "जब तक आप 'ग्रीन सिग्नल / OK' नहीं बोलेंगे, वीडियो अपलोड नहीं होगा (या निर्धारित शेड्यूल टाइम खत्म होने पर स्वतः अपलोड होगा)।",
+                color = TextSecondary,
+                fontSize = 11.sp
+            )
+
+            Spacer(modifier = Modifier.height(14.dp))
+
+            if (episodes.isEmpty()) {
+                Box(
+                    modifier = Modifier.fillMaxWidth().padding(24.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(AppLocaleStrings.tr(state.selectedLanguage, "No pending episodes. Create new episodes from the 'Channel & Series' tab!", "कोई पेंडिंग एपिसोड नहीं है। 'चैनल व सीरीज' टैब से नया एपिसोड बनाएं!"), color = TextMuted, fontSize = 12.sp)
+                }
+            } else {
+                episodes.forEach { episode ->
+                    EpisodeReviewItemCard(
+                        episode = episode,
+                        onGreenSignal = { onGreenSignalAndUpload(episode.id) },
+                        onReject = { onRejectEpisode(episode.id) }
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun EpisodeReviewItemCard(
+    episode: AutomatedEpisode,
+    onGreenSignal: () -> Unit,
+    onReject: () -> Unit
+) {
+    val isPending = episode.status == EpisodeReviewStatus.PENDING_REVIEW
+    val isUploaded = episode.status == EpisodeReviewStatus.UPLOADED
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = AnimeSurfaceVariant),
+        shape = RoundedCornerShape(12.dp),
+        border = BorderStroke(
+            1.dp,
+            if (isPending) AnimeGold else if (isUploaded) AnimeGreen else AnimePurple.copy(alpha = 0.3f)
+        )
+    ) {
+        Column(modifier = Modifier.padding(12.dp)) {
+            // Episode Title & Status Header
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(text = "🎬 ${episode.title}", color = TextPrimary, fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                }
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(4.dp))
+                        .background(if (isUploaded) AnimeGreen else if (isPending) AnimeGold else AnimeCyan)
+                        .padding(horizontal = 6.dp, vertical = 2.dp)
+                ) {
+                    Text(
+                        text = episode.status.label,
+                        color = Color.Black,
+                        fontSize = 9.sp,
+                        fontWeight = FontWeight.ExtraBold
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(6.dp))
+
+            Text(text = episode.synopsis, color = TextSecondary, fontSize = 11.sp, lineHeight = 15.sp)
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            // Countdown / Schedule Info
+            if (isPending) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(AnimeGold.copy(alpha = 0.12f))
+                        .padding(horizontal = 10.dp, vertical = 6.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Default.Schedule, contentDescription = null, tint = AnimeGold, modifier = Modifier.size(14.dp))
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(AppLocaleStrings.tr(state.selectedLanguage, "Schedule fallback: 01:54:30 left", "शेड्यूल फॉलबैक: 01:54:30 शेष"), color = AnimeGold, fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                    }
+                    Text(AppLocaleStrings.tr(state.selectedLanguage, "Auto-upload if unreviewed", "रिव्यू न मिलने पर स्वतः अपलोड"), color = TextMuted, fontSize = 9.sp)
+                }
+                Spacer(modifier = Modifier.height(10.dp))
+            } else if (isUploaded && episode.uploadedUrl.isNotBlank()) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(AnimeGreen.copy(alpha = 0.15f))
+                        .padding(horizontal = 10.dp, vertical = 6.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(Icons.Default.Check, contentDescription = null, tint = AnimeGreen, modifier = Modifier.size(14.dp))
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text("YouTube पर लाइव: ${episode.uploadedUrl}", color = AnimeGreen, fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                }
+                Spacer(modifier = Modifier.height(10.dp))
+            }
+
+            // Green Signal & Action Buttons
+            if (isPending) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Button(
+                        onClick = onGreenSignal,
+                        colors = ButtonDefaults.buttonColors(containerColor = AnimeGreen),
+                        shape = RoundedCornerShape(8.dp),
+                        modifier = Modifier.weight(1f).height(42.dp).testTag("green_signal_ok_btn")
+                    ) {
+                        Icon(Icons.Default.CloudUpload, contentDescription = null, tint = Color.Black, modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(AppLocaleStrings.tr(state.selectedLanguage, "🟢 Give Green Signal (OK) & Upload", "🟢 ग्रीन सिग्नल (OK) दें व अपलोड करें"), color = Color.Black, fontSize = 11.sp, fontWeight = FontWeight.ExtraBold)
+                    }
+
+                    OutlinedButton(
+                        onClick = onReject,
+                        shape = RoundedCornerShape(8.dp),
+                        border = BorderStroke(1.dp, Color(0xFFFF5252)),
+                        modifier = Modifier.height(42.dp)
+                    ) {
+                        Icon(Icons.Default.Close, contentDescription = null, tint = Color(0xFFFF5252), modifier = Modifier.size(14.dp))
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(AppLocaleStrings.tr(state.selectedLanguage, "Reject", "खारिज (Reject)"), color = Color(0xFFFF5252), fontSize = 10.sp)
+                    }
+                }
+            }
+        }
+    }
+}
+
+/**
+ * Lyria AI Generative Music & Soundtrack Card
+ */
+@Composable
+private fun LyriaMusicGeneratorCard(
+    musicPrompt: String,
+    selectedMood: MusicMood,
+    isGenerating: Boolean,
+    lastGeneratedTitle: String,
+    waveformData: List<Float>,
+    onPromptChange: (String) -> Unit,
+    onMoodChange: (MusicMood) -> Unit,
+    onGenerateMusic: () -> Unit
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = AnimeSurface),
+        shape = RoundedCornerShape(16.dp),
+        border = BorderStroke(1.dp, AnimePink.copy(alpha = 0.6f))
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Default.MusicNote, contentDescription = null, tint = AnimePink, modifier = Modifier.size(20.dp))
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(AppLocaleStrings.tr(state.selectedLanguage, "Lyria AI Music & Soundtrack Generator", "Lyria AI म्यूजिक व साउंडट्रैक जनरेटर"), color = TextPrimary, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                }
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(6.dp))
+                        .background(AnimePink.copy(alpha = 0.2f))
+                        .padding(horizontal = 8.dp, vertical = 3.dp)
+                ) {
+                    Text("LYRIA V3", color = AnimePink, fontSize = 9.sp, fontWeight = FontWeight.Bold)
+                }
+            }
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            Text(
+                text = "प्रॉम्प्ट्स या सीन इमेज से कस्टम बैकग्राउंड म्यूजिक, बैटल थीम, जिंगल्स और जापानी ऑर्केस्ट्रा तैयार करें।",
+                color = TextSecondary,
+                fontSize = 11.sp
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // Mood Selector
+            Text(AppLocaleStrings.tr(state.selectedLanguage, "Select Music Mood / Genre:", "म्यूजिक मूड / जॉनर चुनें:"), color = TextMuted, fontSize = 11.sp)
+            Spacer(modifier = Modifier.height(6.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                MusicMood.values().forEach { mood ->
+                    val isSelected = selectedMood == mood
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(if (isSelected) AnimePink else AnimeSurfaceVariant)
+                            .border(1.dp, if (isSelected) AnimeGold else Color.Transparent, RoundedCornerShape(8.dp))
+                            .clickable { onMoodChange(mood) }
+                            .padding(vertical = 8.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = mood.label,
+                            color = if (isSelected) Color.Black else TextPrimary,
+                            fontSize = 10.sp,
+                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                            maxLines = 1
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // Music Prompt Input
+            Text(AppLocaleStrings.tr(state.selectedLanguage, "Describe Soundtrack (Music Prompt):", "म्यूजिक प्रॉम्प्ट लिखें:"), color = TextMuted, fontSize = 11.sp)
+            Spacer(modifier = Modifier.height(6.dp))
+            OutlinedTextField(
+                value = musicPrompt,
+                onValueChange = onPromptChange,
+                minLines = 2,
+                modifier = Modifier.fillMaxWidth().testTag("lyria_music_prompt_input"),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = AnimePink,
+                    focusedTextColor = TextPrimary,
+                    unfocusedTextColor = TextPrimary
+                ),
+                shape = RoundedCornerShape(10.dp)
+            )
+
+            Spacer(modifier = Modifier.height(14.dp))
+
+            // Generate Music Button
+            Button(
+                onClick = onGenerateMusic,
+                enabled = !isGenerating,
+                colors = ButtonDefaults.buttonColors(containerColor = AnimePink),
+                shape = RoundedCornerShape(10.dp),
+                modifier = Modifier.fillMaxWidth().height(46.dp).testTag("generate_lyria_music_btn")
+            ) {
+                if (isGenerating) {
+                    CircularProgressIndicator(modifier = Modifier.size(16.dp), color = Color.White, strokeWidth = 2.dp)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(AppLocaleStrings.tr(state.selectedLanguage, "Lyria AI is generating soundtrack...", "Lyria AI साउंडट्रैक तैयार कर रहा है..."), color = Color.White, fontSize = 12.sp)
+                } else {
+                    Icon(Icons.Default.AutoAwesome, contentDescription = null, tint = Color.White, modifier = Modifier.size(16.dp))
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(AppLocaleStrings.tr(state.selectedLanguage, "🎵 Create Custom Soundtrack with Lyria AI", "🎵 Lyria AI से कस्टम साउंडट्रैक बनाएं"), color = Color.White, fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                }
+            }
+
+            // Waveform Preview if generated
+            if (lastGeneratedTitle.isNotBlank()) {
+                Spacer(modifier = Modifier.height(14.dp))
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(containerColor = AnimeSurfaceVariant),
+                    shape = RoundedCornerShape(10.dp),
+                    border = BorderStroke(1.dp, AnimePink)
+                ) {
+                    Column(modifier = Modifier.padding(12.dp)) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(text = "🎧 $lastGeneratedTitle", color = AnimeGold, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                            Text(text = "${selectedMood.label} • 30s", color = AnimeCyanLight, fontSize = 10.sp)
+                        }
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        // Native Canvas Audio Waveform Component
+                        AudioWaveformCanvas(
+                            waveformSamples = waveformData,
+                            playbackProgress = 0.45f,
+                            isPlaying = true,
+                            barCount = 40,
+                            height = 46.dp,
+                            activeBarColor = AnimePink,
+                            playheadColor = AnimeGold
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+/**
+ * Multi-App API Integration Card
+ */
+@Composable
+private fun MultiAppApiConnectCard(
+    connectedChannel: com.example.data.model.ConnectedChannel
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = AnimeSurface),
+        shape = RoundedCornerShape(16.dp),
+        border = BorderStroke(1.dp, AnimeCyan.copy(alpha = 0.6f))
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text(AppLocaleStrings.tr(state.selectedLanguage, "Multi-App API Hub Automation", "मल्टीपल ऐप एपीआई ऑटोमेशन (Multi-App API Hub)"), color = TextPrimary, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+            Text(AppLocaleStrings.tr(state.selectedLanguage, "Connect automations with YouTube, Instagram, Webhooks & Zapier", "YouTube, Instagram, Webhooks व Zapier के साथ ऑटोमेशन जोड़ें"), color = TextSecondary, fontSize = 11.sp)
+
+            Spacer(modifier = Modifier.height(14.dp))
+
+            ApiConnectorRow(
+                appName = "YouTube Data API v3",
+                status = AppLocaleStrings.tr(state.selectedLanguage, "Connected (Active)", "सक्रिय (Connected)"),
+                icon = Icons.Default.Tv,
+                color = Color(0xFFFF0000),
+                desc = AppLocaleStrings.tr(state.selectedLanguage, "Automated video upload, thumbnail & tags publishing", "ऑटोमेटिक वीडियो अपलोड, थंबनेल व टैग्स पब्लिशिंग")
+            )
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            ApiConnectorRow(
+                appName = "Instagram Graph API",
+                status = AppLocaleStrings.tr(state.selectedLanguage, "Reels Ready (Active)", "सक्रिय (Reels Ready)"),
+                icon = Icons.Default.Movie,
+                color = Color(0xFFE1306C),
+                desc = AppLocaleStrings.tr(state.selectedLanguage, "Reels scheduling & 9:16 vertical auto-upload", "रील्स शेड्यूलिंग व 9:16 वर्टिकल ऑटो-अपलोड")
+            )
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            ApiConnectorRow(
+                appName = "Webhooks & Zapier Connector",
+                status = AppLocaleStrings.tr(state.selectedLanguage, "REST Endpoint (Active)", "सक्रिय (REST Endpoint)"),
+                icon = Icons.Default.Link,
+                color = AnimeCyan,
+                desc = "https://api.animestudio.ai/v1/webhook/episodes"
+            )
+        }
+    }
+}
+
+@Composable
+private fun ApiConnectorRow(
+    appName: String,
+    status: String,
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    color: Color,
+    desc: String
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(10.dp))
+            .background(AnimeSurfaceVariant)
+            .padding(12.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
+            Box(
+                modifier = Modifier
+                    .size(32.dp)
+                    .clip(CircleShape)
+                    .background(color.copy(alpha = 0.2f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(icon, contentDescription = null, tint = color, modifier = Modifier.size(18.dp))
+            }
+            Spacer(modifier = Modifier.width(10.dp))
+            Column {
+                Text(appName, color = TextPrimary, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                Text(desc, color = TextMuted, fontSize = 10.sp)
+            }
+        }
+
+        Box(
+            modifier = Modifier
+                .clip(RoundedCornerShape(6.dp))
+                .background(AnimeGreen.copy(alpha = 0.2f))
+                .padding(horizontal = 8.dp, vertical = 3.dp)
+        ) {
+            Text(status, color = AnimeGreen, fontSize = 9.sp, fontWeight = FontWeight.Bold)
+        }
+    }
+}

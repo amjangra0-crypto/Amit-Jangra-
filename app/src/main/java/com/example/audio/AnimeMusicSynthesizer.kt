@@ -95,6 +95,16 @@ class AnimeMusicSynthesizer {
         audioTrack = null
     }
 
+    fun playMood(mood: com.example.data.model.MusicMood) {
+        stop()
+        start(mood.label)
+    }
+
+    fun playMood(moodLabel: String) {
+        stop()
+        start(moodLabel)
+    }
+
     fun setDucking(duck: Boolean) {
         isDucked = duck
     }

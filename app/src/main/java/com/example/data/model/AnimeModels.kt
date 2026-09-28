@@ -65,10 +65,124 @@ enum class SubtitleMode(val label: String, val description: String) {
     ORIGINAL_ONLY("मूल (Original)", "Show original script dialogue")
 }
 
+enum class ProductionFormat(
+    val id: String,
+    val title: String,
+    val subtitle: String,
+    val sceneCount: Int,
+    val icon: String,
+    val targetAspect: String,
+    val description: String
+) {
+    SHORTS_REEL(
+        id = "shorts_reel",
+        title = "Shorts / Reel (15-60s)",
+        subtitle = "⚡ शार्ट / रील",
+        sceneCount = 2,
+        icon = "⚡",
+        targetAspect = "9:16 Vertical",
+        description = "Rapid punchy pacing, viral cliffhanger, vertical framing & fast dub tempo"
+    ),
+    ANIME_EPISODE(
+        id = "anime_episode",
+        title = "Anime Episode (Long)",
+        subtitle = "🎬 एनिमे एपिसोड",
+        sceneCount = 4,
+        icon = "🎬",
+        targetAspect = "16:9 Widescreen",
+        description = "Standard 4-scene anime episode with prologue, battle encounter & climactic payoff"
+    ),
+    MANHWA_WEB_SERIES(
+        id = "manhwa_web_series",
+        title = "Manhwa Web Series",
+        subtitle = "📜 मन्हवा वेब सीरीज",
+        sceneCount = 5,
+        icon = "📜",
+        targetAspect = "Webtoon Vertical",
+        description = "Korean manhwa episodic narrative with shadow auras, dungeon awakening & chapter cliffhangers"
+    ),
+    CINEMATIC_MOVIE(
+        id = "cinematic_movie",
+        title = "Cinematic Movie (OVA)",
+        subtitle = "🎥 एनिमे मूवी / OVA",
+        sceneCount = 6,
+        icon = "🎥",
+        targetAspect = "21:9 Ultra-Wide",
+        description = "Grand theatrical cinematic with orchestral scores, widescreen letterbox & deep emotional arcs"
+    )
+}
+
+enum class MotionEffect(
+    val id: String,
+    val title: String,
+    val emoji: String,
+    val description: String
+) {
+    SPEEDLINES_ACTION("speedlines", "Shonen Speedlines", "⚡", "Dynamic radial action speedlines for combat and sudden impact"),
+    SCREEN_SHAKE_IMPACT("screen_shake", "Screen Shake Impact", "💥", "Dynamic camera shake on explosions, punches, shouts & magic blasts"),
+    AURA_GLOW_PARTICLES("aura_glow", "Manhwa Shadow Aura", "🔥", "Electric blue & purple glowing aura with rising embers"),
+    MANGA_PANEL_SLIDE("panel_slide", "Manga / Webtoon Panel Shift", "📜", "Webtoon vertical panel shift & ink screentone borders"),
+    CINEMATIC_ZOOM("cinematic_zoom", "Dramatic Ken Burns Zoom", "🎥", "Smooth camera zoom-in focusing into character expressions"),
+    SLOW_MO_FREEZE("slow_mo", "Slow-Mo Freeze Frame", "⏱️", "Bullet-time slow motion with sudden motion burst")
+}
+
+enum class CharacterExpressionType(
+    val id: String,
+    val title: String,
+    val emoji: String,
+    val stickerIcon: String,
+    val description: String
+) {
+    FIERCE_BATTLE("fierce_battle", "Fierce Battle Roar", "🔥", "roaring", "Fiery warrior spirit, clenched combat teeth & intense stare"),
+    MANHWA_GLOWING_EYES("glowing_eyes", "Manhwa Glowing Eyes", "⚡", "glowing", "Overpowered cold gaze with neon glowing eyes & dark aura"),
+    KAWAII_BLUSH("kawaii_blush", "Kawaii Blush & Sparkles", "🌸", "blush", "Rosy pink cheeks, sparkling eyes & warm anime smile"),
+    SHOCK_SWEATDROP("shock_sweatdrop", "Comedic Sweatdrop", "💧", "sweatdrop", "Oversized anime sweatdrop, wide panic eyes & comedic shudder"),
+    TSUNDERE_POUT("tsundere_pout", "Tsundere Pout", "💢", "pout", "Anime anger vein mark, puffed cheeks & tsundere glare"),
+    MELANCHOLIC_TEARS("melancholic_tears", "Melancholic Tears", "✨", "tears", "Glistening cinematic tears, emotional heartbreak & soft blink"),
+    VILLAIN_SMIRK("villain_smirk", "Villainous Smirk", "😈", "smirk", "Shadow-shaded smirk, confident tilted head & sharp eyes")
+}
+
+enum class SourcePlatform(
+    val id: String,
+    val title: String,
+    val iconEmoji: String,
+    val brandColorHex: String,
+    val description: String
+) {
+    YOUTUBE("youtube", "YouTube", "▶️", "#FF0000", "वीडियो पेसिंग, हुक और बैकग्राउंड म्यूजिक समझकर निर्माण"),
+    GOOGLE("google", "Google Web", "🔍", "#4285F4", "गहरा रिसर्च, वर्ल्डबिल्डिंग और मिथोलॉजी डाटा विश्लेषण"),
+    INSTAGRAM("instagram", "Instagram Reels", "📸", "#E1306C", "एस्थेटिक विजुअल्स, ट्रेंडिंग वाइब और त्वरित हुक"),
+    SNAPCHAT("snapchat", "Snapchat Spotlight", "👻", "#FFFC00", "फास्ट-पेस्ड स्नैप्स, एआर मूड और स्पॉन्डटेनियस डायलॉग्स"),
+    VOICE_COMMAND("voice", "Voice Directive", "🎙️", "#00E5FF", "ध्वनि व बोलकर दिए गए निर्देश को समझकर निर्माण"),
+    DIRECT_TEXT("text", "Text Prompt", "✍️", "#9C27B0", "विस्तृत टेक्स्ट विवरण व रचनात्मक कहानी")
+}
+
+data class SourceIntelligence(
+    val platform: SourcePlatform,
+    val rawQueryOrUrl: String,
+    val analyzedTheme: String,
+    val narrativeHook: String,
+    val visualVibe: String,
+    val audioMoodTag: String,
+    val keyExtractedTags: List<String> = emptyList(),
+    val isContinuityIntentDetected: Boolean = false,
+    val detectedEpisodeHint: Int = 1
+)
+
+data class ContinuityConfig(
+    val isSeriesContinuityEnabled: Boolean = false,
+    val linkedParentProjectId: String? = null,
+    val linkedParentProjectTitle: String? = null,
+    val episodeNumber: Int = 1,
+    val partLabel: String = "Part 1 / Standalone"
+)
+
 data class DialogueLine(
     val characterName: String,
     val text: String,
     val emotion: String = "Normal", // "Happy", "Serious", "Excited", "Mysterious", "Dramatic"
+    val expression: String = "Confident Smirk", // Dynamic facial expression
+    val motionEffect: String = "SPEEDLINES_ACTION", // Motion effect during line
     val voicePitch: Float = 1.0f,
     val voiceSpeed: Float = 1.0f,
     val voiceType: String = "Girl",
@@ -85,24 +199,33 @@ data class AnimeScene(
     val durationSec: Int = 8,
     val sceneDrawableName: String = "scene_cherry_temple",
     val onScreenTitleTranslated: String = "",
-    val atmosphericEffect: String = "Cherry Blossom Storm"
+    val atmosphericEffect: String = "Cherry Blossom Storm",
+    val motionEffect: String = "SPEEDLINES_ACTION",
+    val productionFormat: String = "Anime Episode"
 )
 
 data class AnimeScript(
     val id: String = System.currentTimeMillis().toString(),
     val title: String,
     val originalPrompt: String,
-    val inputSourceType: String = "TEXT", // "TEXT", "LINK", "IMAGE"
+    val inputSourceType: String = "TEXT", // "TEXT", "LINK", "IMAGE", "VOICE"
     val sourceReference: String = "",
     val genre: String = "Shonen Fantasy",
     val artStyle: String = "Japanese Anime (Makoto Shinkai)",
+    val productionFormat: String = "Anime Episode (Long)",
+    val defaultMotionEffect: String = "SPEEDLINES_ACTION",
     val language: String = "Hindi",
     val voiceoverLanguage: String = "Hindi",
     val subtitleMode: SubtitleMode = SubtitleMode.TRANSLATED_ONLY,
     val synopsis: String,
     val characters: List<CharacterProfile>,
     val scenes: List<AnimeScene>,
-    val createdAt: Long = System.currentTimeMillis()
+    val createdAt: Long = System.currentTimeMillis(),
+    val sourcePlatformName: String = "Direct Text",
+    val isLinkedSequel: Boolean = false,
+    val linkedEpisodeNumber: Int = 1,
+    val linkedParentTitle: String = "",
+    val noveltyBadge: String = "✨ 100% Brand New Characters & Lore"
 )
 
 enum class MusicMood(val label: String, val description: String) {
@@ -115,10 +238,14 @@ enum class MusicMood(val label: String, val description: String) {
 
 enum class AnimeArtStyle(val id: String, val title: String, val description: String) {
     JAPANESE_ANIME("japanese_anime", "Japanese Anime", "Vibrant colors, cinematic lighting, Makoto Shinkai / CoMix Wave aesthetic"),
+    MANHWA_WEBTOON("manhwa_webtoon", "Manhwa Webtoon", "Solo-Leveling Korean webtoon style, vibrant digital glow, dark shadow aura & glowing neon eyes"),
+    CLASSIC_MANGA("classic_manga", "Classic Manga", "Monochrome ink screentones, dramatic manga panels, hatching & speedlines"),
     SHONEN_ACTION("shonen_action", "Shonen Action", "Dynamic line art, high contrast, ufotable anime style"),
     CHIBI_CARTOON("chibi_cartoon", "Chibi Cartoon", "Super cute, round kawaii proportions, playful cartoon vibes"),
-    CLASSIC_MANGA("classic_manga", "Classic Manga", "Monochrome ink screentones, dramatic manga panels"),
-    CYBERPUNK_ANIME("cyberpunk_anime", "Cyberpunk Neo", "Neon glow, rain reflections, futuristic anime cityscapes")
+    CYBERPUNK_ANIME("cyberpunk_anime", "Cyberpunk Neo", "Neon glow, rain reflections, futuristic anime cityscapes"),
+    SKETCH_LINEART("sketch_lineart", "Sketch & Line Art Anime", "Pencil sketch, clean dynamic character lines, animation storyboard aesthetics"),
+    HYPER_REALISTIC("hyper_realistic", "Hyper-Realistic Anime (Veo/CGI)", "Ultra-detailed textures, photorealistic cinematic lighting, raytraced reflections, hyper-realistic anime CGI"),
+    RETRO_90S_CEL("retro_90s_cel", "90s Retro Cel Anime", "Classic 90s vintage anime cel shading, grain, hand-drawn retro aesthetic")
 }
 
 enum class SupportedLanguage(val code: String, val displayName: String, val nativeName: String) {
@@ -129,7 +256,11 @@ enum class SupportedLanguage(val code: String, val displayName: String, val nati
     SPANISH("es", "Spanish", "Español"),
     FRENCH("fr", "French", "Français"),
     GERMAN("de", "German", "Deutsch"),
-    KOREAN("ko", "Korean", "한국어")
+    KOREAN("ko", "Korean", "한국어"),
+    TAMIL("ta", "Tamil", "தமிழ்"),
+    TELUGU("te", "Telugu", "తెలుగు"),
+    RUSSIAN("ru", "Russian", "Русский"),
+    ARABIC("ar", "Arabic", "العربية")
 }
 
 enum class SubscriptionPlan(

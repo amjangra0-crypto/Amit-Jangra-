@@ -2,12 +2,15 @@ package com.example.network
 
 import android.util.Log
 import com.example.BuildConfig
+import com.example.data.engine.SourceIntelligenceEngine
 import com.example.data.model.AnimeArtStyle
 import com.example.data.model.AnimeScene
 import com.example.data.model.AnimeScript
 import com.example.data.model.AnimeVisualElement
 import com.example.data.model.CharacterProfile
 import com.example.data.model.DialogueLine
+import com.example.data.model.SourceIntelligence
+import com.example.data.model.SourcePlatform
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okhttp3.MediaType.Companion.toMediaType
@@ -100,28 +103,85 @@ class GeminiApiService {
         sourceType: String,
         artStyle: AnimeArtStyle,
         language: String,
-        availableCharacters: List<CharacterProfile>
+        availableCharacters: List<CharacterProfile>,
+        productionFormat: com.example.data.model.ProductionFormat = com.example.data.model.ProductionFormat.ANIME_EPISODE,
+        motionEffect: com.example.data.model.MotionEffect = com.example.data.model.MotionEffect.SPEEDLINES_ACTION,
+        voiceAccent: String = "",
+        sourcePlatform: SourcePlatform = SourcePlatform.DIRECT_TEXT,
+        isSeriesContinuity: Boolean = false,
+        linkedScript: AnimeScript? = null,
+        linkedEpisodeNumber: Int = 1,
+        excludedCharacterNames: Set<String> = emptySet()
     ): AnimeScript = withContext(Dispatchers.Default) {
+        val targetSceneCount = productionFormat.sceneCount
+        val sourceIntel = SourceIntelligenceEngine.analyzeSource(input, sourcePlatform)
+        val shouldLinkContinuity = isSeriesContinuity || (sourceIntel.isContinuityIntentDetected && linkedScript != null)
+        val effectiveEpisode = if (shouldLinkContinuity) {
+            if (sourceIntel.detectedEpisodeHint > 1) sourceIntel.detectedEpisodeHint else linkedEpisodeNumber.coerceAtLeast(2)
+        } else 1
+
+        val continuityInstructions = if (shouldLinkContinuity && linkedScript != null) {
+            """
+            === 🔗 SERIES CONTINUITY / SEQUEL MODE (ACTIVE) ===
+            This project is an ongoing episodic sequel directly linked to previous movie/project: "${linkedScript.title}".
+            Current Episode / Part: Episode $effectiveEpisode
+            REUSE the established characters from the previous movie: ${linkedScript.characters.map { it.name }.joinToString(", ")}.
+            Continue the overarching narrative arc, deepen character bonds, and escalate the conflict into Part $effectiveEpisode.
+            """.trimIndent()
+        } else {
+            """
+            === ✨ MANDATORY CHARACTER & IDEA NOVELTY DIRECTIVE ===
+            CRITICAL MANDATE: All characters must be 100% BRAND NEW and NEVER repeated from previous projects!
+            Do NOT reuse stock or previously generated character names (Do NOT use: ${excludedCharacterNames.joinToString(", ")}).
+            You MUST invent completely unique original characters with fresh names, original backstories, unique visual hairstyles, eye colors, outfit auras, distinct voice personas, and fresh plotlines!
+            """.trimIndent()
+        }
+
+        val formatGuide = when (productionFormat) {
+            com.example.data.model.ProductionFormat.SHORTS_REEL -> 
+                "Format: Viral Anime Short / Reel (15-60 seconds, exactly 2 fast-paced high-octane scenes, immediate hook and dramatic punchline)."
+            com.example.data.model.ProductionFormat.MANHWA_WEB_SERIES -> 
+                "Format: Manhwa Webtoon Series Episode (Solo Leveling / Tower of God style, exactly $targetSceneCount episodic scenes, hunter rank awakenings, dark shadow aura, neon glowing eyes, vertical tension, and cliffhanger ending)."
+            com.example.data.model.ProductionFormat.CINEMATIC_MOVIE -> 
+                "Format: Grand Cinematic Anime Movie / OVA (Theatrical masterpiece, exactly $targetSceneCount dramatic acts from overture to celestial climax)."
+            else -> 
+                "Format: Standard Anime Episode (Full broadcast anime episode, exactly $targetSceneCount scenes: intro, confrontation, climax, resolution)."
+        }
+
         val systemPrompt = """
-            You are a master Japanese Anime & Animation Director.
-            Generate a creative anime video script based on this $sourceType: "$input"
-            Target Art Style: ${artStyle.title} (${artStyle.description})
-            Language for dialogues: $language
+            You are a master Japanese Anime, Korean Manhwa, and Manga Animation Director.
+            Generate a rich, dramatic video animation script based on this $sourceType (${sourcePlatform.title}): "$input"
+            
+            SOURCE INTELLIGENCE CONTEXT:
+            - Source Platform: ${sourcePlatform.title}
+            - Analyzed Theme: ${sourceIntel.analyzedTheme}
+            - Narrative Hook: ${sourceIntel.narrativeHook}
+            - Visual Vibe: ${sourceIntel.visualVibe}
+            - Audio Pacing: ${sourceIntel.audioMoodTag}
+            
+            $continuityInstructions
+            $formatGuide
+            Art Style: ${artStyle.title} (${artStyle.description})
+            Default Motion Effect: ${motionEffect.title} (${motionEffect.description})
+            Language for dialogues: $language ${if (voiceAccent.isNotBlank()) "with $voiceAccent accent cadence" else ""}
+            Required Scene Count: Exactly $targetSceneCount scenes.
             
             Return a JSON with the following structure:
             {
-              "title": "Short title",
-              "genre": "Anime Genre",
+              "title": "Compelling Title",
+              "genre": "Anime / Manhwa Genre",
+              "productionFormat": "${productionFormat.title}",
               "synopsis": "A compelling 2-sentence synopsis",
               "characters": [
                 {
                   "name": "Character Name",
                   "gender": "Girl / Boy / Adult Male / Lady / Mascot",
-                  "role": "Hero / Ally / Mentor / Mascot",
+                  "role": "Hero / Hunter / Mentor / Mascot",
                   "personality": "Personality description",
                   "voiceType": "Girl / Boy / Male / Lady / Mascot",
                   "voicePitch": 1.2,
-                  "voiceSpeed": 1.0
+                  "voiceSpeed": 1.0,
+                  "expression": "Fierce Battle Roar / Manhwa Glowing Eyes / Kawaii Blush & Sparkles / Comedic Sweatdrop / Tsundere Pout / Melancholic Tears / Villainous Smirk"
                 }
               ],
               "scenes": [
@@ -129,15 +189,19 @@ class GeminiApiService {
                   "sceneNumber": 1,
                   "title": "Scene Name",
                   "visualPrompt": "Detailed visual description of this anime scene frame",
-                  "backgroundType": "Cherry Blossom Temple / Cyber Neo City / Mystic Castle",
+                  "backgroundType": "Cherry Blossom Temple / Cyber Neo City / Shadow Dungeon / Mystic Shrine",
                   "bgMood": "Epic Battle / Emotional Piano / Mystery Fantasy / Kawaii Playful / Cyber Synth",
+                  "motionEffect": "${motionEffect.title}",
                   "durationSec": 8,
                   "dialogues": [
                     {
                       "characterName": "Character Name",
                       "text": "Dialogue spoken in $language",
-                      "emotion": "Determined / Excited / Gentle / Mysterious",
-                      "voiceType": "Girl / Boy / Male / Lady / Mascot"
+                      "emotion": "Determined / Fierce / Shocked / Kawaii / Mysterious",
+                      "expression": "Fierce Battle Roar / Manhwa Glowing Eyes / Kawaii Blush / Comedic Sweatdrop / Tsundere Pout / Melancholic Tears / Villainous Smirk",
+                      "motionEffect": "${motionEffect.title}",
+                      "voiceType": "Girl / Boy / Male / Lady / Mascot",
+                      "voiceAccent": "${if (voiceAccent.isNotBlank()) voiceAccent else "Standard Anime"}"
                     }
                   ]
                 }
@@ -147,7 +211,22 @@ class GeminiApiService {
         """.trimIndent()
 
         val rawAiResult = callGemini(systemPrompt)
-        val script = parseScriptJson(rawAiResult, input, sourceType, artStyle, language, availableCharacters)
+        val script = parseScriptJson(
+            rawJson = rawAiResult,
+            input = input,
+            sourceType = sourceType,
+            artStyle = artStyle,
+            language = language,
+            availableCharacters = availableCharacters,
+            productionFormat = productionFormat,
+            motionEffect = motionEffect,
+            voiceAccent = voiceAccent,
+            sourcePlatform = sourcePlatform,
+            isSeriesContinuity = shouldLinkContinuity,
+            linkedScript = linkedScript,
+            linkedEpisodeNumber = effectiveEpisode,
+            excludedCharacterNames = excludedCharacterNames
+        )
         script
     }
 
@@ -157,7 +236,15 @@ class GeminiApiService {
         sourceType: String,
         artStyle: AnimeArtStyle,
         language: String,
-        availableCharacters: List<CharacterProfile>
+        availableCharacters: List<CharacterProfile>,
+        productionFormat: com.example.data.model.ProductionFormat,
+        motionEffect: com.example.data.model.MotionEffect,
+        voiceAccent: String,
+        sourcePlatform: SourcePlatform = SourcePlatform.DIRECT_TEXT,
+        isSeriesContinuity: Boolean = false,
+        linkedScript: AnimeScript? = null,
+        linkedEpisodeNumber: Int = 1,
+        excludedCharacterNames: Set<String> = emptySet()
     ): AnimeScript {
         if (rawJson.isNotBlank()) {
             try {
@@ -165,31 +252,37 @@ class GeminiApiService {
                 val cleaned = rawJson.replace("```json", "").replace("```", "").trim()
                 val root = JSONObject(cleaned)
                 val title = root.optString("title", "Anime Chronicle")
-                val genre = root.optString("genre", "Fantasy Shonen")
-                val synopsis = root.optString("synopsis", "An extraordinary tale animated by AI.")
+                val genre = root.optString("genre", if (artStyle == AnimeArtStyle.MANHWA_WEBTOON) "Urban Hunter Fantasy" else "Fantasy Shonen")
+                val synopsis = root.optString("synopsis", "An extraordinary animation generated through AI.")
 
                 val charactersList = mutableListOf<CharacterProfile>()
                 val charsArr = root.optJSONArray("characters")
-                if (charsArr != null && charsArr.length() > 0) {
+                if (charsArr != null) {
                     for (i in 0 until charsArr.length()) {
-                        val c = charsArr.getJSONObject(i)
-                        val vType = c.optString("voiceType", "Girl")
+                        val cObj = charsArr.getJSONObject(i)
+                        val name = cObj.optString("name", "Hero")
+                        val vType = cObj.optString("voiceType", "Girl")
+                        val expr = cObj.optString("expression", "Confident Smirk")
+                        val matchedAvatar = when {
+                            name.contains("Ren", ignoreCase = true) || name.contains("रेन", ignoreCase = true) || vType.equals("Boy", ignoreCase = true) -> "char_shonen_hero"
+                            name.contains("Jin", ignoreCase = true) || name.contains("Hunter", ignoreCase = true) || vType.equals("Male", ignoreCase = true) -> "char_shonen_hero"
+                            name.contains("Sensei", ignoreCase = true) || name.contains("Kyoto", ignoreCase = true) || vType.equals("Lady", ignoreCase = true) -> "char_lady_mentor"
+                            name.contains("Popo", ignoreCase = true) || name.contains("Mascot", ignoreCase = true) || vType.equals("Mascot", ignoreCase = true) -> "char_chibi_mascot"
+                            else -> "char_anime_heroine"
+                        }
                         charactersList.add(
                             CharacterProfile(
                                 id = "char_${System.currentTimeMillis()}_$i",
-                                name = c.optString("name", "Hero"),
-                                gender = c.optString("gender", "Girl"),
-                                role = c.optString("role", "Protagonist"),
-                                personality = c.optString("personality", "Courageous and curious"),
-                                voicePitch = c.optDouble("voicePitch", 1.0).toFloat(),
-                                voiceSpeed = c.optDouble("voiceSpeed", 1.0).toFloat(),
+                                name = name,
+                                gender = cObj.optString("gender", "Girl"),
+                                role = cObj.optString("role", "Protagonist"),
+                                personality = cObj.optString("personality", "Brave"),
+                                voicePitch = cObj.optDouble("voicePitch", 1.2).toFloat(),
+                                voiceSpeed = cObj.optDouble("voiceSpeed", 1.0).toFloat(),
                                 voiceType = vType,
-                                avatarDrawableName = when {
-                                    vType.contains("boy", ignoreCase = true) || vType.contains("male", ignoreCase = true) -> "char_shonen_hero"
-                                    vType.contains("lady", ignoreCase = true) || vType.contains("sensei", ignoreCase = true) -> "char_lady_mentor"
-                                    vType.contains("mascot", ignoreCase = true) || vType.contains("chibi", ignoreCase = true) -> "char_chibi_mascot"
-                                    else -> "char_anime_heroine"
-                                }
+                                avatarDrawableName = matchedAvatar,
+                                expression = expr,
+                                voiceAccent = voiceAccent.ifBlank { "Standard Anime" }
                             )
                         )
                     }
@@ -197,37 +290,47 @@ class GeminiApiService {
 
                 val scenesList = mutableListOf<AnimeScene>()
                 val scenesArr = root.optJSONArray("scenes")
-                if (scenesArr != null && scenesArr.length() > 0) {
+                if (scenesArr != null) {
                     for (i in 0 until scenesArr.length()) {
-                        val s = scenesArr.getJSONObject(i)
+                        val sObj = scenesArr.getJSONObject(i)
                         val dialoguesList = mutableListOf<DialogueLine>()
-                        val diagArr = s.optJSONArray("dialogues")
-                        if (diagArr != null) {
-                            for (j in 0 until diagArr.length()) {
-                                val d = diagArr.getJSONObject(j)
+                        val dArr = sObj.optJSONArray("dialogues")
+                        if (dArr != null) {
+                            for (j in 0 until dArr.length()) {
+                                val dObj = dArr.getJSONObject(j)
                                 dialoguesList.add(
                                     DialogueLine(
-                                        characterName = d.optString("characterName", "Narrator"),
-                                        text = d.optString("text", "Let the journey begin!"),
-                                        emotion = d.optString("emotion", "Normal"),
-                                        voiceType = d.optString("voiceType", "Girl")
+                                        characterName = dObj.optString("characterName", "Narrator"),
+                                        text = dObj.optString("text", "..."),
+                                        emotion = dObj.optString("emotion", "Normal"),
+                                        expression = dObj.optString("expression", "Confident Smirk"),
+                                        motionEffect = dObj.optString("motionEffect", motionEffect.title),
+                                        voicePitch = 1.0f,
+                                        voiceSpeed = 1.0f,
+                                        voiceType = dObj.optString("voiceType", "Girl"),
+                                        voiceAccent = dObj.optString("voiceAccent", voiceAccent.ifBlank { "Standard Anime" })
                                     )
                                 )
                             }
                         }
 
-                        val mood = s.optString("bgMood", "Emotional Piano")
-                        val isCyber = mood.contains("Cyber", ignoreCase = true) || artStyle == AnimeArtStyle.CYBERPUNK_ANIME
+                        val bgType = sObj.optString("backgroundType", "Cherry Blossom Sanctuary")
+                        val isCyber = bgType.contains("cyber", ignoreCase = true) || bgType.contains("city", ignoreCase = true) || artStyle == AnimeArtStyle.CYBERPUNK_ANIME
+                        val isManhwa = artStyle == AnimeArtStyle.MANHWA_WEBTOON || bgType.contains("dungeon", ignoreCase = true) || bgType.contains("shadow", ignoreCase = true)
+                        val sMotion = sObj.optString("motionEffect", motionEffect.title)
+
                         scenesList.add(
                             AnimeScene(
-                                sceneNumber = s.optInt("sceneNumber", i + 1),
-                                title = s.optString("title", "Scene ${i + 1}"),
-                                visualPrompt = s.optString("visualPrompt", "A breathtaking anime shot."),
-                                backgroundType = s.optString("backgroundType", if (isCyber) "Cyber Neo City" else "Cherry Blossom Sanctuary"),
-                                bgMood = mood,
+                                sceneNumber = sObj.optInt("sceneNumber", i + 1),
+                                title = sObj.optString("title", "Scene ${i + 1}"),
+                                visualPrompt = sObj.optString("visualPrompt", ""),
+                                backgroundType = bgType,
+                                bgMood = sObj.optString("bgMood", if (isManhwa) "Epic Battle" else if (isCyber) "Cyber Synth" else "Emotional Piano"),
                                 dialogues = dialoguesList,
-                                durationSec = s.optInt("durationSec", 8),
-                                sceneDrawableName = if (isCyber) "scene_cyber_city" else "scene_cherry_temple"
+                                durationSec = sObj.optInt("durationSec", if (productionFormat == com.example.data.model.ProductionFormat.SHORTS_REEL) 6 else 8),
+                                sceneDrawableName = if (isManhwa || isCyber) "scene_cyber_city" else "scene_cherry_temple",
+                                motionEffect = sMotion,
+                                productionFormat = productionFormat.title
                             )
                         )
                     }
@@ -241,10 +344,17 @@ class GeminiApiService {
                         sourceReference = input,
                         genre = genre,
                         artStyle = artStyle.title,
+                        productionFormat = productionFormat.title,
+                        defaultMotionEffect = motionEffect.title,
                         language = language,
                         synopsis = synopsis,
                         characters = charactersList,
-                        scenes = scenesList
+                        scenes = scenesList,
+                        sourcePlatformName = sourcePlatform.title,
+                        isLinkedSequel = isSeriesContinuity,
+                        linkedEpisodeNumber = linkedEpisodeNumber,
+                        linkedParentTitle = linkedScript?.title ?: "",
+                        noveltyBadge = if (isSeriesContinuity) "🔗 Series Sequel (Ep. $linkedEpisodeNumber)" else "✨ 100% Brand New Characters & Lore"
                     )
                 }
             } catch (e: Exception) {
@@ -253,7 +363,21 @@ class GeminiApiService {
         }
 
         // Fallback procedural engine produces rich, context-aware anime script
-        return createRichFallbackScript(input, sourceType, artStyle, language, availableCharacters)
+        return createRichFallbackScript(
+            input = input,
+            sourceType = sourceType,
+            artStyle = artStyle,
+            language = language,
+            availableCharacters = availableCharacters,
+            productionFormat = productionFormat,
+            motionEffect = motionEffect,
+            voiceAccent = voiceAccent,
+            sourcePlatform = sourcePlatform,
+            isSeriesContinuity = isSeriesContinuity,
+            linkedScript = linkedScript,
+            linkedEpisodeNumber = linkedEpisodeNumber,
+            excludedCharacterNames = excludedCharacterNames
+        )
     }
 
     /**
@@ -615,132 +739,270 @@ class GeminiApiService {
         sourceType: String,
         artStyle: AnimeArtStyle,
         language: String,
-        availableCharacters: List<CharacterProfile>
+        availableCharacters: List<CharacterProfile>,
+        productionFormat: com.example.data.model.ProductionFormat = com.example.data.model.ProductionFormat.ANIME_EPISODE,
+        motionEffect: com.example.data.model.MotionEffect = com.example.data.model.MotionEffect.SPEEDLINES_ACTION,
+        voiceAccent: String = "",
+        sourcePlatform: SourcePlatform = SourcePlatform.DIRECT_TEXT,
+        isSeriesContinuity: Boolean = false,
+        linkedScript: AnimeScript? = null,
+        linkedEpisodeNumber: Int = 1,
+        excludedCharacterNames: Set<String> = emptySet()
     ): AnimeScript {
-        val topic = if (input.isBlank()) "जादुई एनिमे संसार की दास्तान" else input
-        val isHindi = language.equals("Hindi", ignoreCase = true)
-        val isCyber = artStyle == AnimeArtStyle.CYBERPUNK_ANIME || topic.contains("cyber", ignoreCase = true) || topic.contains("tech", ignoreCase = true)
+        val topic = if (input.isBlank()) "जादुई एनिमे व मन्हवा संसार" else input
+        val isHindi = language.equals("Hindi", ignoreCase = true) || language.equals("hi", ignoreCase = true)
+        val isKorean = language.equals("Korean", ignoreCase = true) || language.equals("ko", ignoreCase = true)
+        val isJapanese = language.equals("Japanese", ignoreCase = true) || language.equals("ja", ignoreCase = true)
+        val isManhwa = artStyle == AnimeArtStyle.MANHWA_WEBTOON || productionFormat == com.example.data.model.ProductionFormat.MANHWA_WEB_SERIES || topic.contains("manhwa", ignoreCase = true) || topic.contains("hunter", ignoreCase = true) || topic.contains("shadow", ignoreCase = true)
+        val isManga = artStyle == AnimeArtStyle.CLASSIC_MANGA || topic.contains("manga", ignoreCase = true)
+        val isMovie = productionFormat == com.example.data.model.ProductionFormat.CINEMATIC_MOVIE
+        val isShorts = productionFormat == com.example.data.model.ProductionFormat.SHORTS_REEL
+        val isCyber = artStyle == AnimeArtStyle.CYBERPUNK_ANIME || topic.contains("cyber", ignoreCase = true)
 
-        val heroine = availableCharacters.find { it.voiceType == "Girl" } ?: CharacterProfile(
-            id = "char_heroine",
-            name = if (isHindi) "आयरा (Aira)" else "Aira",
-            gender = "Girl",
-            role = "Protagonist",
-            personality = "Brave, spirited, wielder of light",
-            voicePitch = 1.35f,
-            voiceSpeed = 1.0f,
-            voiceType = "Girl",
-            avatarDrawableName = "char_anime_heroine"
-        )
+        // Strict Novelty Rule: Generate 100% Brand-New Characters unless continuity mode is requested
+        val charactersList = if (isSeriesContinuity && linkedScript != null && linkedScript.characters.isNotEmpty()) {
+            linkedScript.characters
+        } else {
+            SourceIntelligenceEngine.generateNovelCharacters(
+                artStyleTitle = artStyle.title,
+                genre = if (isManhwa) "Manhwa Hunter" else if (isCyber) "Cyberpunk" else "Fantasy Shonen",
+                language = language,
+                excludedNames = excludedCharacterNames,
+                voiceAccent = voiceAccent
+            )
+        }
 
-        val heroBoy = availableCharacters.find { it.voiceType == "Boy" } ?: CharacterProfile(
-            id = "char_hero",
-            name = if (isHindi) "रेन (Ren)" else "Ren",
-            gender = "Boy",
-            role = "Flame Warrior",
-            personality = "Passionate, determined adventurer",
-            voicePitch = 1.15f,
-            voiceSpeed = 1.05f,
-            voiceType = "Boy",
-            avatarDrawableName = "char_shonen_hero"
-        )
+        val heroBoy = charactersList.getOrNull(1) ?: charactersList[0]
+        val heroine = charactersList[0]
+        val sensei = charactersList.getOrNull(2) ?: charactersList[0]
+        val mascot = charactersList.getOrNull(3) ?: charactersList[0]
 
-        val sensei = availableCharacters.find { it.voiceType == "Lady" } ?: CharacterProfile(
-            id = "char_mentor",
-            name = if (isHindi) "मास्टर क्योटो (Master Kyoto)" else "Master Kyoto",
-            gender = "Lady",
-            role = "Wise Anime Mentor",
-            personality = "Calm, intellectual protector",
-            voicePitch = 1.0f,
-            voiceSpeed = 0.95f,
-            voiceType = "Lady",
-            avatarDrawableName = "char_lady_mentor"
-        )
+        val protagonistName = heroBoy.name
+        val heroineName = heroine.name
+        val senseiName = sensei.name
+        val mascotName = mascot.name
 
-        val mascot = availableCharacters.find { it.voiceType == "Mascot" } ?: CharacterProfile(
-            id = "char_mascot",
-            name = if (isHindi) "पोपो (Popo)" else "Popo",
-            gender = "Chibi Mascot",
-            role = "Anime Companion",
-            personality = "Kawaii, hyper-energetic, faithful",
-            voicePitch = 1.6f,
-            voiceSpeed = 1.2f,
-            voiceType = "Mascot",
-            avatarDrawableName = "char_chibi_mascot"
-        )
-
-        val title = when {
-            isHindi -> "किस्मत का चक्र: $topic"
-            isCyber -> "Neo Tokyo Pulse: $topic"
-            else -> "Echoes of Destiny: $topic"
+        val title = if (isSeriesContinuity && linkedScript != null) {
+            "${linkedScript.title}: भाग $linkedEpisodeNumber (Ep. $linkedEpisodeNumber)"
+        } else {
+            when {
+                isManhwa && isKorean -> "각성자들의 신화: $topic"
+                isManhwa && isHindi -> "अल्टीमेट हंटर का उदय: $topic"
+                isManhwa -> "Rift Awakening: $topic"
+                isMovie && isHindi -> "सिनेमैटिक एनिमे महागाथा: $topic"
+                isMovie -> "The Astral Odyssey: $topic"
+                isShorts && isHindi -> "⚡ 30s सुपर एनिमे शॉट: $topic"
+                isShorts -> "⚡ 30s High-Voltage Anime: $topic"
+                isManga -> "Manga Chronicle: $topic"
+                isHindi -> "ब्रह्मांडीय योद्धा की दास्तान: $topic"
+                else -> "Chronicles of Destiny: $topic"
+            }
         }
 
         val synopsis = when {
+            isManhwa && isKorean -> "서울 한복판에 열린 붉은 던전 게이트! 진성우의 그림자 군단이 마침내 깨어난다."
+            isManhwa && isHindi -> "सियोल के रहस्यमयी डंजन में जब डार्क शैडो पोर्टल खुलता है, तब हंटर की नीली चमकती आंखें और शैडो आर्मी प्रकट होती है!"
+            isManhwa -> "When the mysterious S-Rank red gate manifests in Seoul, the legendary Hunter awakens his Shadow Army with glowing eyes."
+            isShorts -> "A rapid-fire clash of blades and magic in under 60 seconds with explosive speedlines and screen shakes!"
+            isMovie -> "A grand theatrical cinematic odyssey across parallel celestial realms, orchestrated with emotional depth."
             isHindi -> "जब प्राचीन भविष्यवाणी जागती है, तब आयरा और रेन को एक नया रास्ता खोजना पड़ता है। क्या वे इस जादुई दुनिया को बचा पाएंगे?"
-            else -> "When the ancient prophecy awakens, Aira and Ren embark across dimensions to safeguard the sacred timeline."
+            else -> "When the ancient prophecy awakens, heroes embark across dimensions to safeguard the sacred timeline."
         }
 
-        val scene1Dialogues = if (isHindi) {
-            listOf(
-                DialogueLine(heroine.name, "रेन, आसमान की तरफ देखो! चेरी ब्लॉसम के पत्ते चमक रहे हैं!", "Excited", heroine.voicePitch, heroine.voiceSpeed, heroine.voiceType),
-                DialogueLine(heroBoy.name, "हां आयरा! प्राचीन पोर्टल जाग चुका है, हमारी परीक्षा का समय आ गया है!", "Determined", heroBoy.voicePitch, heroBoy.voiceSpeed, heroBoy.voiceType),
-                DialogueLine(mascot.name, "पोपो भी तैयार है! चलो मिलकर दुनिया को बचाते हैं, पोपो!", "Happy", mascot.voicePitch, mascot.voiceSpeed, mascot.voiceType)
+        val effectiveAccent = voiceAccent.ifBlank {
+            if (isManhwa) "Korean Seoul Dramatic (Manhwa Style)" else if (isHindi) "Hindi Dub (Heroic Bollywood Anime)" else "Standard Anime"
+        }
+
+        val scenesList = mutableListOf<AnimeScene>()
+
+        if (isShorts) {
+            // 2 High-octane punchy scenes
+            val d1 = if (isKorean) {
+                listOf(
+                    DialogueLine(protagonistName, "여기서 끝이다. 일어나라, 나의 그림자여!", "Fierce", "Manhwa Glowing Eyes", "AURA_GLOW_PARTICLES", 0.88f, 1.1f, "Boy", effectiveAccent),
+                    DialogueLine(heroineName, "엄청난 마력이야... 단숨에 게이트를 부숴버려!", "Excited", "Fierce Battle Roar", "SPEEDLINES_ACTION", 1.35f, 1.05f, "Girl", effectiveAccent)
+                )
+            } else if (isHindi) {
+                listOf(
+                    DialogueLine(protagonistName, "अब कोई नहीं बचेगा! जागो, मेरी शैडो आर्मी!", "Fierce", "Manhwa Glowing Eyes", "AURA_GLOW_PARTICLES", 0.95f, 1.1f, "Boy", effectiveAccent),
+                    DialogueLine(heroineName, "रेन, इसकी शक्ति बेहिसाब है! एक ही वार में ख़त्म करो!", "Excited", "Fierce Battle Roar", "SPEEDLINES_ACTION", 1.35f, 1.05f, "Girl", effectiveAccent)
+                )
+            } else {
+                listOf(
+                    DialogueLine(protagonistName, "This ends right here. Arise, my Shadow Legion!", "Fierce", "Manhwa Glowing Eyes", "AURA_GLOW_PARTICLES", 0.95f, 1.1f, "Boy", effectiveAccent),
+                    DialogueLine(heroineName, "His magical aura is off the charts! Strike now!", "Excited", "Fierce Battle Roar", "SPEEDLINES_ACTION", 1.35f, 1.05f, "Girl", effectiveAccent)
+                )
+            }
+
+            val d2 = if (isKorean) {
+                listOf(
+                    DialogueLine(protagonistName, "일격필살! 극한의 그림자 참격!", "Determined", "Fierce Battle Roar", "SCREEN_SHAKE_IMPACT", 0.88f, 1.15f, "Boy", effectiveAccent),
+                    DialogueLine(mascotName, "대승리다, 크아아앙!", "Happy", "Kawaii Blush & Sparkles", "SPEEDLINES_ACTION", 1.65f, 1.2f, "Mascot", effectiveAccent)
+                )
+            } else if (isHindi) {
+                listOf(
+                    DialogueLine(protagonistName, "महा-प्रहार! शैडो स्लैश!", "Determined", "Fierce Battle Roar", "SCREEN_SHAKE_IMPACT", 0.95f, 1.15f, "Boy", effectiveAccent),
+                    DialogueLine(mascotName, "पोपो भी खुश हो गया, हम जीत गए!", "Happy", "Kawaii Blush & Sparkles", "SPEEDLINES_ACTION", 1.65f, 1.2f, "Mascot", effectiveAccent)
+                )
+            } else {
+                listOf(
+                    DialogueLine(protagonistName, "Final Impact Strike! Absolute Shadow Burst!", "Determined", "Fierce Battle Roar", "SCREEN_SHAKE_IMPACT", 0.95f, 1.15f, "Boy", effectiveAccent),
+                    DialogueLine(mascotName, "Victory is ours! Let's conquer the next boss, poyo!", "Happy", "Kawaii Blush & Sparkles", "SPEEDLINES_ACTION", 1.65f, 1.2f, "Mascot", effectiveAccent)
+                )
+            }
+
+            scenesList.add(
+                AnimeScene(
+                    sceneNumber = 1,
+                    title = if (isHindi) "शार्ट दृश्य १: शैडो पोर्टल का विस्फोट" else "Scene 1: The Shadow Gate Burst",
+                    visualPrompt = "Dynamic high-contrast anime action frame, glowing blue eyes, radial speedlines, dark purple flame aura",
+                    backgroundType = if (isManhwa) "Shadow Dungeon" else "Cyber Neo City",
+                    bgMood = "Epic Battle",
+                    dialogues = d1,
+                    durationSec = 6,
+                    sceneDrawableName = "scene_cyber_city",
+                    motionEffect = "AURA_GLOW_PARTICLES",
+                    productionFormat = productionFormat.title
+                )
             )
+
+            scenesList.add(
+                AnimeScene(
+                    sceneNumber = 2,
+                    title = if (isHindi) "शार्ट दृश्य २: अंतिम निर्णायक प्रहार" else "Scene 2: The Final Impact",
+                    visualPrompt = "Climactic slash frame with screen shake, speedlines, electric aura explosion, cinematic freeze frame",
+                    backgroundType = if (isManhwa) "Shadow Dungeon" else "Cyber Neo City",
+                    bgMood = "Epic Battle",
+                    dialogues = d2,
+                    durationSec = 6,
+                    sceneDrawableName = "scene_cyber_city",
+                    motionEffect = "SCREEN_SHAKE_IMPACT",
+                    productionFormat = productionFormat.title
+                )
+            )
+        } else if (isManhwa) {
+            // 5 Scenes Manhwa Webtoon Series
+            val titles = listOf(
+                "Episode 1: The S-Rank Awakening in Seoul",
+                "Episode 2: Shadow Domain Expands",
+                "Episode 3: The Cold Gaze of the Monarch",
+                "Episode 4: Red Gate Confrontation",
+                "Episode 5: The Monarch's Command (Cliffhanger)"
+            )
+            val hindiTitles = listOf(
+                "एपिसोड १: सियोल में एस-रैंक हंटर की जागृति",
+                "एपिसोड २: शैडो डोमेन का विस्तार",
+                "एपिसोड ३: मोनार्क की नीली चमकती निगाहें",
+                "एपिसोड ४: रेड गेट महासंग्राम",
+                "एपिसोड ५: मोनार्क का आदेश (क्लिफहैंगर)"
+            )
+
+            for (idx in 0 until 5) {
+                val scTitle = if (isHindi) hindiTitles[idx] else titles[idx]
+                val eff = when (idx) {
+                    0 -> "AURA_GLOW_PARTICLES"
+                    1 -> "MANGA_PANEL_SLIDE"
+                    2 -> "CINEMATIC_ZOOM"
+                    3 -> "SCREEN_SHAKE_IMPACT"
+                    else -> "SPEEDLINES_ACTION"
+                }
+
+                val diag = if (isKorean) {
+                    listOf(
+                        DialogueLine(protagonistName, if (idx == 0) "시스템 메시지... 플레이어로 각성하셨습니다." else "일어나라! 내 명령에 복종하라!", "Fierce", "Manhwa Glowing Eyes", eff, 0.88f, 1.0f, "Boy", effectiveAccent),
+                        DialogueLine(heroineName, if (idx == 0) "저 푸른 마력... 설마 국가권력급 헌터?!" else "당신의 등 뒤는 내가 지킨다!", "Determined", "Villainous Smirk", eff, 1.35f, 1.02f, "Girl", effectiveAccent)
+                    )
+                } else if (isHindi) {
+                    listOf(
+                        DialogueLine(protagonistName, if (idx == 0) "सिस्टम संदेश: आप प्लेयर के रूप में जागृत हो चुके हैं।" else "उठो! मेरे शैडो सिपाही, आज इस डंजन पर हमारा राज होगा!", "Fierce", "Manhwa Glowing Eyes", eff, 0.92f, 1.0f, "Boy", effectiveAccent),
+                        DialogueLine(heroineName, if (idx == 0) "वह नीली चमक... क्या यह कोई नेशनल रैंक हंटर है?!" else "तुम्हारे पीछे की रक्षा मेरी तलवार करेगी!", "Determined", "Villainous Smirk", eff, 1.35f, 1.02f, "Girl", effectiveAccent)
+                    )
+                } else {
+                    listOf(
+                        DialogueLine(protagonistName, if (idx == 0) "[System Notification: You have awakened as Player.]" else "Arise! My shadow legion, conquer the abyss!", "Fierce", "Manhwa Glowing Eyes", eff, 0.92f, 1.0f, "Boy", effectiveAccent),
+                        DialogueLine(heroineName, if (idx == 0) "That azure mana... is he a National-Level Hunter?!" else "I will watch your blind spot. Let's finish this!", "Determined", "Villainous Smirk", eff, 1.35f, 1.02f, "Girl", effectiveAccent)
+                    )
+                }
+
+                scenesList.add(
+                    AnimeScene(
+                        sceneNumber = idx + 1,
+                        title = scTitle,
+                        visualPrompt = "Solo Leveling style manhwa panel, glowing blue neon eyes, dark shadowy soldiers, vertical tension, high-tech Seoul skyline",
+                        backgroundType = "Shadow Dungeon",
+                        bgMood = if (idx % 2 == 0) "Epic Battle" else "Cyber Synth",
+                        dialogues = diag,
+                        durationSec = 8,
+                        sceneDrawableName = "scene_cyber_city",
+                        motionEffect = eff,
+                        productionFormat = productionFormat.title
+                    )
+                )
+            }
         } else {
-            listOf(
-                DialogueLine(heroine.name, "Ren, look at the sky! The sakura petals are resonating with celestial light!", "Excited", heroine.voicePitch, heroine.voiceSpeed, heroine.voiceType),
-                DialogueLine(heroBoy.name, "I feel it too, Aira! The ancient portal has awakened, our quest begins now!", "Determined", heroBoy.voicePitch, heroBoy.voiceSpeed, heroBoy.voiceType),
-                DialogueLine(mascot.name, "Popo is ready to fly! Let's embark on our ultimate anime adventure, poyo!", "Happy", mascot.voicePitch, mascot.voiceSpeed, mascot.voiceType)
-            )
+            // Standard Episode (4 scenes) or Movie (6 scenes)
+            val sceneCount = if (isMovie) 6 else 4
+            for (idx in 0 until sceneCount) {
+                val scTitle = if (isHindi) "दृश्य ${idx + 1}: ${if (idx == 0) "चेरी ब्लॉसम की जागृति" else if (idx == sceneCount - 1) "अंतिम विजय व नया सवेरा" else "महा-युद्ध का आगाज़"}" 
+                              else "Scene ${idx + 1}: ${if (idx == 0) "The Celestial Awakening" else if (idx == sceneCount - 1) "Dawn of the New Era" else "Clash of Destinies"}"
+
+                val eff = when (idx % 4) {
+                    0 -> "CINEMATIC_ZOOM"
+                    1 -> "SPEEDLINES_ACTION"
+                    2 -> "SCREEN_SHAKE_IMPACT"
+                    else -> "AURA_GLOW_PARTICLES"
+                }
+
+                val dList = if (isHindi) {
+                    listOf(
+                        DialogueLine(heroine.name, "रेन, आसमान की तरफ देखो! चेरी ब्लॉसम के पत्ते चमक रहे हैं!", "Excited", "Kawaii Blush & Sparkles", eff, heroine.voicePitch, heroine.voiceSpeed, heroine.voiceType, effectiveAccent),
+                        DialogueLine(heroBoy.name, "मेरी तलवार कभी नहीं झुकेगी! चलो, पूरी शक्ति से आगे बढ़ते हैं!", "Fierce", "Fierce Battle Roar", eff, heroBoy.voicePitch, heroBoy.voiceSpeed, heroBoy.voiceType, effectiveAccent),
+                        DialogueLine(mascot.name, "पोपो भी तुम्हारे साथ है! हम सब मिलकर इस दुनिया को बचाएंगे!", "Happy", "Comedic Sweatdrop", eff, mascot.voicePitch, mascot.voiceSpeed, mascot.voiceType, effectiveAccent)
+                    )
+                } else {
+                    listOf(
+                        DialogueLine(heroine.name, "Ren, look at the sky! The sakura petals are resonating with celestial light!", "Excited", "Kawaii Blush & Sparkles", eff, heroine.voicePitch, heroine.voiceSpeed, heroine.voiceType, effectiveAccent),
+                        DialogueLine(heroBoy.name, "My resolve will never break! Let's unleash our true power!", "Fierce", "Fierce Battle Roar", eff, heroBoy.voicePitch, heroBoy.voiceSpeed, heroBoy.voiceType, effectiveAccent),
+                        DialogueLine(mascot.name, "Popo is ready to fly! Together we are invincible, poyo!", "Happy", "Comedic Sweatdrop", eff, mascot.voicePitch, mascot.voiceSpeed, mascot.voiceType, effectiveAccent)
+                    )
+                }
+
+                scenesList.add(
+                    AnimeScene(
+                        sceneNumber = idx + 1,
+                        title = scTitle,
+                        visualPrompt = if (idx % 2 == 0) "Makoto Shinkai style wide angle shot of cherry blossom temple with glowing pink celestial light" else "Cyberpunk anime city night view with holographic billboards and neon rain",
+                        backgroundType = if (idx % 2 == 0) "Cherry Blossom Sanctuary" else "Cyber Neo City",
+                        bgMood = if (idx % 2 == 0) "Emotional Piano" else "Epic Battle",
+                        dialogues = dList,
+                        durationSec = if (isMovie) 10 else 8,
+                        sceneDrawableName = if (idx % 2 == 0) "scene_cherry_temple" else "scene_cyber_city",
+                        motionEffect = eff,
+                        productionFormat = productionFormat.title
+                    )
+                )
+            }
         }
-
-        val scene2Dialogues = if (isHindi) {
-            listOf(
-                DialogueLine(sensei.name, "याद रखो, शक्ति केवल तलवार में नहीं बल्कि तुम्हारे दिल के संकल्प में है।", "Serious", sensei.voicePitch, sensei.voiceSpeed, sensei.voiceType),
-                DialogueLine(heroBoy.name, "मैं कभी पीछे नहीं हटूंगा मास्टर! मेरी तलवार इस पूरे शहर को रोशन करेगी!", "Passionate", heroBoy.voicePitch, heroBoy.voiceSpeed, heroBoy.voiceType),
-                DialogueLine(heroine.name, "और मैं अपनी रोशनी से हर अंधेरे को मिटा दूंगी!", "Triumphant", heroine.voicePitch, heroine.voiceSpeed, heroine.voiceType)
-            )
-        } else {
-            listOf(
-                DialogueLine(sensei.name, "Remember young warriors: real strength lies not in the blade, but in your unshakeable conviction.", "Serious", sensei.voicePitch, sensei.voiceSpeed, sensei.voiceType),
-                DialogueLine(heroBoy.name, "I'll never back down Master! My blade will ignite the entire metropolis with courage!", "Passionate", heroBoy.voicePitch, heroBoy.voiceSpeed, heroBoy.voiceType),
-                DialogueLine(heroine.name, "Together, we will vanquish every shadow across Neo Tokyo!", "Triumphant", heroine.voicePitch, heroine.voiceSpeed, heroine.voiceType)
-            )
-        }
-
-        val scene1 = AnimeScene(
-            sceneNumber = 1,
-            title = if (isHindi) "दृश्य १: जागृति और नई किरण" else "Scene 1: The Sakura Awakening",
-            visualPrompt = "Makoto Shinkai style wide angle shot of cherry blossom temple with glowing pink celestial light at sunset",
-            backgroundType = "Cherry Blossom Sanctuary",
-            bgMood = "Emotional Piano",
-            dialogues = scene1Dialogues,
-            durationSec = 9,
-            sceneDrawableName = "scene_cherry_temple"
-        )
-
-        val scene2 = AnimeScene(
-            sceneNumber = 2,
-            title = if (isHindi) "दृश्य २: नियो शहर का महासंग्राम" else "Scene 2: Neo City Showdown",
-            visualPrompt = "Cyberpunk anime city night view with holographic billboards, neon rain reflections, and glowing aura warriors",
-            backgroundType = "Cyber Neo City",
-            bgMood = if (isCyber) "Cyber Synth" else "Epic Battle",
-            dialogues = scene2Dialogues,
-            durationSec = 10,
-            sceneDrawableName = "scene_cyber_city"
-        )
 
         return AnimeScript(
             title = title,
             originalPrompt = input,
             inputSourceType = sourceType,
             sourceReference = input,
-            genre = if (isCyber) "Cyberpunk Action" else "Fantasy Shonen",
+            genre = if (isManhwa) "Manhwa Urban Fantasy" else if (isCyber) "Cyberpunk Action" else "Fantasy Shonen",
             artStyle = artStyle.title,
+            productionFormat = productionFormat.title,
+            defaultMotionEffect = motionEffect.title,
             language = language,
+            voiceoverLanguage = language,
             synopsis = synopsis,
-            characters = listOf(heroine, heroBoy, sensei, mascot),
-            scenes = listOf(scene1, scene2)
+            characters = charactersList,
+            scenes = scenesList,
+            sourcePlatformName = sourcePlatform.title,
+            isLinkedSequel = isSeriesContinuity,
+            linkedEpisodeNumber = linkedEpisodeNumber,
+            linkedParentTitle = linkedScript?.title ?: "",
+            noveltyBadge = if (isSeriesContinuity) "🔗 Series Sequel (Ep. $linkedEpisodeNumber)" else "✨ 100% Brand New Characters & Lore"
         )
     }
 }

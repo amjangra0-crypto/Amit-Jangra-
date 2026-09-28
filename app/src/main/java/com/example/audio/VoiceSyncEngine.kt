@@ -68,6 +68,10 @@ class VoiceSyncEngine(private val context: Context) {
             "fr", "french" -> Locale.FRENCH
             "de", "german" -> Locale.GERMAN
             "ko", "korean" -> Locale.KOREAN
+            "ta", "tamil" -> Locale("ta", "IN")
+            "te", "telugu" -> Locale("te", "IN")
+            "ru", "russian" -> Locale("ru", "RU")
+            "ar", "arabic" -> Locale("ar", "SA")
             else -> Locale.ENGLISH
         }
         if (isTtsReady) {
@@ -185,10 +189,26 @@ class VoiceSyncEngine(private val context: Context) {
             tts?.language = Locale.UK
         } else if (voiceAccent.contains("American", ignoreCase = true)) {
             tts?.language = Locale.US
-        } else if (voiceAccent.contains("Japanese", ignoreCase = true)) {
+        } else if (voiceAccent.contains("Japanese", ignoreCase = true) || voiceAccent.contains("Tokyo", ignoreCase = true)) {
             tts?.language = Locale.JAPANESE
+        } else if (voiceAccent.contains("Korean", ignoreCase = true) || voiceAccent.contains("Seoul", ignoreCase = true) || voiceAccent.contains("Manhwa", ignoreCase = true)) {
+            tts?.language = Locale.KOREAN
         } else if (voiceAccent.contains("Hindi", ignoreCase = true)) {
             tts?.language = Locale("hi", "IN")
+        } else if (voiceAccent.contains("Spanish", ignoreCase = true) || voiceAccent.contains("Madrid", ignoreCase = true)) {
+            tts?.language = Locale("es", "ES")
+        } else if (voiceAccent.contains("French", ignoreCase = true) || voiceAccent.contains("Paris", ignoreCase = true)) {
+            tts?.language = Locale.FRENCH
+        } else if (voiceAccent.contains("German", ignoreCase = true)) {
+            tts?.language = Locale.GERMAN
+        } else if (voiceAccent.contains("Tamil", ignoreCase = true)) {
+            tts?.language = Locale("ta", "IN")
+        } else if (voiceAccent.contains("Telugu", ignoreCase = true)) {
+            tts?.language = Locale("te", "IN")
+        } else if (voiceAccent.contains("Russian", ignoreCase = true)) {
+            tts?.language = Locale("ru", "RU")
+        } else if (voiceAccent.contains("Arabic", ignoreCase = true)) {
+            tts?.language = Locale("ar", "SA")
         }
 
         val finalPitch = (pitch * personaPitchMultiplier).coerceIn(0.5f, 2.0f)

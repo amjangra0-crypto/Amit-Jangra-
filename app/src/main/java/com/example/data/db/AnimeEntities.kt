@@ -70,3 +70,21 @@ data class AdminAccessEntity(
     val currentTier: String = "plan_vip",
     val remainingCredits: Int = 999999
 )
+
+@Entity(tableName = "exported_videos")
+data class ExportedVideoEntity(
+    @PrimaryKey val id: String,
+    val scriptId: String,
+    val title: String,
+    val durationSeconds: Int,
+    val filePath: String,
+    val fileSizeBytes: Long,
+    val resolution: String = "1280x720 (720p HD)",
+    val fps: Int = 30,
+    val language: String,
+    val artStyle: String,
+    val sceneCount: Int = 4,
+    val status: String = "COMPLETED", // COMPLETED, PROCESSING, FAILED
+    val createdAt: Long = System.currentTimeMillis()
+)
+

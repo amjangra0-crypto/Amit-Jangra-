@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Anime Studio AI - Android App</title>
+  <style>
+    :root {
+      --bg-dark: #0d0b18;
+      --surface-dark: #161328;
+      --card-bg: #1f1b38;
+      --cyan-neon: #00f0ff;
+      --pink-neon: #ff2a85;
+      --gold-accent: #ffd700;
+      --text-main: #f0f0ff;
+      --text-muted: #a09cb8;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      line-height: 1.6;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      padding: 24px 16px;
+    }
+
+    .container {
+      max-width: 820px;
+      width: 100%;
+      margin: 0 auto;
+    }
+
+    header {
+      text-align: center;
+      padding: 40px 16px 24px;
+    }
+
+    .badge {
+      display: inline-block;
+      background: rgba(0, 240, 255, 0.12);
+      color: var(--cyan-neon);
+      border: 1px solid rgba(0, 240, 255, 0.4);
+      padding: 6px 14px;
+      border-radius: 999px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      margin-bottom: 16px;
+    }
+
+    h1 {
+      font-size: 2.5rem;
+      background: linear-gradient(135deg, #00f0ff, #ff2a85, #ffd700);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 12px;
+      font-weight: 800;
+    }
+
+    p.subtitle {
+      color: var(--text-muted);
+      font-size: 1.1rem;
+      max-width: 600px;
+      margin: 0 auto 24px;
+    }
+
+    .card {
+      background: var(--surface-dark);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 16px;
+      padding: 24px;
+      margin-bottom: 24px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+    }
+
+    .alert-box {
+      background: rgba(255, 42, 133, 0.12);
+      border-left: 4px solid var(--pink-neon);
+      padding: 16px 20px;
+      border-radius: 8px;
+      margin-bottom: 24px;
+    }
+
+    .alert-box h3 {
+      color: var(--pink-neon);
+      font-size: 1.05rem;
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .alert-box p {
+      color: #ffd6e7;
+      font-size: 0.95rem;
+    }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 16px;
+      margin: 20px 0;
+    }
+
+    .feature-item {
+      background: var(--card-bg);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: 12px;
+      padding: 18px;
+      transition: transform 0.2s ease, border-color 0.2s ease;
+    }
+
+    .feature-item:hover {
+      transform: translateY(-3px);
+      border-color: rgba(0, 240, 255, 0.3);
+    }
+
+    .feature-item .icon {
+      font-size: 1.8rem;
+      margin-bottom: 10px;
+    }
+
+    .feature-item h4 {
+      color: var(--cyan-neon);
+      margin-bottom: 6px;
+      font-size: 1.05rem;
+    }
+
+    .feature-item p {
+      color: var(--text-muted);
+      font-size: 0.88rem;
+    }
+
+    .cta-btn-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      justify-content: center;
+      margin: 24px 0 12px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 24px;
+      border-radius: 10px;
+      font-size: 1rem;
+      font-weight: 600;
+      text-decoration: none;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #00f0ff, #0088ff);
+      color: #0d0b18;
+      box-shadow: 0 4px 15px rgba(0, 240, 255, 0.3);
+    }
+
+    .btn-primary:hover {
+      box-shadow: 0 6px 20px rgba(0, 240, 255, 0.5);
+      transform: scale(1.02);
+    }
+
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--text-main);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+    }
+
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.15);
+    }
+
+    /* System Requirements Specs Table / Grid */
+    .specs-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 14px;
+      margin-top: 16px;
+    }
+
+    .spec-card {
+      background: var(--card-bg);
+      border: 1px solid rgba(0, 240, 255, 0.15);
+      border-radius: 12px;
+      padding: 16px;
+    }
+
+    .spec-card .spec-title {
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: var(--cyan-neon);
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .spec-card .spec-value {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 4px;
+    }
+
+    .spec-card .spec-sub {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+    }
+
+    .requirements-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 14px;
+      font-size: 0.92rem;
+    }
+
+    .requirements-table th,
+    .requirements-table td {
+      padding: 10px 14px;
+      text-align: left;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+    }
+
+    .requirements-table th {
+      color: var(--gold-accent);
+      font-weight: 600;
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    .requirements-table tr:hover td {
+      background: rgba(0, 240, 255, 0.04);
+    }
+
+    .badge-req {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 6px;
+      font-size: 0.78rem;
+      font-weight: 600;
+    }
+
+    .badge-min {
+      background: rgba(255, 215, 0, 0.15);
+      color: var(--gold-accent);
+      border: 1px solid rgba(255, 215, 0, 0.3);
+    }
+
+    .badge-rec {
+      background: rgba(0, 240, 255, 0.15);
+      color: var(--cyan-neon);
+      border: 1px solid rgba(0, 240, 255, 0.3);
+    }
+
+    .step-list {
+      counter-reset: steps;
+      list-style: none;
+      margin-top: 16px;
+    }
+
+    .step-list li {
+      position: relative;
+      padding-left: 36px;
+      margin-bottom: 14px;
+      font-size: 0.95rem;
+    }
+
+    .step-list li::before {
+      counter-increment: steps;
+      content: counter(steps);
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 24px;
+      height: 24px;
+      background: var(--cyan-neon);
+      color: #0d0b18;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.8rem;
+      font-weight: bold;
+    }
+
+    footer {
+      text-align: center;
+      padding: 30px 16px;
+      color: var(--text-muted);
+      font-size: 0.85rem;
+    }
+
+    footer a {
+      color: var(--cyan-neon);
+      text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="badge">🤖 Android Application Repository</div>
+      <h1>Anime Studio AI</h1>
+      <p class="subtitle">
+        Generate anime & cartoon videos from text prompts, links, or sketches with voice sync, custom characters, dynamic BGM, and multilingual dubbing.
+      </p>
+    </header>
+
+    <!-- Why 404 note for GitHub Pages visitors -->
+    <div class="alert-box">
+      <h3>📱 About This Project & GitHub Pages</h3>
+      <p>
+        यह रिपोजिटरी एक <strong>Native Android App (Kotlin &amp; Jetpack Compose)</strong> है, सामान्य HTML/JS वेबसाइट नहीं। 
+        GitHub Pages केवल स्टेटिक वेब पेजों को होस्ट करता है। एंड्रॉइड ऐप का उपयोग करने के लिए नीचे दिए गए निर्देश देखें।
+      </p>
+    </div>
+
+    <!-- How to run/use the app -->
+    <div class="card">
+      <h2 style="color: var(--gold-accent); margin-bottom: 8px;">🚀 How to Run &amp; Install the App</h2>
+      <ol class="step-list">
+        <li>
+          <strong>In Google AI Studio Build:</strong> View and test the live app directly in your browser using the built-in <strong>Streaming Android Emulator</strong>.
+        </li>
+        <li>
+          <strong>On Your Android Device:</strong> In AI Studio, open the project menu &rarr; select <strong>Export</strong> &rarr; click <strong>Generate APK</strong>. Download the <code>.apk</code> file to your Android phone and tap to install.
+        </li>
+        <li>
+          <strong>In Android Studio (Local PC):</strong> Clone this GitHub repository to your computer, open it in <strong>Android Studio</strong>, and click <strong>Run (Shift + F10)</strong> on an emulator or physical device.
+        </li>
+      </ol>
+
+      <div class="cta-btn-group">
+        <a href="https://github.com/amjangra0-crypto" class="btn btn-primary">
+          📂 View GitHub Profile &amp; Repos
+        </a>
+      </div>
+    </div>
+
+    <!-- System Requirements Card -->
+    <div class="card">
+      <h2 style="color: var(--cyan-neon); margin-bottom: 8px;">⚙️ System Requirements</h2>
+      <p style="color: var(--text-muted); font-size: 0.95rem; margin-bottom: 16px;">
+        To run <strong>Anime Studio AI</strong> effectively and enjoy smooth real-time animation, lip-sync voiceovers, and dynamic background music on your Android device or emulator, make sure your hardware and software meet the specifications below:
+      </p>
+
+      <div class="specs-grid">
+        <div class="spec-card">
+          <div class="spec-title">📱 Android OS Version</div>
+          <div class="spec-value">Android 7.0+</div>
+          <div class="spec-sub">API Level 24 (Nougat) minimum &bull; Android 10.0+ (API 29+) recommended</div>
+        </div>
+
+        <div class="spec-card">
+          <div class="spec-title">💾 Storage Space</div>
+          <div class="spec-value">250 MB Free</div>
+          <div class="spec-sub">500 MB+ recommended for multi-scene scripts, project backups &amp; audio assets</div>
+        </div>
+
+        <div class="spec-card">
+          <div class="spec-title">⚡ RAM / Memory</div>
+          <div class="spec-value">3 GB RAM</div>
+          <div class="spec-sub">4 GB+ recommended for real-time lip sync &amp; multi-track audio playback</div>
+        </div>
+
+        <div class="spec-card">
+          <div class="spec-title">🔊 Audio &amp; Speech</div>
+          <div class="spec-value">TTS Engine</div>
+          <div class="spec-sub">Google Text-to-Speech or device default speech synthesis engine</div>
+        </div>
+      </div>
+
+      <table class="requirements-table">
+        <thead>
+          <tr>
+            <th>Component</th>
+            <th>Minimum Requirement</th>
+            <th>Recommended Specification</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Operating System</strong></td>
+            <td><span class="badge-req badge-min">Android 7.0 (API 24)</span></td>
+            <td><span class="badge-req badge-rec">Android 10.0 – 14.0+ (API 29–35)</span></td>
+          </tr>
+          <tr>
+            <td><strong>Free Storage Space</strong></td>
+            <td><span class="badge-req badge-min">250 MB</span> (App install &amp; local Room DB)</td>
+            <td><span class="badge-req badge-rec">500 MB – 1 GB</span> (Saved scripts, SRT subtitles &amp; exports)</td>
+          </tr>
+          <tr>
+            <td><strong>RAM (Memory)</strong></td>
+            <td><span class="badge-req badge-min">3 GB</span></td>
+            <td><span class="badge-req badge-rec">4 GB or higher</span></td>
+          </tr>
+          <tr>
+            <td><strong>Device Architecture</strong></td>
+            <td><span class="badge-req badge-min">ARM64-v8a / x86_64</span></td>
+            <td><span class="badge-req badge-rec">64-bit Octa-Core Processor</span></td>
+          </tr>
+          <tr>
+            <td><strong>Network</strong></td>
+            <td><span class="badge-req badge-min">Offline playback supported</span></td>
+            <td><span class="badge-req badge-rec">High-speed Wi-Fi / 4G / 5G</span> (for AI generation)</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Features Overview -->
+    <div class="card">
+      <h2 style="margin-bottom: 12px;">✨ Features in Anime Studio AI</h2>
+      <div class="features-grid">
+        <div class="feature-item">
+          <div class="icon">🎬</div>
+          <h4>Anime Video Studio</h4>
+          <p>Multi-scene anime screenplay generation from prompts, web articles, or scanned manga sketches.</p>
+        </div>
+        <div class="feature-item">
+          <div class="icon">🎙️</div>
+          <h4>Voice Sync Engine</h4>
+          <p>Lip-sync visual animations with character-customized pitch, speed, accent, and mood.</p>
+        </div>
+        <div class="feature-item">
+          <div class="icon">👤</div>
+          <h4>Character Builder</h4>
+          <p>Design avatars, hair styles, eye colors, outfits, and assign custom voice personas.</p>
+        </div>
+        <div class="feature-item">
+          <div class="icon">🎵</div>
+          <h4>Dynamic Music Synth</h4>
+          <p>Real-time background music generation (Action, Battle, Emotional, Shonen, Cyberpunk).</p>
+        </div>
+        <div class="feature-item">
+          <div class="icon">🌐</div>
+          <h4>Multilingual Dubbing</h4>
+          <p>Instant audio &amp; subtitle dubbing across Japanese (日本語), Hindi (हिंदी), English, and Spanish.</p>
+        </div>
+        <div class="feature-item">
+          <div class="icon">📦</div>
+          <h4>Download &amp; Storage</h4>
+          <p>Room SQLite database vault, photo upload picker, JSON project backups, TXT scripts, and SRT subtitles.</p>
+        </div>
+      </div>
+    </div>
+
+    <footer>
+      <p>Built with Kotlin, Jetpack Compose, and Room Database.</p>
+      <p style="margin-top: 6px;">Powered by <strong>Google AI Studio</strong></p>
+    </footer>
+  </div>
+</body>
+</html>
