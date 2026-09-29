@@ -2,8 +2,10 @@ package com.example.ui.components
 
 import android.Manifest
 import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
-import android.os.Build
+import android.net.Uri
+import android.provider.Settings
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -25,19 +27,17 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.CameraAlt
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.CloudDone
-import androidx.compose.material.icons.filled.FolderSpecial
-import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.Security
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Shield
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
-import androidx.compose.material3.Surface
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -50,7 +50,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
@@ -72,8 +71,9 @@ import com.example.ui.theme.TextPrimary
 import com.example.ui.theme.TextSecondary
 
 /**
- * First-Launch / Install App Permissions Setup Dialog
- * Prompts user for Camera, Microphone, Location, and Storage permissions.
+ * Single-Permission Onboarding Dialog (Prompted only once after installation).
+ * Requests solely Microphone access for AI Voice Dubbing & Speech Prompts.
+ * Camera, Location, and Notifications are completely excluded.
  */
 @Composable
 fun AppPermissionsOnboardingDialog(
@@ -85,70 +85,54 @@ fun AppPermissionsOnboardingDialog(
         context.getSharedPreferences("anime_app_permissions_prefs", Context.MODE_PRIVATE)
     }
 
-    var cameraGranted by remember {
-        mutableStateOf(
-            ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED
-        )
-    }
     var micGranted by remember {
         mutableStateOf(
             ContextCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED
         )
     }
-    var locationGranted by remember {
-        mutableStateOf(
-            ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
-        )
-    }
-    var notificationsGranted by remember {
-        mutableStateOf(
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED
-            } else true
-        )
-    }
 
-    val requestMultiplePermissionsLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.RequestMultiplePermissions()
-    ) { permissionsMap ->
-        cameraGranted = permissionsMap[Manifest.permission.CAMERA] ?: cameraGranted
-        micGranted = permissionsMap[Manifest.permission.RECORD_AUDIO] ?: micGranted
-        locationGranted = permissionsMap[Manifest.permission.ACCESS_FINE_LOCATION] ?: locationGranted
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            notificationsGranted = permissionsMap[Manifest.permission.POST_NOTIFICATIONS] ?: notificationsGranted
+    val requestPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        micGranted = isGranted
+        // Permanently record that permission was prompted on install so it never asks repeatedly
+        prefs.edit().putBoolean("permissions_requested_on_install", true).commit()
+        if (isGranted) {
+            Toast.makeText(context, AppLocaleStrings.get("permissions_granted_toast", language), Toast.LENGTH_SHORT).show()
         }
-
-        prefs.edit().putBoolean("permissions_requested_on_install", true).apply()
-        Toast.makeText(context, AppLocaleStrings.get("permissions_granted_toast", language), Toast.LENGTH_SHORT).show()
         onDismiss()
     }
 
     Dialog(
-        onDismissRequest = onDismiss,
-        properties = DialogProperties(dismissOnBackPress = true, dismissOnClickOutside = false)
+        onDismissRequest = {
+            // Dismissed by user: mark handled so it won't prompt again
+            prefs.edit().putBoolean("permissions_requested_on_install", true).commit()
+            onDismiss()
+        },
+        properties = DialogProperties(dismissOnBackPress = true, dismissOnClickOutside = true)
     ) {
         Card(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(vertical = 16.dp)
                 .testTag("permissions_onboarding_dialog"),
-            shape = RoundedCornerShape(20.dp),
+            shape = RoundedCornerShape(22.dp),
             colors = CardDefaults.cardColors(containerColor = AnimeSurface),
             border = BorderStroke(
                 1.5.dp,
-                Brush.linearGradient(listOf(AnimeCyan, AnimePurple, AnimeGold))
+                Brush.linearGradient(listOf(AnimeCyan, AnimePink, AnimeGold))
             )
         ) {
             Column(
                 modifier = Modifier
-                    .padding(20.dp)
+                    .padding(22.dp)
                     .verticalScroll(rememberScrollState()),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 // Header Icon
                 Box(
                     modifier = Modifier
-                        .size(52.dp)
+                        .size(56.dp)
                         .clip(CircleShape)
                         .background(
                             Brush.linearGradient(listOf(AnimeCyan, AnimePink, AnimeGold))
@@ -156,14 +140,36 @@ fun AppPermissionsOnboardingDialog(
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
-                        imageVector = Icons.Default.Security,
+                        imageVector = Icons.Default.Shield,
                         contentDescription = null,
                         tint = Color.Black,
-                        modifier = Modifier.size(28.dp)
+                        modifier = Modifier.size(30.dp)
                     )
                 }
 
-                Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(14.dp))
+
+                // One Permission Required Badge
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(AnimeCyan.copy(alpha = 0.18f))
+                        .border(1.dp, AnimeCyan.copy(alpha = 0.5f), RoundedCornerShape(8.dp))
+                        .padding(horizontal = 10.dp, vertical = 4.dp)
+                ) {
+                    Text(
+                        text = if (AppLocaleStrings.isHindi(language)) {
+                            "⚡ केवल 1 अनुमति आवश्यक (One Permission Only)"
+                        } else {
+                            "⚡ Only 1 Permission Required"
+                        },
+                        color = AnimeCyan,
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(10.dp))
 
                 Text(
                     text = AppLocaleStrings.get("permissions_title", language),
@@ -178,154 +184,204 @@ fun AppPermissionsOnboardingDialog(
                     text = AppLocaleStrings.get("permissions_desc", language),
                     color = TextSecondary,
                     fontSize = 12.sp,
-                    lineHeight = 16.sp
+                    lineHeight = 17.sp
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Permission item 1: Camera
-                PermissionItemRow(
-                    icon = Icons.Default.CameraAlt,
-                    iconColor = AnimePink,
-                    title = AppLocaleStrings.get("perm_camera", language),
-                    description = AppLocaleStrings.get("perm_camera_desc", language),
-                    isGranted = cameraGranted
-                )
+                // Single Permission Item: Microphone
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(14.dp))
+                        .background(AnimeSurfaceVariant)
+                        .border(
+                            1.dp,
+                            if (micGranted) AnimeGreen.copy(alpha = 0.6f) else AnimeCyan.copy(alpha = 0.4f),
+                            RoundedCornerShape(14.dp)
+                        )
+                        .padding(14.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(42.dp)
+                            .clip(CircleShape)
+                            .background(if (micGranted) AnimeGreen.copy(alpha = 0.2f) else AnimeCyan.copy(alpha = 0.2f)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Mic,
+                            contentDescription = null,
+                            tint = if (micGranted) AnimeGreen else AnimeCyan,
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
 
-                Spacer(modifier = Modifier.height(10.dp))
+                    Spacer(modifier = Modifier.width(12.dp))
 
-                // Permission item 2: Microphone & Speech-to-Text
-                PermissionItemRow(
-                    icon = Icons.Default.Mic,
-                    iconColor = AnimeCyan,
-                    title = AppLocaleStrings.get("perm_mic", language),
-                    description = AppLocaleStrings.get("perm_mic_desc", language),
-                    isGranted = micGranted
-                )
+                    Column(modifier = Modifier.weight(1f)) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(
+                                text = AppLocaleStrings.get("perm_mic", language),
+                                color = TextPrimary,
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            if (micGranted) {
+                                Icon(
+                                    imageVector = Icons.Default.CheckCircle,
+                                    contentDescription = null,
+                                    tint = AnimeGreen,
+                                    modifier = Modifier.size(14.dp)
+                                )
+                            }
+                        }
+                        Spacer(modifier = Modifier.height(3.dp))
+                        Text(
+                            text = AppLocaleStrings.get("perm_mic_desc", language),
+                            color = TextSecondary,
+                            fontSize = 11.sp,
+                            lineHeight = 15.sp
+                        )
+                    }
+                }
 
-                Spacer(modifier = Modifier.height(10.dp))
+                Spacer(modifier = Modifier.height(12.dp))
 
-                // Permission item 3: Location
-                PermissionItemRow(
-                    icon = Icons.Default.LocationOn,
-                    iconColor = AnimeGold,
-                    title = AppLocaleStrings.get("perm_location", language),
-                    description = AppLocaleStrings.get("perm_location_desc", language),
-                    isGranted = locationGranted
-                )
-
-                Spacer(modifier = Modifier.height(10.dp))
-
-                // Permission item 4: Storage & Drive Vault
-                PermissionItemRow(
-                    icon = Icons.Default.FolderSpecial,
-                    iconColor = AnimeGreen,
-                    title = AppLocaleStrings.get("perm_storage", language),
-                    description = AppLocaleStrings.get("perm_storage_desc", language),
-                    isGranted = true // SAF storage framework
-                )
+                // Privacy Guarantees Box (No camera, location, storage prompts)
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(10.dp))
+                        .background(AnimePurple.copy(alpha = 0.15f))
+                        .border(1.dp, AnimePurple.copy(alpha = 0.3f), RoundedCornerShape(10.dp))
+                        .padding(horizontal = 12.dp, vertical = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Security,
+                        contentDescription = null,
+                        tint = AnimeGold,
+                        modifier = Modifier.size(16.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = if (AppLocaleStrings.isHindi(language)) {
+                            "🔒 कोई कैमरा, लोकेशन या अनावश्यक परमिशन नहीं माँगी जाती।"
+                        } else {
+                            "🔒 No camera, location, or intrusive permissions ever requested."
+                        },
+                        color = AnimeGold,
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.Medium
+                    )
+                }
 
                 Spacer(modifier = Modifier.height(20.dp))
 
-                // Action Button: Grant All
-                Button(
-                    onClick = {
-                        val permissionsToRequest = mutableListOf(
-                            Manifest.permission.CAMERA,
-                            Manifest.permission.RECORD_AUDIO,
-                            Manifest.permission.ACCESS_FINE_LOCATION,
-                            Manifest.permission.ACCESS_COARSE_LOCATION
+                if (!micGranted) {
+                    // Action Button: Grant Single Permission
+                    Button(
+                        onClick = {
+                            requestPermissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(48.dp)
+                            .testTag("grant_all_permissions_btn"),
+                        colors = ButtonDefaults.buttonColors(containerColor = AnimeCyan),
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Mic,
+                            contentDescription = null,
+                            tint = Color.Black,
+                            modifier = Modifier.size(18.dp)
                         )
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                            permissionsToRequest.add(Manifest.permission.POST_NOTIFICATIONS)
-                        }
-
-                        requestMultiplePermissionsLauncher.launch(permissionsToRequest.toTypedArray())
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(48.dp)
-                        .testTag("grant_all_permissions_btn"),
-                    colors = ButtonDefaults.buttonColors(containerColor = AnimeCyan),
-                    shape = RoundedCornerShape(12.dp)
-                ) {
-                    Icon(Icons.Default.Security, contentDescription = null, tint = Color.Black, modifier = Modifier.size(18.dp))
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = AppLocaleStrings.get("grant_permissions_btn", language),
-                        color = Color.Black,
-                        fontSize = 13.sp,
-                        fontWeight = FontWeight.Bold
-                    )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = AppLocaleStrings.get("grant_permissions_btn", language),
+                            color = Color.Black,
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                } else {
+                    // Already Granted -> Continue Button
+                    Button(
+                        onClick = {
+                            prefs.edit().putBoolean("permissions_requested_on_install", true).commit()
+                            onDismiss()
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(48.dp)
+                            .testTag("grant_all_permissions_btn"),
+                        colors = ButtonDefaults.buttonColors(containerColor = AnimeGreen),
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.CheckCircle,
+                            contentDescription = null,
+                            tint = Color.Black,
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = AppLocaleStrings.get("permissions_skip", language),
+                            color = Color.Black,
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
                 }
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                TextButton(
-                    onClick = {
-                        prefs.edit().putBoolean("permissions_requested_on_install", true).apply()
-                        onDismiss()
-                    },
-                    modifier = Modifier.testTag("skip_permissions_btn")
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(
-                        text = AppLocaleStrings.get("permissions_skip", language),
-                        color = TextMuted,
-                        fontSize = 12.sp
-                    )
+                    // Continue without mic
+                    TextButton(
+                        onClick = {
+                            prefs.edit().putBoolean("permissions_requested_on_install", true).commit()
+                            onDismiss()
+                        },
+                        modifier = Modifier.testTag("skip_permissions_btn")
+                    ) {
+                        Text(
+                            text = AppLocaleStrings.get("permissions_skip", language),
+                            color = TextMuted,
+                            fontSize = 12.sp
+                        )
+                    }
+
+                    // Open App Settings button if user wants to change later
+                    TextButton(
+                        onClick = {
+                            try {
+                                val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                                    data = Uri.fromParts("package", context.packageName, null)
+                                }
+                                context.startActivity(intent)
+                            } catch (_: Exception) {}
+                        }
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(Icons.Default.Settings, contentDescription = null, tint = TextMuted, modifier = Modifier.size(12.dp))
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = if (AppLocaleStrings.isHindi(language)) "सेटिंग्स" else "Settings",
+                                color = TextMuted,
+                                fontSize = 11.sp
+                            )
+                        }
+                    }
                 }
-            }
-        }
-    }
-}
-
-@Composable
-private fun PermissionItemRow(
-    icon: ImageVector,
-    iconColor: Color,
-    title: String,
-    description: String,
-    isGranted: Boolean
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(12.dp))
-            .background(AnimeSurfaceVariant)
-            .border(
-                1.dp,
-                if (isGranted) AnimeGreen.copy(alpha = 0.5f) else AnimePurple.copy(alpha = 0.3f),
-                RoundedCornerShape(12.dp)
-            )
-            .padding(10.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Box(
-            modifier = Modifier
-                .size(34.dp)
-                .clip(CircleShape)
-                .background(iconColor.copy(alpha = 0.18f)),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(imageVector = icon, contentDescription = null, tint = iconColor, modifier = Modifier.size(18.dp))
-        }
-
-        Spacer(modifier = Modifier.width(10.dp))
-
-        Column(modifier = Modifier.weight(1f)) {
-            Text(text = title, color = TextPrimary, fontSize = 12.sp, fontWeight = FontWeight.Bold)
-            Text(text = description, color = TextSecondary, fontSize = 10.sp, lineHeight = 13.sp)
-        }
-
-        if (isGranted) {
-            Box(
-                modifier = Modifier
-                    .size(20.dp)
-                    .clip(CircleShape)
-                    .background(AnimeGreen),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(Icons.Default.Check, contentDescription = "Granted", tint = Color.Black, modifier = Modifier.size(14.dp))
             }
         }
     }

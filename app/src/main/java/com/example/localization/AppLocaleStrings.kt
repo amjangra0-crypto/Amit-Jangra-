@@ -219,19 +219,13 @@ object AppLocaleStrings {
             "mic_listening" to "🎙️ सुन रहा हूँ... बोलिए (Listening...)",
             "mic_permission_needed" to "माइक्रोफ़ोन अनुमति आवश्यक है",
             // Runtime Permissions Onboarding Dialog Keys
-            "permissions_title" to "आवश्यक ऐप अनुमतियाँ (App Permissions)",
-            "permissions_desc" to "एनिमे स्टूडियो एआई को पूर्ण क्षमता से चलाने के लिए कैमरा, माइक्रोफ़ोन, लोकेशन और स्टोरेज की अनुमति आवश्यक है।",
-            "perm_camera" to "कैमरा (Camera)",
-            "perm_camera_desc" to "एनिमे पात्र बनाने व फोटो स्कैनिंग के लिए",
-            "perm_mic" to "माइक्रोफ़ोन (Microphone & Voice Input)",
-            "perm_mic_desc" to "बोलकर प्रॉम्प्ट लिखने व वॉइस डबिंग के लिए",
-            "perm_location" to "लोकेशन (Location & Regional AI)",
-            "perm_location_desc" to "स्थानीय देश व भाषा का स्वतः पता लगाने के लिए",
-            "perm_storage" to "लोकल स्टोरेज व ड्राइव (Storage & Vault)",
-            "perm_storage_desc" to "MP4 वीडियो फाइल्स व प्रोजेक्ट्स सेव करने के लिए",
-            "grant_permissions_btn" to "सभी अनुमतियाँ दें (Grant All Permissions)",
-            "permissions_granted_toast" to "✓ सभी अनुमतियाँ स्वीकृत हो गईं!",
-            "permissions_skip" to "बाद में अनुमति दें (Continue)"
+            "permissions_title" to "ऐप अनुमति (केवल 1 अनुमति आवश्यक)",
+            "permissions_desc" to "इस ऐप के लिए इंस्टॉलेशन के बाद केवल 1 अनुमति आवश्यक है: AI वॉइस डबिंग और स्पीच-टू-टेक्स्ट के लिए माइक्रोफ़ोन।",
+            "perm_mic" to "माइक्रोफ़ोन अनुमति (Microphone)",
+            "perm_mic_desc" to "AI वॉइस डबिंग, डायलॉग स्पीच-टू-टेक्स्ट और वॉयस कमांड के लिए",
+            "grant_permissions_btn" to "माइक्रोफ़ोन अनुमति दें (Allow Microphone)",
+            "permissions_granted_toast" to "✓ माइक्रोफ़ोन अनुमति स्वीकृत!",
+            "permissions_skip" to "आगे बढ़ें (Continue)"
         ),
 
         "English" to mapOf(
@@ -438,18 +432,12 @@ object AppLocaleStrings {
             "mic_listening" to "🎙️ Listening... Speak now",
             "mic_permission_needed" to "Microphone permission required for voice commands",
             // Runtime Permissions Onboarding Dialog Keys
-            "permissions_title" to "Required App Permissions",
-            "permissions_desc" to "Grant Camera, Microphone, Location, and Storage permissions to unlock full Anime Studio AI capabilities.",
-            "perm_camera" to "Camera",
-            "perm_camera_desc" to "For anime character photo scanning & visual input",
-            "perm_mic" to "Microphone & Voice Input",
-            "perm_mic_desc" to "Speak to type prompts & dub voice lines hands-free",
-            "perm_location" to "Location & Regional AI",
-            "perm_location_desc" to "For regional language auto-detection & localized dubbing",
-            "perm_storage" to "Local Storage & Media Vault",
-            "perm_storage_desc" to "To save rendered MP4 videos, scripts & project backups",
-            "grant_permissions_btn" to "Grant All Permissions",
-            "permissions_granted_toast" to "✓ All permissions granted successfully!",
+            "permissions_title" to "App Permission (Only 1 Required)",
+            "permissions_desc" to "Only 1 permission is required for this app after installation: Microphone for AI Voice Dubbing & Speech-to-Text. No camera or location access is needed.",
+            "perm_mic" to "Microphone Permission",
+            "perm_mic_desc" to "For AI Voice Dubbing, Dialogue Narration, and Speech-to-Text Studio Prompts",
+            "grant_permissions_btn" to "Allow Microphone Access",
+            "permissions_granted_toast" to "✓ Microphone permission granted!",
             "permissions_skip" to "Continue"
         ),
 

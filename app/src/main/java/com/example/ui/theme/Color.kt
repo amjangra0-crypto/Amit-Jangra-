@@ -81,77 +81,121 @@ data class VibrantThemeInfo(
     val emoji: String,
     val primaryColor: Color,
     val secondaryColor: Color,
-    val lightSurface: Color
+    val lightBackground: Color,
+    val lightSurface: Color,
+    val lightSurfaceVariant: Color,
+    val darkBackground: Color,
+    val darkSurface: Color,
+    val darkSurfaceVariant: Color
 )
 
 object VibrantThemePresets {
     val all = listOf(
         VibrantThemeInfo(
             key = "CORAL",
-            nameEn = "Coral Sunset",
-            nameHi = "कोरल सनसेट",
-            emoji = "🌺",
-            primaryColor = VibrantCoralRed,
-            secondaryColor = VibrantMangoYellow,
-            lightSurface = VibrantCoralSurface
+            nameEn = "Coral Red",
+            nameHi = "कोरल लाल",
+            emoji = "🔴",
+            primaryColor = Color(0xFFE53935),
+            secondaryColor = Color(0xFFF59E0B),
+            lightBackground = Color(0xFFFFECEB),
+            lightSurface = Color(0xFFFFD9D6),
+            lightSurfaceVariant = Color(0xFFFFC5C0),
+            darkBackground = Color(0xFF200709),
+            darkSurface = Color(0xFF330C10),
+            darkSurfaceVariant = Color(0xFF481419)
+        ),
+        VibrantThemeInfo(
+            key = "EMERALD",
+            nameEn = "Emerald Green",
+            nameHi = "एमराल्ड हरा",
+            emoji = "🟢",
+            primaryColor = Color(0xFF10B981),
+            secondaryColor = Color(0xFF06B6D4),
+            lightBackground = Color(0xFFE8FDF0),
+            lightSurface = Color(0xFFD1FADF),
+            lightSurfaceVariant = Color(0xFFA6F4C5),
+            darkBackground = Color(0xFF041E11),
+            darkSurface = Color(0xFF092C1A),
+            darkSurfaceVariant = Color(0xFF103F27)
+        ),
+        VibrantThemeInfo(
+            key = "AZURE",
+            nameEn = "Azure Blue",
+            nameHi = "एज़्यूर नीला",
+            emoji = "🔵",
+            primaryColor = Color(0xFF0284C7),
+            secondaryColor = Color(0xFF8B5CF6),
+            lightBackground = Color(0xFFE0F2FE),
+            lightSurface = Color(0xFFBAE6FD),
+            lightSurfaceVariant = Color(0xFF7DD3FC),
+            darkBackground = Color(0xFF051726),
+            darkSurface = Color(0xFF09233A),
+            darkSurfaceVariant = Color(0xFF0F3252)
         ),
         VibrantThemeInfo(
             key = "MANGO",
             nameEn = "Mango Gold",
             nameHi = "मैंगो गोल्ड",
             emoji = "🥭",
-            primaryColor = VibrantMangoYellow,
-            secondaryColor = VibrantCoralRed,
-            lightSurface = VibrantMangoSurface
+            primaryColor = Color(0xFFD97706),
+            secondaryColor = Color(0xFFE53935),
+            lightBackground = Color(0xFFFEF3C7),
+            lightSurface = Color(0xFFFDE68A),
+            lightSurfaceVariant = Color(0xFFFCD34D),
+            darkBackground = Color(0xFF261902),
+            darkSurface = Color(0xFF382504),
+            darkSurfaceVariant = Color(0xFF4D3307)
         ),
         VibrantThemeInfo(
             key = "SPRING",
             nameEn = "Spring Lime",
             nameHi = "स्प्रिंग लाइम",
             emoji = "🌿",
-            primaryColor = VibrantSpringGreen,
-            secondaryColor = VibrantAzureBlue,
-            lightSurface = VibrantSpringSurface
-        ),
-        VibrantThemeInfo(
-            key = "EMERALD",
-            nameEn = "Emerald Jade",
-            nameHi = "एमराल्ड जेड",
-            emoji = "💎",
-            primaryColor = VibrantEmeraldGreen,
-            secondaryColor = VibrantSpringGreen,
-            lightSurface = VibrantEmeraldSurface
-        ),
-        VibrantThemeInfo(
-            key = "AZURE",
-            nameEn = "Azure Ocean",
-            nameHi = "एज़्यूर ओशन",
-            emoji = "🌊",
-            primaryColor = VibrantAzureBlue,
-            secondaryColor = VibrantNeonPurple,
-            lightSurface = VibrantAzureSurface
+            primaryColor = Color(0xFF22C55E),
+            secondaryColor = Color(0xFF0284C7),
+            lightBackground = Color(0xFFF0FDF4),
+            lightSurface = Color(0xFFDCFCE7),
+            lightSurfaceVariant = Color(0xFFBBF7D0),
+            darkBackground = Color(0xFF05210E),
+            darkSurface = Color(0xFF0A3116),
+            darkSurfaceVariant = Color(0xFF134521)
         ),
         VibrantThemeInfo(
             key = "SAKURA",
-            nameEn = "Sakura Blossom",
-            nameHi = "साकुरा ब्लॉसम",
+            nameEn = "Sakura Pink",
+            nameHi = "साकुरा गुलाबी",
             emoji = "🌸",
-            primaryColor = VibrantSakuraPink,
-            secondaryColor = VibrantCoralRed,
-            lightSurface = VibrantSakuraSurface
+            primaryColor = Color(0xFFEC4899),
+            secondaryColor = Color(0xFFF59E0B),
+            lightBackground = Color(0xFFFCE7F3),
+            lightSurface = Color(0xFFFBCFE8),
+            lightSurfaceVariant = Color(0xFFF472B6),
+            darkBackground = Color(0xFF260619),
+            darkSurface = Color(0xFF380B26),
+            darkSurfaceVariant = Color(0xFF4D1235)
         ),
         VibrantThemeInfo(
             key = "NEON",
-            nameEn = "Neon Cyber",
-            nameHi = "नियॉन साइबर",
+            nameEn = "Neon Purple",
+            nameHi = "नियॉन पर्पल",
             emoji = "🔮",
-            primaryColor = VibrantNeonPurple,
-            secondaryColor = VibrantAzureBlue,
-            lightSurface = VibrantNeonPurpleSurface
+            primaryColor = Color(0xFF8B5CF6),
+            secondaryColor = Color(0xFF06B6D4),
+            lightBackground = Color(0xFFF3E8FF),
+            lightSurface = Color(0xFFE9D5FF),
+            lightSurfaceVariant = Color(0xFFD8B4FE),
+            darkBackground = Color(0xFF150826),
+            darkSurface = Color(0xFF220D3D),
+            darkSurfaceVariant = Color(0xFF321556)
         )
     )
 
     fun find(key: String): VibrantThemeInfo {
-        return all.firstOrNull { it.key.equals(key, ignoreCase = true) } ?: all.first()
+        return all.firstOrNull { it.key.equals(key, ignoreCase = true) }
+            ?: if (key.equals("RED", ignoreCase = true)) all.first()
+            else if (key.equals("GREEN", ignoreCase = true)) all[1]
+            else if (key.equals("BLUE", ignoreCase = true)) all[2]
+            else all.first()
     }
 }

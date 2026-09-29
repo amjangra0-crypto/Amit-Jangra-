@@ -1,8 +1,13 @@
 package com.example.ui.screens
 
+import android.Manifest
+import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.net.Uri
+import android.provider.Settings
 import android.widget.Toast
+import androidx.core.content.ContextCompat
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
@@ -77,8 +82,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.model.StorageTargetType
+import androidx.compose.material.icons.filled.Security
 import com.example.localization.AppLocaleStrings
 import com.example.ui.AnimeViewModel
+import com.example.ui.components.AppPermissionsOnboardingDialog
 import com.example.ui.components.CountryCodePickerBottomSheet
 import com.example.ui.components.StorageDestinationDialog
 import com.example.ui.theme.AnimeCyan
@@ -110,6 +117,7 @@ fun AppSettingsScreen(
     val lang = state.selectedLanguage
 
     var showCountryPicker by remember { mutableStateOf(false) }
+    var showManualPermissionsDialog by remember { mutableStateOf(false) }
     var voiceSpeed by remember { mutableFloatStateOf(1.0f) }
     var voicePitch by remember { mutableFloatStateOf(1.0f) }
     var selectedResolution by remember { mutableStateOf("1080p Full HD") }
@@ -802,6 +810,141 @@ fun AppSettingsScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
+        // App Permissions Status Card (Only 1 Permission Required)
+        val isMicGranted = ContextCompat.checkSelfPermission(
+            context,
+            Manifest.permission.RECORD_AUDIO
+        ) == PackageManager.PERMISSION_GRANTED
+
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(containerColor = AnimeSurface),
+            shape = RoundedCornerShape(16.dp)
+        ) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Icon(
+                            Icons.Default.Mic,
+                            contentDescription = null,
+                            tint = if (isMicGranted) AnimeGreen else AnimeCyan
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Column {
+                            Text(
+                                text = AppLocaleStrings.tr(
+                                    lang,
+                                    "App Permission (Only 1 Required)",
+                                    "ऐप अनुमति (केवल 1 अनुमति आवश्यक)"
+                                ),
+                                color = TextPrimary,
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Text(
+                                text = if (isMicGranted) {
+                                    AppLocaleStrings.tr(
+                                        lang,
+                                        "Microphone granted • Never asks again",
+                                        "माइक्रोफ़ोन अनुमति स्वीकृत • बार-बार नहीं पूछा जाएगा"
+                                    )
+                                } else {
+                                    AppLocaleStrings.tr(
+                                        lang,
+                                        "Microphone for AI Voice Dubbing (Optional)",
+                                        "AI वॉइस डबिंग के लिए माइक्रोफ़ोन (वैकल्पिक)"
+                                    )
+                                },
+                                color = TextSecondary,
+                                fontSize = 11.sp
+                            )
+                        }
+                    }
+
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(6.dp))
+                            .background(
+                                if (isMicGranted) AnimeGreen.copy(alpha = 0.2f)
+                                else AnimeCyan.copy(alpha = 0.2f)
+                            )
+                            .padding(horizontal = 8.dp, vertical = 4.dp)
+                    ) {
+                        Text(
+                            text = if (isMicGranted) "✓ GRANTED" else "OPTIONAL",
+                            color = if (isMicGranted) AnimeGreen else AnimeCyan,
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    OutlinedButton(
+                        onClick = { showManualPermissionsDialog = true },
+                        shape = RoundedCornerShape(8.dp),
+                        border = BorderStroke(1.dp, AnimeCyan.copy(alpha = 0.6f)),
+                        modifier = Modifier
+                            .weight(1f)
+                            .testTag("settings_review_permissions_btn")
+                    ) {
+                        Icon(
+                            Icons.Default.Security,
+                            contentDescription = null,
+                            tint = AnimeCyan,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = AppLocaleStrings.tr(
+                                lang,
+                                if (isMicGranted) "Permission Details" else "Grant Permission",
+                                if (isMicGranted) "अनुमति विवरण" else "अनुमति दें"
+                            ),
+                            color = AnimeCyan,
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+
+                    OutlinedButton(
+                        onClick = {
+                            try {
+                                val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                                    data = Uri.fromParts("package", context.packageName, null)
+                                }
+                                context.startActivity(intent)
+                            } catch (_: Exception) {}
+                        },
+                        shape = RoundedCornerShape(8.dp),
+                        border = BorderStroke(1.dp, AnimePurple.copy(alpha = 0.4f)),
+                        modifier = Modifier.testTag("settings_system_permissions_btn")
+                    ) {
+                        Icon(
+                            Icons.Default.Settings,
+                            contentDescription = null,
+                            tint = TextMuted,
+                            modifier = Modifier.size(16.dp)
+                        )
+                    }
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
         // App Info & Owner Details
         Card(
             modifier = Modifier.fillMaxWidth(),
@@ -841,6 +984,13 @@ fun AppSettingsScreen(
                     showCountryPicker = false
                 },
                 onDismiss = { showCountryPicker = false }
+            )
+        }
+
+        if (showManualPermissionsDialog) {
+            AppPermissionsOnboardingDialog(
+                language = lang,
+                onDismiss = { showManualPermissionsDialog = false }
             )
         }
     }

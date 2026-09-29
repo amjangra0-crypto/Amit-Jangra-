@@ -55,58 +55,42 @@ fun getVibrantColorScheme(theme: String, isDark: Boolean): androidx.compose.mate
     val secondaryColor = preset.secondaryColor
 
     return if (isDark) {
-        DarkColorScheme.copy(
-            primary = primaryColor,
-            primaryContainer = AnimeSurfaceVariant,
-            onPrimaryContainer = primaryColor,
-            secondary = secondaryColor,
-            secondaryContainer = AnimeSurfaceVariant,
-            onSecondaryContainer = secondaryColor,
-            tertiary = when (theme.uppercase()) {
-                "SAKURA", "CORAL" -> VibrantMangoYellow
-                "MANGO" -> VibrantCoralRed
-                "SPRING", "EMERALD" -> VibrantAzureBlue
-                "AZURE" -> VibrantSakuraPink
-                else -> AnimePink
-            },
-            background = AnimeBackground,
-            surface = AnimeSurface,
-            surfaceVariant = AnimeSurfaceVariant
-        )
-    } else {
-        val lightBg = when (theme.uppercase()) {
-            "CORAL" -> VibrantCoralTint
-            "MANGO" -> VibrantMangoTint
-            "SPRING" -> VibrantSpringTint
-            "EMERALD" -> VibrantEmeraldTint
-            "AZURE" -> VibrantAzureTint
-            "SAKURA" -> VibrantSakuraTint
-            "NEON" -> VibrantNeonPurpleTint
-            else -> VibrantCoralTint
-        }
-
-        LightColorScheme.copy(
+        darkColorScheme(
             primary = primaryColor,
             onPrimary = Color.White,
-            primaryContainer = preset.lightSurface,
+            primaryContainer = preset.darkSurfaceVariant,
             onPrimaryContainer = primaryColor,
             secondary = secondaryColor,
             onSecondary = Color.White,
-            secondaryContainer = LightSurfaceVariant,
+            secondaryContainer = preset.darkSurfaceVariant,
             onSecondaryContainer = secondaryColor,
-            tertiary = when (theme.uppercase()) {
-                "SAKURA", "CORAL" -> VibrantMangoYellow
-                "MANGO" -> VibrantCoralRed
-                "SPRING", "EMERALD" -> VibrantAzureBlue
-                "AZURE" -> VibrantSakuraPink
-                else -> AnimePink
-            },
-            background = lightBg,
-            surface = Color.White,
-            surfaceVariant = preset.lightSurface,
-            onSurface = LightTextPrimary,
-            onSurfaceVariant = LightTextSecondary,
-            outline = primaryColor.copy(alpha = 0.25f)
+            tertiary = preset.secondaryColor,
+            background = preset.darkBackground,
+            onBackground = Color.White,
+            surface = preset.darkSurface,
+            onSurface = Color.White,
+            surfaceVariant = preset.darkSurfaceVariant,
+            onSurfaceVariant = Color(0xFFCBD5E1),
+            outline = primaryColor.copy(alpha = 0.45f)
+        )
+    } else {
+        lightColorScheme(
+            primary = primaryColor,
+            onPrimary = Color.White,
+            primaryContainer = preset.lightSurfaceVariant,
+            onPrimaryContainer = primaryColor,
+            secondary = secondaryColor,
+            onSecondary = Color.White,
+            secondaryContainer = preset.lightSurfaceVariant,
+            onSecondaryContainer = secondaryColor,
+            tertiary = preset.secondaryColor,
+            background = preset.lightBackground,
+            onBackground = Color(0xFF0F172A),
+            surface = preset.lightSurface,
+            onSurface = Color(0xFF0F172A),
+            surfaceVariant = preset.lightSurfaceVariant,
+            onSurfaceVariant = Color(0xFF334155),
+            outline = primaryColor.copy(alpha = 0.35f)
         )
     }
 }

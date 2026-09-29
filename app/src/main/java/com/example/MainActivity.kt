@@ -114,9 +114,15 @@ class MainActivity : ComponentActivity() {
             var showPermissionsDialog by remember {
                 val prefs = getSharedPreferences("anime_app_permissions_prefs", Context.MODE_PRIVATE)
                 val hasShown = prefs.getBoolean("permissions_requested_on_install", false)
-                val cameraGranted = ContextCompat.checkSelfPermission(this@MainActivity, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED
-                val micGranted = ContextCompat.checkSelfPermission(this@MainActivity, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED
-                mutableStateOf(!hasShown || (!cameraGranted && !micGranted))
+                val isMicGranted = ContextCompat.checkSelfPermission(
+                    this@MainActivity,
+                    Manifest.permission.RECORD_AUDIO
+                ) == PackageManager.PERMISSION_GRANTED
+                val shouldShow = !hasShown && !isMicGranted
+                if (isMicGranted && !hasShown) {
+                    prefs.edit().putBoolean("permissions_requested_on_install", true).commit()
+                }
+                mutableStateOf(shouldShow)
             }
 
             MyApplicationTheme(darkTheme = state.isDarkMode, vibrantTheme = state.vibrantTheme) {
@@ -186,54 +192,9 @@ class MainActivity : ComponentActivity() {
 
                                 Spacer(modifier = Modifier.width(4.dp))
 
-                                // Active Storage Target (Local, Drive, SD Card, Hard Disk)
-                                val storageConfig by viewModel.storageConfig.collectAsState()
-                                Box(
-                                    modifier = Modifier
-                                        .clip(RoundedCornerShape(8.dp))
-                                        .background(MaterialTheme.colorScheme.surfaceVariant)
-                                        .border(1.dp, AnimeGold.copy(alpha = 0.5f), RoundedCornerShape(8.dp))
-                                        .clickable { viewModel.toggleStorageDialog(true) }
-                                        .padding(horizontal = 6.dp, vertical = 4.dp)
-                                        .testTag("top_bar_storage_btn")
-                                ) {
-                                    Row(verticalAlignment = Alignment.CenterVertically) {
-                                        Text(text = storageConfig.activeTarget.iconEmoji, fontSize = 12.sp)
-                                        Spacer(modifier = Modifier.width(2.dp))
-                                        Text(
-                                            text = when (storageConfig.activeTarget) {
-                                                StorageTargetType.INTERNAL_STORAGE -> "LOCAL"
-                                                StorageTargetType.GOOGLE_DRIVE -> "DRIVE"
-                                                StorageTargetType.SD_CARD -> "SD"
-                                                StorageTargetType.HARD_DISK -> "HDD"
-                                            },
-                                            color = AnimeGold,
-                                            fontSize = 9.sp,
-                                            fontWeight = FontWeight.Bold
-                                        )
-                                    }
-                                }
 
-                                IconButton(
-                                    onClick = { showThemeSheet = true },
-                                    modifier = Modifier.testTag("top_bar_palette_btn")
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Default.Palette,
-                                        contentDescription = "Vibrant Themes",
-                                        tint = MaterialTheme.colorScheme.primary
-                                    )
-                                }
-                                IconButton(
-                                    onClick = { viewModel.toggleTheme() },
-                                    modifier = Modifier.testTag("top_bar_theme_toggle_btn")
-                                ) {
-                                    Icon(
-                                        imageVector = if (state.isDarkMode) Icons.Default.LightMode else Icons.Default.DarkMode,
-                                        contentDescription = "Toggle Light/Dark Theme",
-                                        tint = if (state.isDarkMode) AnimeGold else AnimePurple
-                                    )
-                                }
+
+
                                 IconButton(
                                     onClick = { viewModel.setTab(AppTab.PROJECTS) },
                                     modifier = Modifier.testTag("top_bar_projects_btn")
@@ -241,10 +202,10 @@ class MainActivity : ComponentActivity() {
                                     Icon(Icons.Default.History, contentDescription = "Project History", tint = AnimeCyan)
                                 }
                                 IconButton(
-                                    onClick = { viewModel.toggleLocalStorageVault(true) },
-                                    modifier = Modifier.testTag("top_bar_vault_btn")
+                                    onClick = { viewModel.setTab(AppTab.SETTINGS) },
+                                    modifier = Modifier.testTag("top_bar_settings_btn")
                                 ) {
-                                    Icon(Icons.Default.Storage, contentDescription = "Saved Vault", tint = AnimeCyan)
+                                    Icon(Icons.Default.Settings, contentDescription = "Settings", tint = MaterialTheme.colorScheme.onSurface)
                                 }
                                 // Profile Avatar button in top bar
                                 IconButton(
@@ -485,7 +446,11 @@ class MainActivity : ComponentActivity() {
                     if (showPermissionsDialog) {
                         AppPermissionsOnboardingDialog(
                             language = state.selectedLanguage,
-                            onDismiss = { showPermissionsDialog = false }
+                            onDismiss = {
+                                val prefs = getSharedPreferences("anime_app_permissions_prefs", Context.MODE_PRIVATE)
+                                prefs.edit().putBoolean("permissions_requested_on_install", true).commit()
+                                showPermissionsDialog = false
+                            }
                         )
                     }
                 }
