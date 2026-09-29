@@ -642,16 +642,22 @@ private fun getLocalizedPrice(plan: SubscriptionPlan, currency: CurrencyType): S
             CurrencyType.INR -> "₹499 / माह"
             CurrencyType.USD -> "$9.99 / mo"
             CurrencyType.EUR -> "€8.99 / mo"
+            CurrencyType.GBP -> "£7.99 / mo"
+            CurrencyType.JPY -> "¥1,480 / mo"
         }
         SubscriptionPlan.STUDIO_ULTRA -> when (currency) {
             CurrencyType.INR -> "₹999 / माह"
             CurrencyType.USD -> "$19.99 / mo"
             CurrencyType.EUR -> "€18.49 / mo"
+            CurrencyType.GBP -> "£15.99 / mo"
+            CurrencyType.JPY -> "¥2,980 / mo"
         }
         SubscriptionPlan.STUDIO_OWNER -> when (currency) {
             CurrencyType.INR -> "₹9,999 (Life VIP)"
             CurrencyType.USD -> "$149.00 (Life VIP)"
             CurrencyType.EUR -> "€139.00 (Life VIP)"
+            CurrencyType.GBP -> "£119.00 (Life VIP)"
+            CurrencyType.JPY -> "¥19,800 (Life VIP)"
         }
     }
 }
@@ -663,16 +669,22 @@ private fun getRawPlanAmount(plan: SubscriptionPlan, currency: CurrencyType): Do
             CurrencyType.INR -> 499.0
             CurrencyType.USD -> 9.99
             CurrencyType.EUR -> 8.99
+            CurrencyType.GBP -> 7.99
+            CurrencyType.JPY -> 1480.0
         }
         SubscriptionPlan.STUDIO_ULTRA -> when (currency) {
             CurrencyType.INR -> 999.0
             CurrencyType.USD -> 19.99
             CurrencyType.EUR -> 18.49
+            CurrencyType.GBP -> 15.99
+            CurrencyType.JPY -> 2980.0
         }
         SubscriptionPlan.STUDIO_OWNER -> when (currency) {
             CurrencyType.INR -> 9999.0
             CurrencyType.USD -> 149.00
             CurrencyType.EUR -> 139.00
+            CurrencyType.GBP -> 119.00
+            CurrencyType.JPY -> 19800.0
         }
     }
 }
@@ -692,6 +704,8 @@ fun SubscriptionCheckoutDialog(
         CurrencyType.INR -> listOf(PaymentGateway.UPI_GPAY, PaymentGateway.UPI_PHONEPE, PaymentGateway.UPI_GENERIC, PaymentGateway.CARD, PaymentGateway.BANK_TRANSFER)
         CurrencyType.USD -> listOf(PaymentGateway.PAYPAL, PaymentGateway.CARD, PaymentGateway.BANK_TRANSFER)
         CurrencyType.EUR -> listOf(PaymentGateway.PAYPAL, PaymentGateway.CARD, PaymentGateway.BANK_TRANSFER)
+        CurrencyType.GBP -> listOf(PaymentGateway.PAYPAL, PaymentGateway.CARD, PaymentGateway.BANK_TRANSFER)
+        CurrencyType.JPY -> listOf(PaymentGateway.PAYPAL, PaymentGateway.CARD, PaymentGateway.BANK_TRANSFER)
     }
 
     AlertDialog(

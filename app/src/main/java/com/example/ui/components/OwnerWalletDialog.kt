@@ -192,6 +192,8 @@ fun OwnerWalletBottomSheet(
                             CurrencyType.INR -> AnimeGreen
                             CurrencyType.USD -> AnimeCyan
                             CurrencyType.EUR -> AnimePink
+                            CurrencyType.GBP -> AnimeGold
+                            CurrencyType.JPY -> AnimePurple
                         }
                     )
                 },
@@ -212,6 +214,8 @@ fun OwnerWalletBottomSheet(
                             CurrencyType.INR -> AnimeGreen
                             CurrencyType.USD -> AnimeCyan
                             CurrencyType.EUR -> AnimePink
+                            CurrencyType.GBP -> AnimeGold
+                            CurrencyType.JPY -> AnimePurple
                         },
                         unselectedContentColor = TextMuted
                     )
@@ -232,6 +236,8 @@ fun OwnerWalletBottomSheet(
                         CurrencyType.INR -> AnimeGreen.copy(alpha = 0.6f)
                         CurrencyType.USD -> AnimeCyan.copy(alpha = 0.6f)
                         CurrencyType.EUR -> AnimePink.copy(alpha = 0.6f)
+                        CurrencyType.GBP -> AnimeGold.copy(alpha = 0.6f)
+                        CurrencyType.JPY -> AnimePurple.copy(alpha = 0.6f)
                     }
                 )
             ) {

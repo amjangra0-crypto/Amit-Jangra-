@@ -300,7 +300,7 @@ class AnimeViewModel(application: Application) : AndroidViewModel(application) {
 
     fun setTab(tab: AppTab) {
         _uiState.value = _uiState.value.copy(currentTab = tab)
-        if (tab != AppTab.PLAYER && _uiState.value.isPlayingVideo) {
+        if (tab != AppTab.PLAYER && tab != AppTab.STUDIO && _uiState.value.isPlayingVideo) {
             pauseVideo()
         }
     }
@@ -612,11 +612,11 @@ class AnimeViewModel(application: Application) : AndroidViewModel(application) {
                 currentScript = script,
                 activeSceneIndex = 0,
                 currentDialogueIndex = 0,
-                currentTab = AppTab.PLAYER,
-                statusMessage = "✨ Anime Script & Video successfully generated!"
+                currentTab = AppTab.STUDIO,
+                statusMessage = "✨ Anime Script & Video successfully generated! Playing real-time preview in Studio..."
             )
 
-            // Auto-start video in player
+            // Auto-start video in studio dashboard player
             playVideo()
         }
     }

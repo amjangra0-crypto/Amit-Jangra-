@@ -93,7 +93,10 @@ import com.example.ui.AnimeViewModel
 import com.example.ui.components.AutomationDirectorSection
 import com.example.ui.components.DownloadProjectDialog
 import com.example.ui.components.ResourceHelpers
+import com.example.ui.components.StudioSceneVideoPlayer
 import com.example.ui.components.WorkflowCardsSection
+import androidx.compose.material.icons.filled.Pause
+import androidx.compose.material.icons.filled.PlayArrow
 import com.example.ui.components.WorkflowInputBox
 import com.example.ui.components.WorkflowInteractiveDialog
 import com.example.ui.components.WorkflowSelectorPills
@@ -310,6 +313,11 @@ fun StudioCreateScreen(viewModel: AnimeViewModel) {
                 Text(AppLocaleStrings.get("quick_download_project", state.selectedLanguage), color = AnimeGold, fontSize = 11.sp, fontWeight = FontWeight.Bold)
             }
         }
+
+        Spacer(modifier = Modifier.height(10.dp))
+
+        // Real-Time Studio Video Player Component (Live Scene Preview)
+        StudioSceneVideoPlayer(viewModel = viewModel)
 
         Spacer(modifier = Modifier.height(10.dp))
 
@@ -1135,30 +1143,67 @@ fun StudioCreateScreen(viewModel: AnimeViewModel) {
             }
         }
 
-        // Generate Action Button
-        Button(
-            onClick = { viewModel.generateAnimeVideo() },
-            enabled = !state.isGenerating,
+        // Generate Action Button & Instant Real-Time Preview
+        Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp)
-                .height(54.dp)
-                .testTag("generate_anime_button"),
-            shape = RoundedCornerShape(14.dp),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = AnimePurple,
-                disabledContainerColor = AnimePurple.copy(alpha = 0.4f)
-            )
+                .padding(horizontal = 16.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(Icons.Default.AutoAwesome, contentDescription = null, tint = AnimeGold)
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    text = if (state.isGenerating) AppLocaleStrings.get("generating_video", state.selectedLanguage) else AppLocaleStrings.get("generate_video_btn", state.selectedLanguage),
-                    color = Color.White,
-                    fontSize = 15.sp,
-                    fontWeight = FontWeight.Bold
+            Button(
+                onClick = { viewModel.generateAnimeVideo() },
+                enabled = !state.isGenerating,
+                modifier = Modifier
+                    .weight(1f)
+                    .height(54.dp)
+                    .testTag("generate_anime_button"),
+                shape = RoundedCornerShape(14.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = AnimePurple,
+                    disabledContainerColor = AnimePurple.copy(alpha = 0.4f)
                 )
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Default.AutoAwesome, contentDescription = null, tint = AnimeGold)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = if (state.isGenerating) AppLocaleStrings.get("generating_video", state.selectedLanguage) else AppLocaleStrings.get("generate_video_btn", state.selectedLanguage),
+                        color = Color.White,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
+
+            OutlinedButton(
+                onClick = {
+                    if (state.isPlayingVideo) viewModel.pauseVideo() else viewModel.playVideo()
+                },
+                modifier = Modifier
+                    .height(54.dp)
+                    .testTag("studio_quick_preview_toggle_btn"),
+                shape = RoundedCornerShape(14.dp),
+                border = BorderStroke(1.5.dp, if (state.isPlayingVideo) AnimePink else AnimeCyan),
+                colors = ButtonDefaults.outlinedButtonColors(
+                    containerColor = if (state.isPlayingVideo) AnimePink.copy(alpha = 0.15f) else AnimeCyan.copy(alpha = 0.12f)
+                )
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = if (state.isPlayingVideo) Icons.Default.Pause else Icons.Default.PlayArrow,
+                        contentDescription = null,
+                        tint = if (state.isPlayingVideo) AnimePink else AnimeCyan,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        text = if (state.isPlayingVideo) "Pause" else "Preview",
+                        color = if (state.isPlayingVideo) AnimePink else AnimeCyan,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 13.sp
+                    )
+                }
             }
         }
 
