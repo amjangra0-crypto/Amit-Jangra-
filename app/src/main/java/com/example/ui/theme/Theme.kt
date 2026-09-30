@@ -59,7 +59,7 @@ fun getVibrantColorScheme(theme: String, isDark: Boolean): androidx.compose.mate
             primary = primaryColor,
             onPrimary = Color.White,
             primaryContainer = preset.darkSurfaceVariant,
-            onPrimaryContainer = primaryColor,
+            onPrimaryContainer = Color.White,
             secondary = secondaryColor,
             onSecondary = Color.White,
             secondaryContainer = preset.darkSurfaceVariant,
@@ -70,27 +70,27 @@ fun getVibrantColorScheme(theme: String, isDark: Boolean): androidx.compose.mate
             surface = preset.darkSurface,
             onSurface = Color.White,
             surfaceVariant = preset.darkSurfaceVariant,
-            onSurfaceVariant = Color(0xFFCBD5E1),
-            outline = primaryColor.copy(alpha = 0.45f)
+            onSurfaceVariant = Color(0xFFE2E8F0),
+            outline = primaryColor.copy(alpha = 0.5f)
         )
     } else {
-        lightColorScheme(
+        darkColorScheme(
             primary = primaryColor,
             onPrimary = Color.White,
             primaryContainer = preset.lightSurfaceVariant,
-            onPrimaryContainer = primaryColor,
+            onPrimaryContainer = Color.White,
             secondary = secondaryColor,
             onSecondary = Color.White,
             secondaryContainer = preset.lightSurfaceVariant,
             onSecondaryContainer = secondaryColor,
             tertiary = preset.secondaryColor,
             background = preset.lightBackground,
-            onBackground = Color(0xFF0F172A),
+            onBackground = Color.White,
             surface = preset.lightSurface,
-            onSurface = Color(0xFF0F172A),
+            onSurface = Color.White,
             surfaceVariant = preset.lightSurfaceVariant,
-            onSurfaceVariant = Color(0xFF334155),
-            outline = primaryColor.copy(alpha = 0.35f)
+            onSurfaceVariant = Color(0xFFE2E8F0),
+            outline = primaryColor.copy(alpha = 0.45f)
         )
     }
 }

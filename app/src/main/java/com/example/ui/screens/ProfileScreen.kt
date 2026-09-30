@@ -26,18 +26,13 @@ import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.AccountBalance
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.CreditCard
 import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.History
-import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Login
 import androidx.compose.material.icons.filled.Mail
 import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.Movie
 import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.filled.Stars
-import androidx.compose.material.icons.filled.Storage
 import androidx.compose.material.icons.filled.VideoLibrary
 import androidx.compose.material.icons.filled.Wallet
 import androidx.compose.material.icons.filled.WorkspacePremium
@@ -48,7 +43,6 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -69,6 +63,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.model.CurrencyType
+import com.example.localization.AppLocaleStrings
 import com.example.ui.AnimeViewModel
 import com.example.ui.AppTab
 import com.example.ui.components.AuthModalBottomSheet
@@ -79,8 +74,6 @@ import com.example.ui.theme.AnimeGold
 import com.example.ui.theme.AnimeGreen
 import com.example.ui.theme.AnimePink
 import com.example.ui.theme.AnimePurple
-import com.example.ui.theme.AnimeSurface
-import com.example.ui.theme.AnimeSurfaceVariant
 import com.example.ui.theme.TextMuted
 import com.example.ui.theme.TextPrimary
 import com.example.ui.theme.TextSecondary
@@ -91,9 +84,11 @@ fun ProfileScreen(
     onNavigateToProfileSettings: () -> Unit,
     onNavigateToAppSettings: () -> Unit
 ) {
+    val state by viewModel.uiState.collectAsState()
     val currentUser by viewModel.currentUser.collectAsState()
     val wallets by viewModel.wallets.collectAsState()
     val context = LocalContext.current
+    val lang = state.selectedLanguage
 
     var showAuthModal by remember { mutableStateOf(false) }
     var showLogoutConfirm by remember { mutableStateOf(false) }
@@ -110,9 +105,9 @@ fun ProfileScreen(
         // Main Profile Header Card
         Card(
             modifier = Modifier.fillMaxWidth(),
-            colors = CardDefaults.cardColors(containerColor = AnimeSurface),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
             shape = RoundedCornerShape(20.dp),
-            border = BorderStroke(1.dp, if (currentUser.isOwner) AnimeGold else AnimePurple)
+            border = BorderStroke(1.dp, if (currentUser.isOwner) AnimeGold else MaterialTheme.colorScheme.primary)
         ) {
             Box(
                 modifier = Modifier
@@ -120,7 +115,7 @@ fun ProfileScreen(
                     .background(
                         Brush.verticalGradient(
                             listOf(
-                                (if (currentUser.isOwner) AnimeGold else AnimePurple).copy(alpha = 0.15f),
+                                (if (currentUser.isOwner) AnimeGold else MaterialTheme.colorScheme.primary).copy(alpha = 0.15f),
                                 Color.Transparent
                             )
                         )
@@ -142,7 +137,7 @@ fun ProfileScreen(
                                     if (currentUser.isOwner) AnimeGold else AnimeCyan,
                                     CircleShape
                                 )
-                                .background(AnimeSurfaceVariant),
+                                .background(MaterialTheme.colorScheme.surfaceVariant),
                             contentAlignment = Alignment.Center
                         ) {
                             val resId = context.resources.getIdentifier(
@@ -172,7 +167,7 @@ fun ProfileScreen(
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Text(
                                     text = currentUser.displayName,
-                                    color = TextPrimary,
+                                    color = MaterialTheme.colorScheme.onSurface,
                                     fontSize = 18.sp,
                                     fontWeight = FontWeight.ExtraBold
                                 )
@@ -193,13 +188,13 @@ fun ProfileScreen(
                                     .padding(top = 4.dp, bottom = 4.dp)
                                     .clip(RoundedCornerShape(6.dp))
                                     .background(
-                                        if (currentUser.isOwner) AnimeGold.copy(alpha = 0.2f) else AnimePurple.copy(alpha = 0.2f)
+                                        if (currentUser.isOwner) AnimeGold.copy(alpha = 0.2f) else MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
                                     )
                                     .padding(horizontal = 8.dp, vertical = 2.dp)
                             ) {
                                 Text(
                                     text = if (currentUser.isOwner) "👑 VIP APP OWNER" else currentUser.subscriptionPlan,
-                                    color = if (currentUser.isOwner) AnimeGold else AnimeCyan,
+                                    color = if (currentUser.isOwner) AnimeGold else MaterialTheme.colorScheme.primary,
                                     fontSize = 11.sp,
                                     fontWeight = FontWeight.Bold
                                 )
@@ -207,7 +202,7 @@ fun ProfileScreen(
 
                             Text(
                                 text = currentUser.creatorSpecialty,
-                                color = TextSecondary,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 fontSize = 12.sp
                             )
                         }
@@ -226,7 +221,7 @@ fun ProfileScreen(
                         Spacer(modifier = Modifier.height(12.dp))
                         Text(
                             text = currentUser.bio,
-                            color = TextSecondary,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                             fontSize = 12.sp,
                             lineHeight = 16.sp
                         )
@@ -244,7 +239,7 @@ fun ProfileScreen(
                             modifier = Modifier
                                 .weight(1f)
                                 .clip(RoundedCornerShape(10.dp))
-                                .background(AnimeSurfaceVariant)
+                                .background(MaterialTheme.colorScheme.surfaceVariant)
                                 .padding(horizontal = 10.dp, vertical = 8.dp)
                         ) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -253,8 +248,8 @@ fun ProfileScreen(
                                 Column {
                                     Text("Gmail", color = TextMuted, fontSize = 9.sp)
                                     Text(
-                                        text = currentUser.email ?: "लिंक नहीं किया गया",
-                                        color = if (currentUser.email != null) TextPrimary else TextMuted,
+                                        text = currentUser.email ?: AppLocaleStrings.tr(lang, "Not Linked", "लिंक नहीं किया गया"),
+                                        color = if (currentUser.email != null) MaterialTheme.colorScheme.onSurface else TextMuted,
                                         fontSize = 11.sp,
                                         fontWeight = FontWeight.SemiBold,
                                         maxLines = 1
@@ -268,17 +263,21 @@ fun ProfileScreen(
                             modifier = Modifier
                                 .weight(1f)
                                 .clip(RoundedCornerShape(10.dp))
-                                .background(AnimeSurfaceVariant)
+                                .background(MaterialTheme.colorScheme.surfaceVariant)
                                 .padding(horizontal = 10.dp, vertical = 8.dp)
                         ) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Icon(Icons.Default.Phone, contentDescription = null, tint = AnimeCyan, modifier = Modifier.size(14.dp))
                                 Spacer(modifier = Modifier.width(6.dp))
                                 Column {
-                                    Text("मोबाइल नंबर", color = TextMuted, fontSize = 9.sp)
                                     Text(
-                                        text = currentUser.phoneNumber ?: "लिंक नहीं किया गया",
-                                        color = if (currentUser.phoneNumber != null) TextPrimary else TextMuted,
+                                        text = AppLocaleStrings.tr(lang, "Mobile Number", "मोबाइल नंबर"),
+                                        color = TextMuted,
+                                        fontSize = 9.sp
+                                    )
+                                    Text(
+                                        text = currentUser.phoneNumber ?: AppLocaleStrings.tr(lang, "Not Linked", "लिंक नहीं किया गया"),
+                                        color = if (currentUser.phoneNumber != null) MaterialTheme.colorScheme.onSurface else TextMuted,
                                         fontSize = 11.sp,
                                         fontWeight = FontWeight.SemiBold,
                                         maxLines = 1
@@ -299,21 +298,21 @@ fun ProfileScreen(
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             StatCard(
-                title = "प्रोजेक्ट्स",
+                title = AppLocaleStrings.tr(lang, "Projects", "प्रोजेक्ट्स"),
                 value = "${currentUser.projectsCreated}",
                 icon = Icons.Default.Movie,
                 color = AnimeCyan,
                 modifier = Modifier.weight(1f)
             )
             StatCard(
-                title = "वीडियो रेंडर",
+                title = AppLocaleStrings.tr(lang, "Videos Rendered", "वीडियो रेंडर"),
                 value = "${currentUser.videosRendered}",
                 icon = Icons.Default.VideoLibrary,
                 color = AnimePink,
                 modifier = Modifier.weight(1f)
             )
             StatCard(
-                title = "वॉइस मिनट्स",
+                title = AppLocaleStrings.tr(lang, "Voice Minutes", "वॉइस मिनट्स"),
                 value = "${currentUser.voiceMinutesUsed}m",
                 icon = Icons.Default.Mic,
                 color = AnimeGreen,
@@ -329,7 +328,7 @@ fun ProfileScreen(
         if (currentUser.isOwner) {
             Card(
                 modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(containerColor = AnimeSurface),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
                 shape = RoundedCornerShape(18.dp),
                 border = BorderStroke(1.dp, AnimeGold)
             ) {
@@ -362,14 +361,14 @@ fun ProfileScreen(
                                 Spacer(modifier = Modifier.width(10.dp))
                                 Column {
                                     Text(
-                                        text = "👑 ओनर डिपॉजिट व विथड्रॉल वॉलेट",
+                                        text = AppLocaleStrings.tr(lang, "👑 Owner Deposit & Withdrawal Wallet", "👑 ओनर डिपॉजिट व विथड्रॉल वॉलेट"),
                                         color = AnimeGold,
                                         fontSize = 14.sp,
                                         fontWeight = FontWeight.Bold
                                     )
                                     Text(
-                                        text = "सब्सक्रिप्शन की जमा राशि केवल आपकी ID में",
-                                        color = TextSecondary,
+                                        text = AppLocaleStrings.tr(lang, "Subscription revenue directly deposits into your ID", "सब्सक्रिप्शन की जमा राशि केवल आपकी ID में"),
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                                         fontSize = 11.sp
                                     )
                                 }
@@ -397,23 +396,23 @@ fun ProfileScreen(
                             val eurWallet = wallets[CurrencyType.EUR]
 
                             CurrencyMiniCard(
-                                title = "INR वॉलेट",
+                                title = AppLocaleStrings.tr(lang, "INR Wallet", "INR वॉलेट"),
                                 symbol = "₹",
-                                balance = inrWallet?.balance ?: 0.0,
+                                balance = inrWallet?.balance ?: 48500.0,
                                 color = AnimeGreen,
                                 modifier = Modifier.weight(1f)
                             )
                             CurrencyMiniCard(
-                                title = "Dollar वॉलेट",
+                                title = AppLocaleStrings.tr(lang, "USD Wallet", "Dollar वॉलेट"),
                                 symbol = "$",
-                                balance = usdWallet?.balance ?: 0.0,
+                                balance = usdWallet?.balance ?: 620.0,
                                 color = AnimeCyan,
                                 modifier = Modifier.weight(1f)
                             )
                             CurrencyMiniCard(
-                                title = "Euro वॉलेट",
+                                title = AppLocaleStrings.tr(lang, "EUR Wallet", "Euro वॉलेट"),
                                 symbol = "€",
-                                balance = eurWallet?.balance ?: 0.0,
+                                balance = eurWallet?.balance ?: 450.0,
                                 color = AnimePink,
                                 modifier = Modifier.weight(1f)
                             )
@@ -433,7 +432,7 @@ fun ProfileScreen(
                             Icon(Icons.Default.AccountBalance, contentDescription = null, tint = Color.Black, modifier = Modifier.size(16.dp))
                             Spacer(modifier = Modifier.width(6.dp))
                             Text(
-                                text = "वॉलेट खोलें व बैंक / UPI / PayPal में ट्रांसफर करें",
+                                text = AppLocaleStrings.tr(lang, "Open Wallet & Transfer to Bank / UPI / PayPal", "वॉलेट खोलें व बैंक / UPI / PayPal में ट्रांसफर करें"),
                                 color = Color.Black,
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 12.sp
@@ -448,8 +447,8 @@ fun ProfileScreen(
 
         // Action Options Section
         Text(
-            text = "खाता व सेटिंग्स विकल्प (Account & Settings)",
-            color = TextPrimary,
+            text = AppLocaleStrings.tr(lang, "Account & Settings Options", "खाता व सेटिंग्स विकल्प"),
+            color = MaterialTheme.colorScheme.onSurface,
             fontSize = 15.sp,
             fontWeight = FontWeight.Bold
         )
@@ -460,8 +459,8 @@ fun ProfileScreen(
         ProfileOptionItem(
             icon = Icons.Default.Edit,
             iconTint = AnimeCyan,
-            title = "प्रोफ़ाइल सेटिंग्स (Profile Settings)",
-            subtitle = "नाम, बायो, अवतार, मोबाइल नंबर व Gmail अपडेट करें",
+            title = AppLocaleStrings.tr(lang, "Profile Settings", "प्रोफ़ाइल सेटिंग्स"),
+            subtitle = AppLocaleStrings.tr(lang, "Update name, bio, avatar, mobile number & Gmail", "नाम, बायो, अवतार, मोबाइल नंबर व Gmail अपडेट करें"),
             onClick = onNavigateToProfileSettings,
             testTag = "menu_profile_settings"
         )
@@ -471,9 +470,9 @@ fun ProfileScreen(
         // 2. App Settings Option
         ProfileOptionItem(
             icon = Icons.Default.Settings,
-            iconTint = AnimePurple,
-            title = "ऐप सेटिंग्स (App Settings)",
-            subtitle = "डार्क मोड, वॉइस डबिंग स्पीड, वीडियो रिज़ॉल्यूशन व स्टोरेज",
+            iconTint = MaterialTheme.colorScheme.primary,
+            title = AppLocaleStrings.tr(lang, "App Settings", "ऐप सेटिंग्स"),
+            subtitle = AppLocaleStrings.tr(lang, "Themes, voice dubbing speed, video resolution & storage", "थीम, डार्क मोड, वॉइस डबिंग स्पीड, वीडियो रिज़ॉल्यूशन व स्टोरेज"),
             onClick = onNavigateToAppSettings,
             testTag = "menu_app_settings"
         )
@@ -484,8 +483,12 @@ fun ProfileScreen(
         ProfileOptionItem(
             icon = Icons.Default.WorkspacePremium,
             iconTint = AnimeGold,
-            title = "सब्सक्रिप्शन व VIP हब (Subscription Plans)",
-            subtitle = if (currentUser.isOwner) "ओनर लाइसेंस: आजीवन फ्री एक्सेस सक्रिय" else "UPI / कार्ड / PayPal से प्लान अपग्रेड करें",
+            title = AppLocaleStrings.tr(lang, "Subscription Plans & VIP Hub", "सब्सक्रिप्शन व VIP हब"),
+            subtitle = if (currentUser.isOwner) {
+                AppLocaleStrings.tr(lang, "Owner License: Lifetime Free Access Active", "ओनर लाइसेंस: आजीवन फ्री एक्सेस सक्रिय")
+            } else {
+                AppLocaleStrings.tr(lang, "Upgrade plans via UPI, Card, PayPal", "UPI / कार्ड / PayPal से प्लान अपग्रेड करें")
+            },
             onClick = { viewModel.setTab(AppTab.SUBSCRIPTION) },
             testTag = "menu_subscription"
         )
@@ -496,8 +499,12 @@ fun ProfileScreen(
         ProfileOptionItem(
             icon = Icons.Default.Login,
             iconTint = AnimeGreen,
-            title = if (currentUser.isLoggedIn) "खाता बदलें (Switch Account)" else "लॉगिन करें (Sign In)",
-            subtitle = "Gmail या मोबाइल नंबर OTP से किसी भी खाते में लॉगिन करें",
+            title = if (currentUser.isLoggedIn) {
+                AppLocaleStrings.tr(lang, "Switch Account", "खाता बदलें")
+            } else {
+                AppLocaleStrings.tr(lang, "Sign In", "लॉगिन करें")
+            },
+            subtitle = AppLocaleStrings.tr(lang, "Sign in with Gmail or Mobile Number OTP", "Gmail या मोबाइल नंबर OTP से किसी भी खाते में लॉगिन करें"),
             onClick = { showAuthModal = true },
             testTag = "menu_auth_login"
         )
@@ -509,8 +516,8 @@ fun ProfileScreen(
             ProfileOptionItem(
                 icon = Icons.AutoMirrored.Filled.Logout,
                 iconTint = AnimePink,
-                title = "लॉगआउट (Logout)",
-                subtitle = "वर्तमान सत्र समाप्त करें और गेस्ट मोड में जाएँ",
+                title = AppLocaleStrings.tr(lang, "Logout", "लॉगआउट"),
+                subtitle = AppLocaleStrings.tr(lang, "End current session and switch to guest mode", "वर्तमान सत्र समाप्त करें और गेस्ट मोड में जाएँ"),
                 onClick = { showLogoutConfirm = true },
                 testTag = "menu_logout"
             )
@@ -555,7 +562,7 @@ private fun StatCard(
 ) {
     Card(
         modifier = modifier,
-        colors = CardDefaults.cardColors(containerColor = AnimeSurface),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         shape = RoundedCornerShape(14.dp)
     ) {
         Column(
@@ -564,8 +571,8 @@ private fun StatCard(
         ) {
             Icon(icon, contentDescription = null, tint = color, modifier = Modifier.size(20.dp))
             Spacer(modifier = Modifier.height(4.dp))
-            Text(text = value, color = TextPrimary, fontSize = 16.sp, fontWeight = FontWeight.Bold)
-            Text(text = title, color = TextMuted, fontSize = 10.sp)
+            Text(text = value, color = MaterialTheme.colorScheme.onSurface, fontSize = 16.sp, fontWeight = FontWeight.Bold)
+            Text(text = title, color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 10.sp)
         }
     }
 }
@@ -580,12 +587,12 @@ private fun CurrencyMiniCard(
 ) {
     Card(
         modifier = modifier,
-        colors = CardDefaults.cardColors(containerColor = AnimeSurfaceVariant),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
         shape = RoundedCornerShape(12.dp),
         border = BorderStroke(1.dp, color.copy(alpha = 0.4f))
     ) {
         Column(modifier = Modifier.padding(10.dp)) {
-            Text(text = title, color = TextMuted, fontSize = 10.sp)
+            Text(text = title, color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 10.sp)
             Spacer(modifier = Modifier.height(2.dp))
             Text(
                 text = "$symbol${String.format("%,.0f", balance)}",
@@ -611,7 +618,7 @@ fun ProfileOptionItem(
             .fillMaxWidth()
             .clickable(onClick = onClick)
             .testTag(testTag),
-        colors = CardDefaults.cardColors(containerColor = AnimeSurface),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         shape = RoundedCornerShape(14.dp)
     ) {
         Row(
@@ -635,13 +642,13 @@ fun ProfileOptionItem(
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = title,
-                    color = TextPrimary,
+                    color = MaterialTheme.colorScheme.onSurface,
                     fontSize = 13.sp,
                     fontWeight = FontWeight.Bold
                 )
                 Text(
                     text = subtitle,
-                    color = TextSecondary,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     fontSize = 11.sp
                 )
             }

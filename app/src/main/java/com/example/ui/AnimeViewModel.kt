@@ -72,7 +72,7 @@ enum class AppTab(val title: String, val iconName: String) {
 
 data class AnimeStudioUiState(
     val currentTab: AppTab = AppTab.STUDIO,
-    val isDarkMode: Boolean = false,
+    val isDarkMode: Boolean = true,
     val vibrantTheme: String = "CORAL", // "CORAL", "MANGO", "SPRING", "EMERALD", "AZURE"
     val iconStyle: String = "NEON_GLOW", // "NEON_GLOW", "METALLIC_GOLD", "SAKURA_VIBRANT", "CYBER_AZURE", "EMERALD_MINT", "MINIMAL_CLEAN"
     val appIconTheme: String = "SHONEN_HERO", // "SHONEN_HERO", "ANIME_HEROINE", "CYBER_MASCOT", "STUDIO_GOLD"
@@ -238,13 +238,105 @@ class AnimeViewModel(application: Application) : AndroidViewModel(application) {
     private val _selectedCountry = MutableStateFlow(CountryCodeProvider.detectDeviceCountry(application))
     val selectedCountry: StateFlow<CountryCode> = _selectedCountry.asStateFlow()
 
+    private val pricingPrefs = application.getSharedPreferences("anime_owner_pricing_prefs", Context.MODE_PRIVATE)
+    private val _customPlanPrices = MutableStateFlow<Map<String, Double>>(loadCustomPrices())
+    val customPlanPrices: StateFlow<Map<String, Double>> = _customPlanPrices.asStateFlow()
+
+    private fun loadCustomPrices(): Map<String, Double> {
+        val map = mutableMapOf<String, Double>()
+        map["creator_pro_INR"] = pricingPrefs.getFloat("creator_pro_INR", 499.0f).toDouble()
+        map["creator_pro_USD"] = pricingPrefs.getFloat("creator_pro_USD", 9.99f).toDouble()
+        map["creator_pro_EUR"] = pricingPrefs.getFloat("creator_pro_EUR", 8.99f).toDouble()
+        map["creator_pro_GBP"] = pricingPrefs.getFloat("creator_pro_GBP", 7.99f).toDouble()
+        map["creator_pro_JPY"] = pricingPrefs.getFloat("creator_pro_JPY", 1480.0f).toDouble()
+
+        map["studio_ultra_INR"] = pricingPrefs.getFloat("studio_ultra_INR", 999.0f).toDouble()
+        map["studio_ultra_USD"] = pricingPrefs.getFloat("studio_ultra_USD", 19.99f).toDouble()
+        map["studio_ultra_EUR"] = pricingPrefs.getFloat("studio_ultra_EUR", 18.49f).toDouble()
+        map["studio_ultra_GBP"] = pricingPrefs.getFloat("studio_ultra_GBP", 15.99f).toDouble()
+        map["studio_ultra_JPY"] = pricingPrefs.getFloat("studio_ultra_JPY", 2980.0f).toDouble()
+
+        map["studio_owner_INR"] = pricingPrefs.getFloat("studio_owner_INR", 9999.0f).toDouble()
+        map["studio_owner_USD"] = pricingPrefs.getFloat("studio_owner_USD", 149.00f).toDouble()
+        map["studio_owner_EUR"] = pricingPrefs.getFloat("studio_owner_EUR", 139.00f).toDouble()
+        map["studio_owner_GBP"] = pricingPrefs.getFloat("studio_owner_GBP", 119.00f).toDouble()
+        map["studio_owner_JPY"] = pricingPrefs.getFloat("studio_owner_JPY", 19800.0f).toDouble()
+        return map
+    }
+
+    fun updatePlanPrice(planId: String, currencyCode: String, newPrice: Double) {
+        val key = "${planId}_${currencyCode}"
+        pricingPrefs.edit().putFloat(key, newPrice.toFloat()).commit()
+        val current = _customPlanPrices.value.toMutableMap()
+        current[key] = newPrice
+        _customPlanPrices.value = current
+        _uiState.value = _uiState.value.copy(
+            statusMessage = "💰 Updated $planId price for $currencyCode: $newPrice"
+        )
+    }
+
+    fun getPlanPrice(plan: com.example.data.model.SubscriptionPlan, currency: CurrencyType): Double {
+        if (plan == com.example.data.model.SubscriptionPlan.FREE) return 0.0
+        val key = "${plan.planId}_${currency.name}"
+        return _customPlanPrices.value[key] ?: when (plan) {
+            com.example.data.model.SubscriptionPlan.CREATOR_PRO -> when (currency) {
+                CurrencyType.INR -> 499.0
+                CurrencyType.USD -> 9.99
+                CurrencyType.EUR -> 8.99
+                CurrencyType.GBP -> 7.99
+                CurrencyType.JPY -> 1480.0
+            }
+            com.example.data.model.SubscriptionPlan.STUDIO_ULTRA -> when (currency) {
+                CurrencyType.INR -> 999.0
+                CurrencyType.USD -> 19.99
+                CurrencyType.EUR -> 18.49
+                CurrencyType.GBP -> 15.99
+                CurrencyType.JPY -> 2980.0
+            }
+            com.example.data.model.SubscriptionPlan.STUDIO_OWNER -> when (currency) {
+                CurrencyType.INR -> 9999.0
+                CurrencyType.USD -> 149.00
+                CurrencyType.EUR -> 139.00
+                CurrencyType.GBP -> 119.00
+                CurrencyType.JPY -> 19800.0
+            }
+            else -> 0.0
+        }
+    }
+
+    fun formatPlanPrice(plan: com.example.data.model.SubscriptionPlan, currency: CurrencyType, lang: String): String {
+        if (plan == com.example.data.model.SubscriptionPlan.FREE) {
+            return if (com.example.localization.AppLocaleStrings.isHindi(lang)) {
+                "${currency.symbol}0 / हमेशा फ्री"
+            } else {
+                "${currency.symbol}0 / Free Forever"
+            }
+        }
+        val price = getPlanPrice(plan, currency)
+        val formattedPrice = if (price == price.toLong().toDouble()) {
+            "${currency.symbol}${price.toLong()}"
+        } else {
+            "${currency.symbol}%.2f".format(price)
+        }
+        val period = if (plan == com.example.data.model.SubscriptionPlan.STUDIO_OWNER) {
+            if (com.example.localization.AppLocaleStrings.isHindi(lang)) "(आजीवन VIP)" else "(Lifetime VIP)"
+        } else {
+            if (com.example.localization.AppLocaleStrings.isHindi(lang)) "/ माह" else "/ mo"
+        }
+        return "$formattedPrice $period"
+    }
+
     private var playbackJob: Job? = null
 
     init {
-        // Auto-detect country & language on app launch from local area / Play Store locale
+        // Check for user-selected language first; fallback to detected country
+        val savedLang = application.getSharedPreferences("app_settings_prefs", Context.MODE_PRIVATE)
+            .getString("app_selected_language", null)
         val detectedCountry = CountryCodeProvider.detectDeviceCountry(application)
-        _selectedCountry.value = detectedCountry
-        setAppLanguage(detectedCountry.primaryLanguage)
+        val initialLang = savedLang ?: detectedCountry.primaryLanguage
+        val matchedCountry = CountryCodeProvider.findByLanguage(initialLang) ?: detectedCountry
+        _selectedCountry.value = matchedCountry
+        setAppLanguage(initialLang)
 
         // Initialize daily WorkManager scheduler if configured
         val creds = ytCredManager.credentials.value
@@ -697,6 +789,11 @@ class AnimeViewModel(application: Application) : AndroidViewModel(application) {
             "Indonesian" -> "30s anime aksi dengan samurai siber dalam Bahasa Indonesia"
             else -> "30s action anime with cyber samurai in English"
         }
+
+        try {
+            application.getSharedPreferences("app_settings_prefs", Context.MODE_PRIVATE)
+                .edit().putString("app_selected_language", normalized).commit()
+        } catch (_: Exception) {}
 
         _uiState.value = _uiState.value.copy(
             selectedLanguage = normalized,

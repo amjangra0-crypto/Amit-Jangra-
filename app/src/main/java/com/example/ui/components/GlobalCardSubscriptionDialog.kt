@@ -117,31 +117,8 @@ fun GlobalCardSubscriptionDialog(
         else -> "Credit/Debit"
     }
 
-    // Dynamic Price based on Currency
-    val planPrice = when (plan) {
-        SubscriptionPlan.FREE -> 0.0
-        SubscriptionPlan.CREATOR_PRO -> when (activeCurrency) {
-            CurrencyType.INR -> 499.0
-            CurrencyType.USD -> 9.99
-            CurrencyType.EUR -> 8.99
-            CurrencyType.GBP -> 7.99
-            CurrencyType.JPY -> 1490.0
-        }
-        SubscriptionPlan.STUDIO_ULTRA -> when (activeCurrency) {
-            CurrencyType.INR -> 999.0
-            CurrencyType.USD -> 19.99
-            CurrencyType.EUR -> 18.49
-            CurrencyType.GBP -> 15.99
-            CurrencyType.JPY -> 2990.0
-        }
-        SubscriptionPlan.STUDIO_OWNER -> when (activeCurrency) {
-            CurrencyType.INR -> 9999.0
-            CurrencyType.USD -> 149.00
-            CurrencyType.EUR -> 139.00
-            CurrencyType.GBP -> 119.00
-            CurrencyType.JPY -> 21900.0
-        }
-    }
+    // Dynamic Price based on Currency and Owner Regional Settings
+    val planPrice = viewModel.getPlanPrice(plan, activeCurrency)
 
     ModalBottomSheet(
         onDismissRequest = { if (!isProcessing) onDismiss() },

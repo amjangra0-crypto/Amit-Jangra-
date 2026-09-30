@@ -216,7 +216,7 @@ fun AppSettingsScreen(
         // 1. GLOBAL MULTI-LANGUAGE SYSTEM CARD (Changes EVERYTHING in the chosen language)
         Card(
             modifier = Modifier.fillMaxWidth(),
-            colors = CardDefaults.cardColors(containerColor = AnimeSurface),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
             shape = RoundedCornerShape(16.dp),
             border = BorderStroke(1.dp, AnimeCyan.copy(alpha = 0.6f))
         ) {
@@ -287,7 +287,7 @@ fun AppSettingsScreen(
                                 )
                             }
                             Text(
-                                text = "सक्रिय भाषा: ${selectedCountry.nativeLanguageName} ($lang)",
+                                text = "${AppLocaleStrings.tr(lang, "Active Language", "सक्रिय भाषा")}: ${selectedCountry.nativeLanguageName} ($lang)",
                                 color = AnimeGold,
                                 fontSize = 11.sp
                             )
@@ -316,7 +316,7 @@ fun AppSettingsScreen(
 
                 // Quick 1-Tap Language Switching Chips
                 Text(
-                    text = "त्वरित भाषा चयन (1-Tap Instant Language Switch):",
+                    text = AppLocaleStrings.tr(lang, "1-Tap Instant Language Switch:", "त्वरित भाषा चयन:"),
                     color = TextMuted,
                     fontSize = 11.sp,
                     fontWeight = FontWeight.SemiBold
@@ -364,7 +364,7 @@ fun AppSettingsScreen(
         // 2. STORAGE DESTINATION SELECTION & MANAGEMENT CARD
         Card(
             modifier = Modifier.fillMaxWidth(),
-            colors = CardDefaults.cardColors(containerColor = AnimeSurface),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
             shape = RoundedCornerShape(16.dp),
             border = BorderStroke(1.dp, AnimeGold.copy(alpha = 0.6f))
         ) {
@@ -464,7 +464,7 @@ fun AppSettingsScreen(
                     emoji = "💾",
                     title = AppLocaleStrings.get("storage_sdcard", lang),
                     description = if (storageConfig.sdCardDisplayName != null)
-                        "फ़ोल्डर: ${storageConfig.sdCardDisplayName}"
+                        "${AppLocaleStrings.tr(lang, "Folder", "फ़ोल्डर")}: ${storageConfig.sdCardDisplayName}"
                     else
                         AppLocaleStrings.get("storage_sdcard_desc", lang),
                     capacity = storageConfig.sdCardSpaceFormatted,
@@ -494,7 +494,7 @@ fun AppSettingsScreen(
                     emoji = "🔌",
                     title = AppLocaleStrings.get("storage_harddisk", lang),
                     description = if (storageConfig.hardDiskDisplayName != null)
-                        "फ़ोल्डर: ${storageConfig.hardDiskDisplayName}"
+                        "${AppLocaleStrings.tr(lang, "Folder", "फ़ोल्डर")}: ${storageConfig.hardDiskDisplayName}"
                     else
                         AppLocaleStrings.get("storage_harddisk_desc", lang),
                     capacity = storageConfig.hardDiskSpaceFormatted,
@@ -528,7 +528,7 @@ fun AppSettingsScreen(
         // Theme Configuration Card
         Card(
             modifier = Modifier.fillMaxWidth(),
-            colors = CardDefaults.cardColors(containerColor = AnimeSurface),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
             shape = RoundedCornerShape(16.dp),
             border = BorderStroke(1.dp, AnimePurple)
         ) {
@@ -638,7 +638,7 @@ fun AppSettingsScreen(
         // AI Dubbing Audio Engine
         Card(
             modifier = Modifier.fillMaxWidth(),
-            colors = CardDefaults.cardColors(containerColor = AnimeSurface),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
             shape = RoundedCornerShape(16.dp)
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
@@ -690,7 +690,7 @@ fun AppSettingsScreen(
         // Video Export Quality Settings
         Card(
             modifier = Modifier.fillMaxWidth(),
-            colors = CardDefaults.cardColors(containerColor = AnimeSurface),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
             shape = RoundedCornerShape(16.dp)
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
@@ -746,7 +746,7 @@ fun AppSettingsScreen(
         // Storage & Cache Manager
         Card(
             modifier = Modifier.fillMaxWidth(),
-            colors = CardDefaults.cardColors(containerColor = AnimeSurface),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
             shape = RoundedCornerShape(16.dp)
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
@@ -818,7 +818,7 @@ fun AppSettingsScreen(
 
         Card(
             modifier = Modifier.fillMaxWidth(),
-            colors = CardDefaults.cardColors(containerColor = AnimeSurface),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
             shape = RoundedCornerShape(16.dp)
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
