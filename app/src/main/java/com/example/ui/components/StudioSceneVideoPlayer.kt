@@ -44,10 +44,13 @@ import androidx.compose.material.icons.filled.MusicOff
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Replay
+import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.SkipNext
 import androidx.compose.material.icons.filled.SkipPrevious
 import androidx.compose.material.icons.filled.Subtitles
 import androidx.compose.material.icons.filled.Translate
+import androidx.compose.material.icons.filled.VolumeOff
+import androidx.compose.material.icons.filled.VolumeUp
 import androidx.compose.material.icons.filled.UnfoldLess
 import androidx.compose.material.icons.filled.UnfoldMore
 import androidx.compose.material.icons.filled.VolumeUp
@@ -70,6 +73,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -136,6 +140,8 @@ fun StudioSceneVideoPlayer(
 
     var isExpanded by remember { mutableStateOf(true) }
     var scenePlaybackProgress by remember { mutableFloatStateOf(0f) }
+    var showTransitionModal by remember { mutableStateOf(false) }
+    var selectedTransitionSceneIndex by remember { mutableIntStateOf(0) }
 
     // Estimate playback progress for active scene
     LaunchedEffect(state.isPlayingVideo, state.activeSceneIndex, state.currentDialogueIndex, scenes.size) {
@@ -771,12 +777,45 @@ fun StudioSceneVideoPlayer(
                                 fontSize = 11.sp,
                                 fontWeight = FontWeight.SemiBold
                             )
-                            Text(
-                                text = "${scenes.size} Scenes",
-                                color = AnimeCyan,
-                                fontSize = 10.sp,
-                                fontWeight = FontWeight.Bold
-                            )
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Surface(
+                                    shape = RoundedCornerShape(6.dp),
+                                    color = AnimePurple.copy(alpha = 0.25f),
+                                    border = BorderStroke(1.dp, AnimePurple.copy(alpha = 0.8f)),
+                                    modifier = Modifier
+                                        .clickable {
+                                            selectedTransitionSceneIndex = currentSceneIndex
+                                            showTransitionModal = true
+                                        }
+                                        .testTag("open_transition_library_btn")
+                                ) {
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        modifier = Modifier.padding(horizontal = 7.dp, vertical = 3.dp)
+                                    ) {
+                                        Icon(
+                                            Icons.Default.AutoAwesome,
+                                            contentDescription = null,
+                                            tint = AnimePink,
+                                            modifier = Modifier.size(11.dp)
+                                        )
+                                        Spacer(modifier = Modifier.width(4.dp))
+                                        Text(
+                                            text = "✨ ${AppLocaleStrings.tr(state.selectedLanguage, "Transitions", "ट्रांजिशन")}",
+                                            color = AnimePink,
+                                            fontSize = 10.sp,
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                    }
+                                }
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    text = "${scenes.size} Scenes",
+                                    color = AnimeCyan,
+                                    fontSize = 10.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
                         }
 
                         Spacer(modifier = Modifier.height(6.dp))
@@ -838,6 +877,32 @@ fun StudioSceneVideoPlayer(
                                                     modifier = Modifier.padding(horizontal = 5.dp, vertical = 2.dp)
                                                 )
                                             }
+
+                                            // Scene Mute Button Overlay
+                                            Box(
+                                                modifier = Modifier
+                                                    .align(Alignment.TopEnd)
+                                                    .padding(4.dp)
+                                                    .size(24.dp)
+                                                    .clip(CircleShape)
+                                                    .background(if (scene.isMuted) Color(0xFFEF4444).copy(alpha = 0.95f) else Color.Black.copy(alpha = 0.7f))
+                                                    .border(
+                                                        1.dp,
+                                                        if (scene.isMuted) Color.White.copy(alpha = 0.9f) else Color.White.copy(alpha = 0.4f),
+                                                        CircleShape
+                                                    )
+                                                    .clickable { viewModel.toggleSceneMute(index) }
+                                                    .testTag("studio_scene_mute_btn_$index"),
+                                                contentAlignment = Alignment.Center
+                                            ) {
+                                                Icon(
+                                                    imageVector = if (scene.isMuted) Icons.Default.VolumeOff else Icons.Default.VolumeUp,
+                                                    contentDescription = if (scene.isMuted) "Unmute Scene" else "Mute Scene",
+                                                    tint = Color.White,
+                                                    modifier = Modifier.size(13.dp)
+                                                )
+                                            }
+
                                             if (isSelected && state.isPlayingVideo) {
                                                 Box(
                                                     modifier = Modifier
@@ -856,7 +921,58 @@ fun StudioSceneVideoPlayer(
                                                 }
                                             }
                                         }
-                                        Column(modifier = Modifier.padding(6.dp)) {
+                                        // Small duration text label under scene thumbnail for precision editing
+                                        Row(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .padding(horizontal = 6.dp, vertical = 3.dp),
+                                            horizontalArrangement = Arrangement.SpaceBetween,
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Surface(
+                                                shape = RoundedCornerShape(4.dp),
+                                                color = Color.Black.copy(alpha = 0.65f),
+                                                border = BorderStroke(0.5.dp, AnimeGold.copy(alpha = 0.7f))
+                                            ) {
+                                                Row(
+                                                    verticalAlignment = Alignment.CenterVertically,
+                                                    modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp)
+                                                ) {
+                                                    Icon(
+                                                        imageVector = Icons.Default.Schedule,
+                                                        contentDescription = null,
+                                                        tint = AnimeGold,
+                                                        modifier = Modifier.size(9.dp)
+                                                    )
+                                                    Spacer(modifier = Modifier.width(3.dp))
+                                                    Text(
+                                                        text = "${scene.durationSec}s",
+                                                        color = AnimeGold,
+                                                        fontSize = 8.sp,
+                                                        fontWeight = FontWeight.Bold,
+                                                        modifier = Modifier.testTag("scene_duration_label_$index")
+                                                    )
+                                                }
+                                            }
+
+                                            if (scene.isMuted) {
+                                                Surface(
+                                                    shape = RoundedCornerShape(4.dp),
+                                                    color = Color(0xFFEF4444).copy(alpha = 0.25f),
+                                                    border = BorderStroke(0.5.dp, Color(0xFFEF4444).copy(alpha = 0.8f))
+                                                ) {
+                                                    Text(
+                                                        text = "MUTED",
+                                                        color = Color(0xFFEF4444),
+                                                        fontSize = 7.sp,
+                                                        fontWeight = FontWeight.ExtraBold,
+                                                        modifier = Modifier.padding(horizontal = 3.dp, vertical = 1.dp)
+                                                    )
+                                                }
+                                            }
+                                        }
+
+                                        Column(modifier = Modifier.padding(start = 6.dp, end = 6.dp, bottom = 6.dp)) {
                                             Text(
                                                 text = scene.title,
                                                 color = if (isSelected) AnimeCyanLight else TextPrimary,
@@ -865,12 +981,40 @@ fun StudioSceneVideoPlayer(
                                                 maxLines = 1,
                                                 overflow = TextOverflow.Ellipsis
                                             )
-                                            Text(
-                                                text = scene.bgMood,
-                                                color = TextMuted,
-                                                fontSize = 8.sp,
-                                                maxLines = 1
-                                            )
+                                            Row(
+                                                modifier = Modifier
+                                                    .fillMaxWidth()
+                                                    .padding(top = 2.dp),
+                                                horizontalArrangement = Arrangement.SpaceBetween,
+                                                verticalAlignment = Alignment.CenterVertically
+                                            ) {
+                                                Text(
+                                                    text = if (scene.isMuted) "🔇 Muted" else scene.bgMood,
+                                                    color = if (scene.isMuted) AnimePink else TextMuted,
+                                                    fontSize = 8.sp,
+                                                    maxLines = 1,
+                                                    modifier = Modifier.weight(1f)
+                                                )
+                                                Surface(
+                                                    shape = RoundedCornerShape(3.dp),
+                                                    color = AnimePurple.copy(alpha = 0.25f),
+                                                    border = BorderStroke(0.5.dp, AnimePurple.copy(alpha = 0.8f)),
+                                                    modifier = Modifier
+                                                        .clickable {
+                                                            selectedTransitionSceneIndex = index
+                                                            showTransitionModal = true
+                                                        }
+                                                        .testTag("scene_transition_badge_$index")
+                                                ) {
+                                                    Text(
+                                                        text = "✨ ${scene.transitionEffect} ${"%.1f".format(scene.transitionDurationSec)}s",
+                                                        color = AnimePink,
+                                                        fontSize = 7.sp,
+                                                        fontWeight = FontWeight.Bold,
+                                                        modifier = Modifier.padding(horizontal = 3.dp, vertical = 1.dp)
+                                                    )
+                                                }
+                                            }
                                         }
                                     }
                                 }
@@ -940,6 +1084,21 @@ fun StudioSceneVideoPlayer(
                 }
             }
         }
+    }
+
+    if (showTransitionModal) {
+        TransitionLibraryModal(
+            sceneIndex = selectedTransitionSceneIndex,
+            scenes = scenes,
+            language = state.selectedLanguage,
+            onApplyTransition = { effect, dur ->
+                viewModel.updateSceneTransition(selectedTransitionSceneIndex, effect, dur)
+            },
+            onApplyToAll = { effect, dur ->
+                viewModel.applyTransitionToAllScenes(effect, dur)
+            },
+            onDismiss = { showTransitionModal = false }
+        )
     }
 }
 

@@ -69,6 +69,7 @@ import com.example.data.model.CurrencyType
 import com.example.data.model.PaymentGateway
 import com.example.data.model.SubscriptionPlan
 import com.example.localization.AppLocaleStrings
+import com.example.ui.AnimeViewModel
 import com.example.ui.theme.AnimeCyan
 import com.example.ui.theme.AnimeGold
 import com.example.ui.theme.AnimeGreen
@@ -88,6 +89,7 @@ fun GlobalCardSubscriptionDialog(
     plan: SubscriptionPlan,
     initialCurrency: CurrencyType,
     selectedLanguage: String,
+    viewModel: AnimeViewModel = androidx.lifecycle.viewmodel.compose.viewModel(),
     onPaymentSuccess: (Double, CurrencyType, CardPaymentDetails) -> Unit,
     onDismiss: () -> Unit
 ) {

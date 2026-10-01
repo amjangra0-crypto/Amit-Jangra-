@@ -42,6 +42,7 @@ import androidx.compose.material.icons.filled.HighQuality
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material.icons.filled.Mic
+import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.PhoneAndroid
 import androidx.compose.material.icons.filled.Public
 import androidx.compose.material.icons.filled.SdCard
@@ -117,6 +118,7 @@ fun AppSettingsScreen(
     val lang = state.selectedLanguage
 
     var showCountryPicker by remember { mutableStateOf(false) }
+    var showThemeSheet by remember { mutableStateOf(false) }
     var showManualPermissionsDialog by remember { mutableStateOf(false) }
     var voiceSpeed by remember { mutableFloatStateOf(1.0f) }
     var voicePitch by remember { mutableFloatStateOf(1.0f) }
@@ -630,6 +632,26 @@ fun AppSettingsScreen(
                         }
                     }
                 }
+
+                Spacer(modifier = Modifier.height(14.dp))
+
+                Button(
+                    onClick = { showThemeSheet = true },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag("settings_open_theme_studio_btn"),
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
+                    shape = RoundedCornerShape(10.dp)
+                ) {
+                    Icon(Icons.Default.Palette, contentDescription = null, tint = Color.White, modifier = Modifier.size(16.dp))
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = if (AppLocaleStrings.isHindi(lang)) "पूर्ण थीम व रंग स्टूडियो खोलें (Palettes & Swatches)" else "Open Full Theme & Color Studio",
+                        color = Color.White,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 12.sp
+                    )
+                }
             }
         }
 
@@ -984,6 +1006,16 @@ fun AppSettingsScreen(
                     showCountryPicker = false
                 },
                 onDismiss = { showCountryPicker = false }
+            )
+        }
+
+        if (showThemeSheet) {
+            com.example.ui.components.VibrantThemePickerSheet(
+                viewModel = viewModel,
+                selectedTheme = state.vibrantTheme,
+                isDarkMode = state.isDarkMode,
+                selectedLanguage = lang,
+                onDismiss = { showThemeSheet = false }
             )
         }
 

@@ -11,47 +11,9 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 
-private val DarkColorScheme = darkColorScheme(
-    primary = AnimePurple,
-    onPrimary = TextPrimary,
-    primaryContainer = AnimeSurfaceVariant,
-    onPrimaryContainer = AnimePurpleLight,
-    secondary = AnimeCyan,
-    onSecondary = TextPrimary,
-    secondaryContainer = AnimeSurfaceVariant,
-    onSecondaryContainer = AnimeCyanLight,
-    tertiary = AnimePink,
-    background = AnimeBackground,
-    onBackground = TextPrimary,
-    surface = AnimeSurface,
-    onSurface = TextPrimary,
-    surfaceVariant = AnimeSurfaceVariant,
-    onSurfaceVariant = TextSecondary,
-    outline = AnimeCardBorder
-)
-
-private val LightColorScheme = lightColorScheme(
-    primary = LightPurple,
-    onPrimary = Color.White,
-    primaryContainer = LightSurfaceVariant,
-    onPrimaryContainer = LightPurple,
-    secondary = LightCyan,
-    onSecondary = Color.White,
-    secondaryContainer = LightSurfaceVariant,
-    onSecondaryContainer = LightCyan,
-    tertiary = LightPink,
-    background = LightBackground,
-    onBackground = LightTextPrimary,
-    surface = LightSurface,
-    onSurface = LightTextPrimary,
-    surfaceVariant = LightSurfaceVariant,
-    onSurfaceVariant = LightTextSecondary,
-    outline = LightCardBorder
-)
-
 fun getVibrantColorScheme(theme: String, isDark: Boolean): androidx.compose.material3.ColorScheme {
     val preset = VibrantThemePresets.find(theme)
-    val primaryColor = preset.primaryColor
+    val primaryColor = AppThemeController.customAccentColor ?: preset.primaryColor
     val secondaryColor = preset.secondaryColor
 
     return if (isDark) {
@@ -64,41 +26,42 @@ fun getVibrantColorScheme(theme: String, isDark: Boolean): androidx.compose.mate
             onSecondary = Color.White,
             secondaryContainer = preset.darkSurfaceVariant,
             onSecondaryContainer = secondaryColor,
-            tertiary = preset.secondaryColor,
+            tertiary = preset.accentPink,
             background = preset.darkBackground,
-            onBackground = Color.White,
+            onBackground = Color(0xFFF8FAFC),
             surface = preset.darkSurface,
-            onSurface = Color.White,
+            onSurface = Color(0xFFF8FAFC),
             surfaceVariant = preset.darkSurfaceVariant,
-            onSurfaceVariant = Color(0xFFE2E8F0),
-            outline = primaryColor.copy(alpha = 0.5f)
+            onSurfaceVariant = Color(0xFFCBD5E1),
+            outline = Color(0xFF334155)
         )
     } else {
-        darkColorScheme(
+        // Pure White Default Color everywhere
+        lightColorScheme(
             primary = primaryColor,
             onPrimary = Color.White,
             primaryContainer = preset.lightSurfaceVariant,
-            onPrimaryContainer = Color.White,
+            onPrimaryContainer = primaryColor,
             secondary = secondaryColor,
             onSecondary = Color.White,
             secondaryContainer = preset.lightSurfaceVariant,
             onSecondaryContainer = secondaryColor,
-            tertiary = preset.secondaryColor,
-            background = preset.lightBackground,
-            onBackground = Color.White,
-            surface = preset.lightSurface,
-            onSurface = Color.White,
-            surfaceVariant = preset.lightSurfaceVariant,
-            onSurfaceVariant = Color(0xFFE2E8F0),
-            outline = primaryColor.copy(alpha = 0.45f)
+            tertiary = preset.accentPink,
+            background = preset.lightBackground, // Pure White (0xFFFFFFFF)
+            onBackground = Color(0xFF0F172A),     // Crisp dark slate
+            surface = preset.lightSurface,       // Pure White (0xFFFFFFFF)
+            onSurface = Color(0xFF0F172A),       // Crisp dark slate
+            surfaceVariant = preset.lightSurfaceVariant, // Soft clean off-white (0xFFF8FAFC)
+            onSurfaceVariant = Color(0xFF475569),
+            outline = preset.lightBorderColor    // Delicate subtle border (0xFFE2E8F0)
         )
     }
 }
 
 @Composable
 fun MyApplicationTheme(
-    darkTheme: Boolean = false,
-    vibrantTheme: String = "CORAL",
+    darkTheme: Boolean = AppThemeController.isDarkMode,
+    vibrantTheme: String = AppThemeController.currentThemeKey,
     dynamicColor: Boolean = false,
     content: @Composable () -> Unit
 ) {
@@ -108,10 +71,12 @@ fun MyApplicationTheme(
         SideEffect {
             val window = (view.context as? Activity)?.window
             if (window != null) {
-                window.statusBarColor = colorScheme.primary.toArgb()
-                window.navigationBarColor = colorScheme.background.toArgb()
+                // If light mode: clean white status bar with dark icons
+                // If dark mode: dark status bar with light icons
+                window.statusBarColor = if (darkTheme) colorScheme.surface.toArgb() else Color.White.toArgb()
+                window.navigationBarColor = if (darkTheme) colorScheme.background.toArgb() else Color.White.toArgb()
                 val insetsController = WindowCompat.getInsetsController(window, view)
-                insetsController.isAppearanceLightStatusBars = false
+                insetsController.isAppearanceLightStatusBars = !darkTheme
                 insetsController.isAppearanceLightNavigationBars = !darkTheme
             }
         }

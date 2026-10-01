@@ -103,6 +103,7 @@ class MainActivity : ComponentActivity() {
     @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        com.example.ui.theme.AppThemeController.initialize(this)
         enableEdgeToEdge()
         setContent {
             val state by viewModel.uiState.collectAsState()
@@ -112,20 +113,19 @@ class MainActivity : ComponentActivity() {
             var showCountryPickerSheet by remember { mutableStateOf(false) }
             var showThemeSheet by remember { mutableStateOf(false) }
             var showPermissionsDialog by remember {
-                val prefs = getSharedPreferences("anime_app_permissions_prefs", Context.MODE_PRIVATE)
-                val hasShown = prefs.getBoolean("permissions_requested_on_install", false)
-                val isMicGranted = ContextCompat.checkSelfPermission(
-                    this@MainActivity,
-                    Manifest.permission.RECORD_AUDIO
-                ) == PackageManager.PERMISSION_GRANTED
-                val shouldShow = !hasShown && !isMicGranted
-                if (isMicGranted && !hasShown) {
-                    prefs.edit().putBoolean("permissions_requested_on_install", true).commit()
+                val shouldPrompt = com.example.util.PermissionPreferenceManager
+                    .shouldTriggerInitialPermissionRequest(this@MainActivity)
+                if (shouldPrompt) {
+                    com.example.util.PermissionPreferenceManager
+                        .markPermissionRequestedOnInstall(this@MainActivity)
                 }
-                mutableStateOf(shouldShow)
+                mutableStateOf(shouldPrompt)
             }
 
-            MyApplicationTheme(darkTheme = state.isDarkMode, vibrantTheme = state.vibrantTheme) {
+            MyApplicationTheme(
+                darkTheme = com.example.ui.theme.AppThemeController.isDarkMode,
+                vibrantTheme = com.example.ui.theme.AppThemeController.currentThemeKey
+            ) {
                 Scaffold(
                     modifier = Modifier.fillMaxSize(),
                     topBar = {
@@ -192,8 +192,17 @@ class MainActivity : ComponentActivity() {
 
                                 Spacer(modifier = Modifier.width(4.dp))
 
-
-
+                                // Quick Changeable Theme & Color Palette Button (matching Image 1)
+                                IconButton(
+                                    onClick = { showThemeSheet = true },
+                                    modifier = Modifier.testTag("top_bar_theme_palette_btn")
+                                ) {
+                                    Icon(
+                                        Icons.Default.Palette,
+                                        contentDescription = "Theme & Colors",
+                                        tint = MaterialTheme.colorScheme.primary
+                                    )
+                                }
 
                                 IconButton(
                                     onClick = { viewModel.setTab(AppTab.PROJECTS) },
@@ -447,8 +456,8 @@ class MainActivity : ComponentActivity() {
                         AppPermissionsOnboardingDialog(
                             language = state.selectedLanguage,
                             onDismiss = {
-                                val prefs = getSharedPreferences("anime_app_permissions_prefs", Context.MODE_PRIVATE)
-                                prefs.edit().putBoolean("permissions_requested_on_install", true).commit()
+                                com.example.util.PermissionPreferenceManager
+                                    .markPermissionRequestedOnInstall(this@MainActivity)
                                 showPermissionsDialog = false
                             }
                         )

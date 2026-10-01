@@ -201,7 +201,10 @@ data class AnimeScene(
     val onScreenTitleTranslated: String = "",
     val atmosphericEffect: String = "Cherry Blossom Storm",
     val motionEffect: String = "SPEEDLINES_ACTION",
-    val productionFormat: String = "Anime Episode"
+    val productionFormat: String = "Anime Episode",
+    val isMuted: Boolean = false,
+    val transitionEffect: String = "Fade",
+    val transitionDurationSec: Float = 1.0f
 )
 
 data class AnimeScript(

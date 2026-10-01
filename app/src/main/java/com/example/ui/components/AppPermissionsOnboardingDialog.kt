@@ -84,6 +84,13 @@ fun AppPermissionsOnboardingDialog(
     val prefs = remember {
         context.getSharedPreferences("anime_app_permissions_prefs", Context.MODE_PRIVATE)
     }
+    val settingsPrefs = remember {
+        context.getSharedPreferences("app_settings_prefs", Context.MODE_PRIVATE)
+    }
+
+    fun markPermissionHandled() {
+        com.example.util.PermissionPreferenceManager.markPermissionRequestedOnInstall(context)
+    }
 
     var micGranted by remember {
         mutableStateOf(
@@ -96,7 +103,7 @@ fun AppPermissionsOnboardingDialog(
     ) { isGranted ->
         micGranted = isGranted
         // Permanently record that permission was prompted on install so it never asks repeatedly
-        prefs.edit().putBoolean("permissions_requested_on_install", true).commit()
+        markPermissionHandled()
         if (isGranted) {
             Toast.makeText(context, AppLocaleStrings.get("permissions_granted_toast", language), Toast.LENGTH_SHORT).show()
         }
@@ -106,7 +113,7 @@ fun AppPermissionsOnboardingDialog(
     Dialog(
         onDismissRequest = {
             // Dismissed by user: mark handled so it won't prompt again
-            prefs.edit().putBoolean("permissions_requested_on_install", true).commit()
+            markPermissionHandled()
             onDismiss()
         },
         properties = DialogProperties(dismissOnBackPress = true, dismissOnClickOutside = true)
@@ -312,7 +319,7 @@ fun AppPermissionsOnboardingDialog(
                     // Already Granted -> Continue Button
                     Button(
                         onClick = {
-                            prefs.edit().putBoolean("permissions_requested_on_install", true).commit()
+                            markPermissionHandled()
                             onDismiss()
                         },
                         modifier = Modifier
@@ -348,7 +355,7 @@ fun AppPermissionsOnboardingDialog(
                     // Continue without mic
                     TextButton(
                         onClick = {
-                            prefs.edit().putBoolean("permissions_requested_on_install", true).commit()
+                            markPermissionHandled()
                             onDismiss()
                         },
                         modifier = Modifier.testTag("skip_permissions_btn")

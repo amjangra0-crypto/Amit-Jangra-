@@ -127,7 +127,13 @@ fun MicVoiceInputButton(
                 isListening = true
                 launchSpeechIntent(context, localeTag, speechRecognizerLauncher)
             } else {
-                permissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
+                // Do not re-request permission repeatedly anywhere in the app
+                val msg = if (AppLocaleStrings.isHindi(language)) {
+                    "माइक अनुमति वैकल्पिक है। आप टेक्स्ट लिखकर भी प्रॉम्प्ट बना सकते हैं।"
+                } else {
+                    "Microphone is optional. You can enter your text prompt directly."
+                }
+                Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
             }
         },
         modifier = modifier.testTag(testTag)

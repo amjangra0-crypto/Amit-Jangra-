@@ -56,7 +56,18 @@ enum class PaymentGateway(val title: String, val description: String) {
     UPI_PHONEPE("PhonePe", "Instant UPI via PhonePe"),
     UPI_GENERIC("UPI ID / QR Code", "Scan & Pay with any UPI app"),
     PAYPAL("PayPal", "Fast global checkout for USD & EUR"),
-    BANK_TRANSFER("Direct Bank Transfer", "Direct NEFT / IMPS / SWIFT wire")
+    BANK_TRANSFER("Direct Bank Transfer", "Direct NEFT / IMPS / SWIFT wire");
+
+    val displayName: String get() = title
+    val iconEmoji: String
+        get() = when (this) {
+            CARD -> "💳"
+            UPI_GPAY -> "🟢"
+            UPI_PHONEPE -> "🟣"
+            UPI_GENERIC -> "📲"
+            PAYPAL -> "🅿️"
+            BANK_TRANSFER -> "🏦"
+        }
 }
 
 enum class TransactionType(val title: String, val isCredit: Boolean) {

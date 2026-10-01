@@ -72,8 +72,8 @@ enum class AppTab(val title: String, val iconName: String) {
 
 data class AnimeStudioUiState(
     val currentTab: AppTab = AppTab.STUDIO,
-    val isDarkMode: Boolean = true,
-    val vibrantTheme: String = "CORAL", // "CORAL", "MANGO", "SPRING", "EMERALD", "AZURE"
+    val isDarkMode: Boolean = false, // Default is Pure White Light Theme everywhere
+    val vibrantTheme: String = "WHITE_MINIMAL", // Pure White Minimal Default
     val iconStyle: String = "NEON_GLOW", // "NEON_GLOW", "METALLIC_GOLD", "SAKURA_VIBRANT", "CYBER_AZURE", "EMERALD_MINT", "MINIMAL_CLEAN"
     val appIconTheme: String = "SHONEN_HERO", // "SHONEN_HERO", "ANIME_HEROINE", "CYBER_MASCOT", "STUDIO_GOLD"
     val iconShape: String = "ROUNDED_SQUIRCLE", // "ROUNDED_SQUIRCLE", "CAPSULE_PILL", "SMOOTH_CARD", "CIRCLE_ROUND"
@@ -734,9 +734,26 @@ class AnimeViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun setVibrantTheme(theme: String) {
+        com.example.ui.theme.AppThemeController.setTheme(theme, _uiState.value.isDarkMode)
         _uiState.value = _uiState.value.copy(
             vibrantTheme = theme,
             statusMessage = "🎨 Theme: $theme"
+        )
+    }
+
+    fun setCustomThemeColor(color: androidx.compose.ui.graphics.Color) {
+        com.example.ui.theme.AppThemeController.setCustomAccent(color)
+        _uiState.value = _uiState.value.copy(
+            statusMessage = "🎨 Custom Color Applied"
+        )
+    }
+
+    fun resetThemeToDefaultWhite() {
+        com.example.ui.theme.AppThemeController.resetToDefaultWhite()
+        _uiState.value = _uiState.value.copy(
+            isDarkMode = false,
+            vibrantTheme = "WHITE_MINIMAL",
+            statusMessage = "⚪ Reset to Pure White Theme"
         )
     }
 
@@ -791,7 +808,7 @@ class AnimeViewModel(application: Application) : AndroidViewModel(application) {
         }
 
         try {
-            application.getSharedPreferences("app_settings_prefs", Context.MODE_PRIVATE)
+            getApplication<Application>().getSharedPreferences("app_settings_prefs", Context.MODE_PRIVATE)
                 .edit().putString("app_selected_language", normalized).commit()
         } catch (_: Exception) {}
 
@@ -1108,37 +1125,46 @@ class AnimeViewModel(application: Application) : AndroidViewModel(application) {
                     activeMotionEffect = dialogue.motionEffect.ifBlank { scene.motionEffect }
                 )
 
-                musicSynthesizer.setDucking(true)
-
-                var speechFinished = false
-
-                voiceSyncEngine.speakDialogue(
-                    characterName = dialogue.characterName,
-                    dialogueText = dialogue.text,
-                    emotion = dialogue.emotion,
-                    voiceType = dialogue.voiceType,
-                    pitch = dialogue.voicePitch,
-                    speed = dialogue.voiceSpeed,
-                    voiceGender = matchingChar?.voiceGender ?: "",
-                    voicePersona = matchingChar?.voicePersona ?: "",
-                    voiceAccent = dialogue.voiceAccent.ifBlank { matchingChar?.voiceAccent ?: "" },
-                    onStart = {
-                        musicSynthesizer.setDucking(true)
-                    },
-                    onDone = {
-                        musicSynthesizer.setDucking(false)
-                        speechFinished = true
+                if (scene.isMuted) {
+                    // Specific scene is muted: silence audio for this segment without affecting rest of project
+                    val displayDurationMs = (dialogue.text.length * 45L).coerceIn(1200L, 3000L)
+                    var waited = 0L
+                    while (waited < displayDurationMs && _uiState.value.isPlayingVideo) {
+                        delay(100)
+                        waited += 100
                     }
-                )
+                } else {
+                    musicSynthesizer.setDucking(true)
+                    var speechFinished = false
 
-                // Wait until dialogue is spoken (with safety timeout)
-                val maxWaitMs = 12000L
-                var waited = 0L
-                while (!speechFinished && waited < maxWaitMs && _uiState.value.isPlayingVideo) {
-                    delay(100)
-                    waited += 100
+                    voiceSyncEngine.speakDialogue(
+                        characterName = dialogue.characterName,
+                        dialogueText = dialogue.text,
+                        emotion = dialogue.emotion,
+                        voiceType = dialogue.voiceType,
+                        pitch = dialogue.voicePitch,
+                        speed = dialogue.voiceSpeed,
+                        voiceGender = matchingChar?.voiceGender ?: "",
+                        voicePersona = matchingChar?.voicePersona ?: "",
+                        voiceAccent = dialogue.voiceAccent.ifBlank { matchingChar?.voiceAccent ?: "" },
+                        onStart = {
+                            musicSynthesizer.setDucking(true)
+                        },
+                        onDone = {
+                            musicSynthesizer.setDucking(false)
+                            speechFinished = true
+                        }
+                    )
+
+                    // Wait until dialogue is spoken (with safety timeout)
+                    val maxWaitMs = 12000L
+                    var waited = 0L
+                    while (!speechFinished && waited < maxWaitMs && _uiState.value.isPlayingVideo) {
+                        delay(100)
+                        waited += 100
+                    }
+                    musicSynthesizer.setDucking(false)
                 }
-                musicSynthesizer.setDucking(false)
                 delay(600) // Brief pause between character lines
             }
 
@@ -1199,11 +1225,48 @@ class AnimeViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    fun applyPromoCode(code: String) = redeemPromoCode(code)
+
     fun toggleGlobalFree(enabled: Boolean) {
         viewModelScope.launch {
             val current = adminSettingsState.value ?: AdminAccessEntity()
             repository.updateAdminSettings(current.copy(isGlobalFreeEnabled = enabled))
         }
+    }
+
+    fun toggleGlobalFreeAccess(enabled: Boolean) = toggleGlobalFree(enabled)
+
+    fun toggleSceneMute(sceneIndex: Int) {
+        val script = _uiState.value.currentScript ?: return
+        val updatedScenes = script.scenes.mapIndexed { idx, s ->
+            if (idx == sceneIndex) s.copy(isMuted = !s.isMuted) else s
+        }
+        _uiState.value = _uiState.value.copy(currentScript = script.copy(scenes = updatedScenes))
+    }
+
+    fun updateSceneTransition(sceneIndex: Int, transitionEffect: String, transitionDurationSec: Float) {
+        val script = _uiState.value.currentScript ?: return
+        val updatedScenes = script.scenes.mapIndexed { idx, s ->
+            if (idx == sceneIndex) s.copy(
+                transitionEffect = transitionEffect,
+                transitionDurationSec = transitionDurationSec
+            ) else s
+        }
+        _uiState.value = _uiState.value.copy(
+            currentScript = script.copy(scenes = updatedScenes),
+            statusMessage = "Transition set to '$transitionEffect' (${"%.1f".format(transitionDurationSec)}s)"
+        )
+    }
+
+    fun applyTransitionToAllScenes(transitionEffect: String, transitionDurationSec: Float) {
+        val script = _uiState.value.currentScript ?: return
+        val updatedScenes = script.scenes.map { s ->
+            s.copy(transitionEffect = transitionEffect, transitionDurationSec = transitionDurationSec)
+        }
+        _uiState.value = _uiState.value.copy(
+            currentScript = script.copy(scenes = updatedScenes),
+            statusMessage = "Applied '$transitionEffect' (${"%.1f".format(transitionDurationSec)}s) to all scenes"
+        )
     }
 
     fun addAuthorizedEmail(email: String) {
@@ -1318,10 +1381,13 @@ class AnimeViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun toggleTheme() {
-        _uiState.value = _uiState.value.copy(isDarkMode = !_uiState.value.isDarkMode)
+        val newDark = !_uiState.value.isDarkMode
+        com.example.ui.theme.AppThemeController.setDarkMode(newDark)
+        _uiState.value = _uiState.value.copy(isDarkMode = newDark)
     }
 
     fun setTheme(isDark: Boolean) {
+        com.example.ui.theme.AppThemeController.setDarkMode(isDark)
         _uiState.value = _uiState.value.copy(isDarkMode = isDark)
     }
 

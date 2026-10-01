@@ -56,9 +56,12 @@ import androidx.compose.material.icons.filled.MusicNote
 import androidx.compose.material.icons.filled.MusicOff
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Subtitles
 import androidx.compose.material.icons.filled.Translate
+import androidx.compose.material.icons.filled.VolumeOff
+import androidx.compose.material.icons.filled.VolumeUp
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -70,6 +73,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -808,15 +812,95 @@ fun AnimePlayerScreen(viewModel: AnimeViewModel) {
                         )
                     ) {
                         Column {
-                            Image(
-                                painter = painterResource(id = ResourceHelpers.getDrawableId(context, scene.sceneDrawableName)),
-                                contentDescription = scene.title,
-                                contentScale = ContentScale.Crop,
+                            Box(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .height(70.dp)
-                            )
-                            Column(modifier = Modifier.padding(8.dp)) {
+                            ) {
+                                Image(
+                                    painter = painterResource(id = ResourceHelpers.getDrawableId(context, scene.sceneDrawableName)),
+                                    contentDescription = scene.title,
+                                    contentScale = ContentScale.Crop,
+                                    modifier = Modifier.fillMaxSize()
+                                )
+                                // Scene Mute Toggle Button Overlay
+                                Box(
+                                    modifier = Modifier
+                                        .align(Alignment.TopEnd)
+                                        .padding(4.dp)
+                                        .size(24.dp)
+                                        .clip(CircleShape)
+                                        .background(if (scene.isMuted) Color(0xFFEF4444).copy(alpha = 0.95f) else Color.Black.copy(alpha = 0.7f))
+                                        .border(
+                                            1.dp,
+                                            if (scene.isMuted) Color.White.copy(alpha = 0.9f) else Color.White.copy(alpha = 0.4f),
+                                            CircleShape
+                                        )
+                                        .clickable { viewModel.toggleSceneMute(index) }
+                                        .testTag("timeline_scene_mute_btn_$index"),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Icon(
+                                        imageVector = if (scene.isMuted) Icons.Default.VolumeOff else Icons.Default.VolumeUp,
+                                        contentDescription = if (scene.isMuted) "Unmute Scene" else "Mute Scene",
+                                        tint = Color.White,
+                                        modifier = Modifier.size(13.dp)
+                                    )
+                                }
+                            }
+
+                            // Small duration text label directly under scene thumbnail for precision editing
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 6.dp, vertical = 3.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Surface(
+                                    shape = RoundedCornerShape(4.dp),
+                                    color = Color.Black.copy(alpha = 0.65f),
+                                    border = BorderStroke(0.5.dp, AnimeGold.copy(alpha = 0.7f))
+                                ) {
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp)
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.Schedule,
+                                            contentDescription = null,
+                                            tint = AnimeGold,
+                                            modifier = Modifier.size(9.dp)
+                                        )
+                                        Spacer(modifier = Modifier.width(3.dp))
+                                        Text(
+                                            text = "${scene.durationSec}s",
+                                            color = AnimeGold,
+                                            fontSize = 8.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            modifier = Modifier.testTag("timeline_scene_duration_$index")
+                                        )
+                                    }
+                                }
+
+                                if (scene.isMuted) {
+                                    Surface(
+                                        shape = RoundedCornerShape(4.dp),
+                                        color = Color(0xFFEF4444).copy(alpha = 0.25f),
+                                        border = BorderStroke(0.5.dp, Color(0xFFEF4444).copy(alpha = 0.8f))
+                                    ) {
+                                        Text(
+                                            text = "MUTED",
+                                            color = Color(0xFFEF4444),
+                                            fontSize = 7.sp,
+                                            fontWeight = FontWeight.ExtraBold,
+                                            modifier = Modifier.padding(horizontal = 3.dp, vertical = 1.dp)
+                                        )
+                                    }
+                                }
+                            }
+
+                            Column(modifier = Modifier.padding(start = 6.dp, end = 6.dp, bottom = 6.dp)) {
                                 Text(
                                     text = AppLocaleStrings.tr(state.selectedLanguage, "Scene ${scene.sceneNumber}", "सीन ${scene.sceneNumber}"),
                                     color = if (isCurrent) AnimeCyan else TextPrimary,

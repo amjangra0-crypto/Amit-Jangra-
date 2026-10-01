@@ -76,9 +76,12 @@ fun VoicePreviewComponent(
     currentPersona: String = "Sweet Kawaii Heroine",
     currentPitch: Float = 1.0f,
     currentSpeed: Float = 1.0f,
+    language: String = "English",
+    onPlaySample: (text: String, pitch: Float, speed: Float, gender: String, persona: String) -> Unit = { _, _, _, _, _ -> },
     onApplyVoice: (persona: VoicePersonaOption, pitch: Float, speed: Float) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val isHindi = com.example.localization.AppLocaleStrings.isHindi(language)
     val voicePersonas = remember {
         listOf(
             VoicePersonaOption("kawaii", "Sweet Kawaii Heroine", "Female", 1.25f, 1.05f, "Sweet anime heroine cadence with sparkling inflection", "Japanese Kawaii"),
@@ -87,7 +90,7 @@ fun VoicePreviewComponent(
             VoicePersonaOption("ninja", "Cyber Shinobi Android", "Female", 1.10f, 1.10f, "Crisp synthetic pitch with rapid ninja precision", "Cyberpunk Vocal"),
             VoicePersonaOption("narrator", "Epic Anime Narrator", "Male", 0.85f, 0.95f, "Authoritative theatrical anime OVA narrator", "Theatrical OVA"),
             VoicePersonaOption("chibi", "Playful Chibi Mascot", "Child", 1.45f, 1.20f, "Cute squeaky mascot comedic anime voice", "Playful Mascot"),
-            VoicePersonaOption("tsundere", "Tsundere Rival Girl", "Female", 1.18f, 1.12f, "Sharp sharp emotional transitions & sassy pouts", "Tsundere Rival")
+            VoicePersonaOption("tsundere", "Tsundere Rival Girl", "Female", 1.18f, 1.12f, "Sharp emotional transitions & sassy pouts", "Tsundere Rival")
         )
     }
 
@@ -100,6 +103,18 @@ fun VoicePreviewComponent(
     var isPlayingSample by remember { mutableStateOf(false) }
     var playbackProgress by remember { mutableFloatStateOf(0f) }
     var playbackTimerSeconds by remember { mutableIntStateOf(5) }
+
+    fun getSampleDialogue(personaId: String): String {
+        return when (personaId) {
+            "kawaii" -> if (isHindi) "मुझ पर विश्वास रखो! हम मिलकर भविष्य बदलेंगे!" else "Believe in me! Together we will change the future!"
+            "shonen" -> if (isHindi) "मेरे दिल की आग कभी बुझ नहीं सकती! तैयार हो जाओ!" else "The fire in my heart will never fade! Prepare yourself!"
+            "sensei" -> if (isHindi) "शांत रहो। असली युद्ध तो अब शुरू हुआ है।" else "Stay calm. The battle has only just begun."
+            "ninja" -> if (isHindi) "बिना आहट के वार करो। मिशन शुरू।" else "Swift and silent in the shadows. Mission commences."
+            "narrator" -> if (isHindi) "किस्मत का पहिया अब धीरे से घूमने लगा है..." else "And so, the gears of destiny quietly turn..."
+            "chibi" -> if (isHindi) "हुर्रे! बहुत बड़ा कारनामा हो गया!" else "Yay! We succeeded with soaring colors!"
+            else -> if (isHindi) "ऐसा मत समझो कि मैं तुम्हारी परवाह करती हूँ!" else "Don't get the wrong idea, it's not like I care about you!"
+        }
+    }
 
     // 5-second playback simulation loop
     LaunchedEffect(isPlayingSample) {
@@ -256,15 +271,7 @@ fun VoicePreviewComponent(
                     Icon(Icons.Default.GraphicEq, contentDescription = null, tint = AnimePink, modifier = Modifier.size(16.dp))
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = when (selectedPersona.id) {
-                            "kawaii" -> "\"Believe in me! Together we will change the future!\""
-                            "shonen" -> "\"No one can extinguish my flame! Prepare yourself!\""
-                            "sensei" -> "\"Stay calm. The battle has only just begun.\""
-                            "ninja" -> "\"音もなく標的を討つ。ミッション開始。\" (बिना आहट के वार करो। मिशन शुरू।)"
-                            "narrator" -> "\"運命の歯車が今、静かに動き出す...\" (किस्मत का पहिया अब धीरे से घूमने लगा है...)"
-                            "chibi" -> "\"やったー！大成功なのだー！\" (हुर्रे! बहुत बड़ा कारनामा हो गया!)"
-                            else -> "\"あんたのことなんか... 別に心配してないんだからね！\""
-                        },
+                        text = "\"${getSampleDialogue(selectedPersona.id)}\"",
                         color = Color.White,
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Medium,
@@ -299,7 +306,15 @@ fun VoicePreviewComponent(
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Button(
-                        onClick = { isPlayingSample = !isPlayingSample },
+                        onClick = {
+                            if (!isPlayingSample) {
+                                isPlayingSample = true
+                                val sampleText = getSampleDialogue(selectedPersona.id)
+                                onPlaySample(sampleText, pitch, speed, selectedPersona.gender, selectedPersona.name)
+                            } else {
+                                isPlayingSample = false
+                            }
+                        },
                         colors = ButtonDefaults.buttonColors(
                             containerColor = if (isPlayingSample) AnimePink else AnimeCyan
                         ),
@@ -315,7 +330,11 @@ fun VoicePreviewComponent(
                         )
                         Spacer(modifier = Modifier.width(6.dp))
                         Text(
-                            text = if (isPlayingSample) "रोकें (Playing)" else "5s सैंपल सुनें",
+                            text = if (isPlayingSample) {
+                                if (isHindi) "रोकें (Playing)" else "Stop (Playing)"
+                            } else {
+                                if (isHindi) "▶ 5s सैंपल सुनें" else "▶ Play Sample"
+                            },
                             color = Color.Black,
                             fontSize = 11.sp,
                             fontWeight = FontWeight.Bold
@@ -343,7 +362,7 @@ fun VoicePreviewComponent(
                     Icon(Icons.Default.Check, contentDescription = null, tint = Color.Black, modifier = Modifier.size(14.dp))
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
-                        text = "करैक्टर पर लागू करें",
+                        text = if (isHindi) "✓ करैक्टर पर लागू करें" else "✓ Assign to Character",
                         color = Color.Black,
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Bold

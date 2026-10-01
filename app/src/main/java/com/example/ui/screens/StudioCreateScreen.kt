@@ -94,6 +94,7 @@ import com.example.ui.components.AutomationDirectorSection
 import com.example.ui.components.DownloadProjectDialog
 import com.example.ui.components.ResourceHelpers
 import com.example.ui.components.StudioSceneVideoPlayer
+import com.example.ui.components.UnifiedStudioCreationHub
 import com.example.ui.components.WorkflowCardsSection
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
@@ -259,22 +260,8 @@ fun StudioCreateScreen(viewModel: AnimeViewModel) {
 
         Spacer(modifier = Modifier.height(10.dp))
 
-        // 1-Click AI Autonomous Director Console (Command / Link Pipeline)
-        AutomationDirectorSection(viewModel = viewModel)
-
-        Spacer(modifier = Modifier.height(10.dp))
-
-        // Fliki AI Workflows Header Selector: Video, Voiceover, Design
-        WorkflowSelectorPills(
-            selectedCategory = state.currentWorkflowCategory,
-            onCategorySelected = { viewModel.setWorkflowCategory(it) }
-        )
-
-        // Fliki AI Input Box with dynamic placeholders & quick action icons
-        WorkflowInputBox(viewModel = viewModel)
-
-        // Fliki AI Workflow Cards Section (Thumbnail, Social, Presentation, Music, Video, etc.)
-        WorkflowCardsSection(viewModel = viewModel)
+        // Unified 4-in-1 Master Hub: Story Prompts & Scanners, Visual Synthesizer, AI Automation & Creative Workflows
+        UnifiedStudioCreationHub(viewModel = viewModel)
 
         Spacer(modifier = Modifier.height(12.dp))
 

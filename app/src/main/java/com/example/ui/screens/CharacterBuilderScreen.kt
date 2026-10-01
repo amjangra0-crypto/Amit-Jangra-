@@ -1,5 +1,7 @@
 package com.example.ui.screens
+
 import com.example.localization.AppLocaleStrings
+import com.example.ui.components.VoicePreviewComponent
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.FastOutSlowInEasing
@@ -688,6 +690,15 @@ fun CharacterBuilderScreen(viewModel: AnimeViewModel) {
                 },
                 onAudition = {
                     viewModel.auditionDraftVoice()
+                },
+                onPlaySampleSnippet = { profile ->
+                    viewModel.playVoiceSampleSnippet(
+                        sampleText = profile.defaultDialogue,
+                        pitch = profile.defaultPitch,
+                        speed = profile.defaultSpeed,
+                        gender = profile.gender,
+                        persona = profile.name
+                    )
                 }
             )
 
