@@ -598,8 +598,16 @@ fun CharacterStudioScreen(viewModel: AnimeViewModel) {
 
                         // Sliders for pitch and speed fine-tuning
                         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                            Text("पिच मॉड्यूलेशन (Pitch): ${"%.2f".format(draft.voicePitch)}x", color = AnimeGold, fontSize = 12.sp)
-                            Text("गति (Speed): ${"%.2f".format(draft.voiceSpeed)}x", color = AnimeCyan, fontSize = 12.sp)
+                            Text(
+                                text = "${AppLocaleStrings.tr(state.selectedLanguage, "Pitch Modulation:", "पिच मॉड्यूलेशन (Pitch):")} ${"%.2f".format(draft.voicePitch)}x",
+                                color = AnimeGold,
+                                fontSize = 12.sp
+                            )
+                            Text(
+                                text = "${AppLocaleStrings.tr(state.selectedLanguage, "Speed:", "गति (Speed):")} ${"%.2f".format(draft.voiceSpeed)}x",
+                                color = AnimeCyan,
+                                fontSize = 12.sp
+                            )
                         }
                         Slider(
                             value = draft.voicePitch,

@@ -5,9 +5,12 @@ import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
+import androidx.compose.runtime.LaunchedEffect
 import androidx.core.content.ContextCompat
 import com.example.ui.components.AppPermissionsOnboardingDialog
 import androidx.compose.foundation.background
@@ -111,20 +114,29 @@ class MainActivity : ComponentActivity() {
             val selectedCountry by viewModel.selectedCountry.collectAsState()
             var isShowingProfileSettings by remember { mutableStateOf(false) }
             var showCountryPickerSheet by remember { mutableStateOf(false) }
-            var showThemeSheet by remember { mutableStateOf(false) }
-            var showPermissionsDialog by remember {
-                val shouldPrompt = com.example.util.PermissionPreferenceManager
-                    .shouldTriggerInitialPermissionRequest(this@MainActivity)
-                if (shouldPrompt) {
-                    com.example.util.PermissionPreferenceManager
-                        .markPermissionRequestedOnInstall(this@MainActivity)
-                }
-                mutableStateOf(shouldPrompt)
+
+            // Strictly one-time permission request upon installation/first launch only
+            val installPermissionLauncher = rememberLauncherForActivityResult(
+                contract = ActivityResultContracts.RequestPermission()
+            ) { _: Boolean ->
+                com.example.util.PermissionPreferenceManager.markPermissionRequestedOnInstall(this@MainActivity)
             }
 
+            LaunchedEffect(Unit) {
+                if (com.example.util.PermissionPreferenceManager.shouldTriggerInitialPermissionRequest(this@MainActivity)) {
+                    com.example.util.PermissionPreferenceManager.markPermissionRequestedOnInstall(this@MainActivity)
+                    installPermissionLauncher.launch(android.Manifest.permission.RECORD_AUDIO)
+                }
+            }
+
+            val isFollowSystem = com.example.ui.theme.AppThemeController.isFollowSystemTheme
+            val systemDark = androidx.compose.foundation.isSystemInDarkTheme()
+            val effectiveDark = if (isFollowSystem) systemDark else com.example.ui.theme.AppThemeController.isDarkMode
+
             MyApplicationTheme(
-                darkTheme = com.example.ui.theme.AppThemeController.isDarkMode,
-                vibrantTheme = com.example.ui.theme.AppThemeController.currentThemeKey
+                darkTheme = effectiveDark,
+                vibrantTheme = com.example.ui.theme.AppThemeController.currentThemeKey,
+                dynamicColor = isFollowSystem
             ) {
                 Scaffold(
                     modifier = Modifier.fillMaxSize(),
@@ -178,11 +190,12 @@ class MainActivity : ComponentActivity() {
                                         .padding(horizontal = 7.dp, vertical = 4.dp)
                                         .testTag("top_bar_country_btn")
                                 ) {
+                                    val displayCountry = com.example.data.model.CountryCodeProvider.findByLanguage(state.selectedLanguage) ?: selectedCountry
                                     Row(verticalAlignment = Alignment.CenterVertically) {
-                                        Text(text = selectedCountry.flagEmoji, fontSize = 13.sp)
+                                        Text(text = displayCountry.flagEmoji, fontSize = 13.sp)
                                         Spacer(modifier = Modifier.width(3.dp))
                                         Text(
-                                            text = selectedCountry.languageCode.uppercase(),
+                                            text = displayCountry.languageCode.uppercase(),
                                             color = AnimeCyan,
                                             fontSize = 10.sp,
                                             fontWeight = FontWeight.Bold
@@ -190,19 +203,10 @@ class MainActivity : ComponentActivity() {
                                     }
                                 }
 
-                                Spacer(modifier = Modifier.width(4.dp))
+                                Spacer(modifier = Modifier.width(6.dp))
 
-                                // Quick Changeable Theme & Color Palette Button (matching Image 1)
-                                IconButton(
-                                    onClick = { showThemeSheet = true },
-                                    modifier = Modifier.testTag("top_bar_theme_palette_btn")
-                                ) {
-                                    Icon(
-                                        Icons.Default.Palette,
-                                        contentDescription = "Theme & Colors",
-                                        tint = MaterialTheme.colorScheme.primary
-                                    )
-                                }
+                                // NOTE: Color & Theme option has been removed from header bar per user request.
+                                // It is exclusively housed inside Settings.
 
                                 IconButton(
                                     onClick = { viewModel.setTab(AppTab.PROJECTS) },
@@ -439,27 +443,6 @@ class MainActivity : ComponentActivity() {
                                 showCountryPickerSheet = false
                             },
                             onDismiss = { showCountryPickerSheet = false }
-                        )
-                    }
-
-                    if (showThemeSheet) {
-                        com.example.ui.components.VibrantThemePickerSheet(
-                            viewModel = viewModel,
-                            selectedTheme = state.vibrantTheme,
-                            isDarkMode = state.isDarkMode,
-                            selectedLanguage = state.selectedLanguage,
-                            onDismiss = { showThemeSheet = false }
-                        )
-                    }
-
-                    if (showPermissionsDialog) {
-                        AppPermissionsOnboardingDialog(
-                            language = state.selectedLanguage,
-                            onDismiss = {
-                                com.example.util.PermissionPreferenceManager
-                                    .markPermissionRequestedOnInstall(this@MainActivity)
-                                showPermissionsDialog = false
-                            }
                         )
                     }
                 }

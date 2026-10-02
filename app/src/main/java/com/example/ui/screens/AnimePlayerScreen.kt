@@ -967,7 +967,15 @@ fun AnimePlayerScreen(viewModel: AnimeViewModel) {
                 Spacer(modifier = Modifier.height(10.dp))
 
                 // One-tap quick language translation strip
-                Text("त्वरित भाषा परिवर्तन (One-Tap Translate Video & Voices):", color = TextSecondary, fontSize = 11.sp)
+                Text(
+                    text = AppLocaleStrings.tr(
+                        state.selectedLanguage,
+                        "One-Tap Translate Video & Voices:",
+                        "त्वरित भाषा परिवर्तन (One-Tap Translate Video & Voices):"
+                    ),
+                    color = TextSecondary,
+                    fontSize = 11.sp
+                )
                 Spacer(modifier = Modifier.height(6.dp))
                 LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                     val quickLangs = listOf(
@@ -1430,7 +1438,18 @@ fun AnimePlayerScreen(viewModel: AnimeViewModel) {
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = if (isExportRunning) "बैकग्राउंड एक्सपोर्ट जारी है..." else "⚡ बैकग्राउंड में .mp4 वीडियो बनाएं व सेव करें",
+                        text = if (isExportRunning)
+                            AppLocaleStrings.tr(
+                                state.selectedLanguage,
+                                "Background export in progress...",
+                                "बैकग्राउंड एक्सपोर्ट जारी है..."
+                            )
+                        else
+                            AppLocaleStrings.tr(
+                                state.selectedLanguage,
+                                "⚡ Render & Save .mp4 Video in Background",
+                                "⚡ बैकग्राउंड में .mp4 वीडियो बनाएं व सेव करें"
+                            ),
                         color = Color.White,
                         fontWeight = FontWeight.Bold,
                         fontSize = 12.sp

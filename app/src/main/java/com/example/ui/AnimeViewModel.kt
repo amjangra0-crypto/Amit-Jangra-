@@ -234,6 +234,8 @@ class AnimeViewModel(application: Application) : AndroidViewModel(application) {
 
     private val ytCredManager = com.example.data.engine.YouTubeCredentialsManager.getInstance(application)
     val youtubeCredentials: StateFlow<com.example.data.engine.YouTubeOAuthCredentials> = ytCredManager.credentials
+    val isYouTubeAutomationGloballyEnabled: StateFlow<Boolean> = ytCredManager.isAutomationGloballyEnabled
+    val isOwnerAccessUnlocked: StateFlow<Boolean> = ytCredManager.isOwnerAccessUnlocked
 
     private val _selectedCountry = MutableStateFlow(CountryCodeProvider.detectDeviceCountry(application))
     val selectedCountry: StateFlow<CountryCode> = _selectedCountry.asStateFlow()
@@ -872,6 +874,32 @@ class AnimeViewModel(application: Application) : AndroidViewModel(application) {
 
     fun testYouTubeConnection(channelId: String, channelHandle: String, accessToken: String): com.example.data.engine.ConnectionTestResult {
         return ytCredManager.testCredentials(channelId, channelHandle, accessToken)
+    }
+
+    fun setYouTubeAutomationGloballyEnabled(enabled: Boolean) {
+        ytCredManager.setAutomationGloballyEnabled(enabled)
+        _uiState.value = _uiState.value.copy(
+            statusMessage = if (enabled) "👑 Owner: YouTube Automation ENABLED for other users"
+                            else "👑 Owner: YouTube Automation DISABLED for other users"
+        )
+    }
+
+    fun unlockOwnerWithPin(pin: String): Boolean {
+        val success = ytCredManager.verifyAndUnlockOwnerPin(pin)
+        if (success) {
+            _uiState.value = _uiState.value.copy(statusMessage = "👑 Owner access verified and unlocked!")
+        }
+        return success
+    }
+
+    fun lockOwnerAccess() {
+        ytCredManager.lockOwnerAccess()
+        _uiState.value = _uiState.value.copy(statusMessage = "🔒 Owner access locked")
+    }
+
+    fun setOwnerMasterPin(newPin: String) {
+        ytCredManager.setOwnerMasterPin(newPin)
+        _uiState.value = _uiState.value.copy(statusMessage = "🔑 Owner master PIN updated!")
     }
 
     fun toggleStorageDialog(show: Boolean) {

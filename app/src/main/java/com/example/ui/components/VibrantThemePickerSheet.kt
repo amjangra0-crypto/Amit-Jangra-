@@ -295,6 +295,57 @@ fun VibrantThemePickerSheet(
 
             Spacer(modifier = Modifier.height(18.dp))
 
+            // Default Mobile Theme Switch (Matches mobile phone system theme)
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
+                shape = RoundedCornerShape(12.dp),
+                border = BorderStroke(1.dp, AnimeCardBorder)
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 14.dp, vertical = 10.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
+                        Text("📱", fontSize = 18.sp)
+                        Spacer(modifier = Modifier.width(10.dp))
+                        Column {
+                            Text(
+                                text = if (AppLocaleStrings.isHindi(selectedLanguage)) "फ़ोन की डिफ़ॉल्ट थीम (System Mobile Theme)" else "Default Mobile Theme (Follow System)",
+                                color = MaterialTheme.colorScheme.onSurface,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 13.sp
+                            )
+                            Text(
+                                text = if (AppLocaleStrings.isHindi(selectedLanguage))
+                                    "ऑन करने पर मोबाइल में जो थीम है, वही लागू हो जाएगी"
+                                else
+                                    "Automatically matches your phone system theme & colors",
+                                color = TextSecondary,
+                                fontSize = 11.sp
+                            )
+                        }
+                    }
+
+                    Switch(
+                        checked = AppThemeController.isFollowSystemTheme,
+                        onCheckedChange = { follow ->
+                            AppThemeController.setFollowSystemTheme(follow, context)
+                        },
+                        colors = SwitchDefaults.colors(
+                            checkedThumbColor = AnimeCyan,
+                            checkedTrackColor = AnimeCyan.copy(alpha = 0.35f)
+                        ),
+                        modifier = Modifier.testTag("theme_sheet_follow_system_toggle")
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(10.dp))
+
             // Dark Mode Switch (Defaults to False / Light Mode Pure White everywhere)
             Card(
                 modifier = Modifier.fillMaxWidth(),
@@ -380,6 +431,94 @@ private fun ThemesTabContent(
     onThemeSelected: (String) -> Unit
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        // Section: Dual & Multi-colour Themes (White & Gold, White & Black, etc.)
+        Text(
+            text = "✨ " + if (AppLocaleStrings.isHindi(selectedLanguage)) "मल्टी-कलर व डुअल थीम्स (Dual Colours)" else "Multi-colour & Dual Themes (White & Gold, White & Black)",
+            color = AnimeGold,
+            fontSize = 13.sp,
+            fontWeight = FontWeight.Bold
+        )
+
+        val dualThemes = VibrantThemePresets.all.filter { it.category == "Dual Colour Themes" }
+        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            dualThemes.chunked(2).forEach { pair ->
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    pair.forEach { preset ->
+                        val isSelected = selectedTheme.equals(preset.key, ignoreCase = true)
+                        Card(
+                            modifier = Modifier
+                                .weight(1f)
+                                .clip(RoundedCornerShape(12.dp))
+                                .clickable { onThemeSelected(preset.key) }
+                                .testTag("theme_card_dual_${preset.key.lowercase()}"),
+                            colors = CardDefaults.cardColors(
+                                containerColor = if (isSelected) preset.primaryColor.copy(alpha = 0.15f) else MaterialTheme.colorScheme.surfaceVariant
+                            ),
+                            border = BorderStroke(
+                                width = if (isSelected) 2.dp else 1.dp,
+                                color = if (isSelected) preset.primaryColor else AnimeCardBorder
+                            ),
+                            shape = RoundedCornerShape(12.dp)
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .padding(10.dp)
+                                    .fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(preset.emoji, fontSize = 18.sp)
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = if (AppLocaleStrings.isHindi(selectedLanguage)) preset.nameHi else preset.nameEn,
+                                        color = MaterialTheme.colorScheme.onSurface,
+                                        fontSize = 11.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        maxLines = 1
+                                    )
+                                    Spacer(modifier = Modifier.height(3.dp))
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Box(
+                                            modifier = Modifier
+                                                .size(10.dp)
+                                                .clip(CircleShape)
+                                                .background(preset.lightBackground)
+                                                .border(1.dp, Color.Gray, CircleShape)
+                                        )
+                                        Spacer(modifier = Modifier.width(3.dp))
+                                        Box(
+                                            modifier = Modifier
+                                                .size(10.dp)
+                                                .clip(CircleShape)
+                                                .background(preset.primaryColor)
+                                        )
+                                        Spacer(modifier = Modifier.width(6.dp))
+                                        Text(
+                                            text = "Dual",
+                                            color = TextSecondary,
+                                            fontSize = 9.sp,
+                                            fontWeight = FontWeight.Medium
+                                        )
+                                    }
+                                }
+                                if (isSelected) {
+                                    Icon(Icons.Default.Check, contentDescription = "Active", tint = preset.primaryColor, modifier = Modifier.size(16.dp))
+                                }
+                            }
+                        }
+                    }
+                    if (pair.size == 1) {
+                        Spacer(modifier = Modifier.weight(1f))
+                    }
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(6.dp))
+
         // Section A: Google Messages Material Style 9 Cards (Image 5 & 2)
         Text(
             text = "📱 " + if (AppLocaleStrings.isHindi(selectedLanguage)) "गूगल मेसेज स्टाइल 9 थीम्स (Material You)" else "Material Card Themes (Image 5 & 2)",

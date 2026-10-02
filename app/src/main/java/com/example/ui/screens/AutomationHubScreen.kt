@@ -35,6 +35,7 @@ import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.ContentPaste
 import androidx.compose.material.icons.filled.GraphicEq
 import androidx.compose.material.icons.filled.Link
+import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.LockClock
 import androidx.compose.material.icons.filled.Movie
 import androidx.compose.material.icons.filled.MusicNote
@@ -43,6 +44,7 @@ import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Public
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Schedule
+import androidx.compose.material.icons.filled.Security
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Tv
 import androidx.compose.material.icons.filled.VideoLibrary
@@ -75,6 +77,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.material3.AlertDialog
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.engine.AutomationChannelManager
@@ -124,6 +128,15 @@ fun AutomationHubScreen(
     val episodesQueue by automationManager.episodesQueue.collectAsState()
     val statusMessage by automationManager.automationStatusMessage.collectAsState()
     val state by viewModel.uiState.collectAsState()
+    val currentUser by viewModel.currentUser.collectAsState()
+    val isOwnerUnlocked by viewModel.isOwnerAccessUnlocked.collectAsState()
+    val isGloballyEnabled by viewModel.isYouTubeAutomationGloballyEnabled.collectAsState()
+    val isOwner = currentUser.isOwner || isOwnerUnlocked
+    val lang = state.selectedLanguage
+
+    var showOwnerPinDialog by remember { mutableStateOf(false) }
+    var ownerPinInput by remember { mutableStateOf("") }
+    var pinError by remember { mutableStateOf("") }
 
     var channelUrlInput by remember { mutableStateOf(connectedChannel.channelUrl) }
     var channelNameInput by remember { mutableStateOf(connectedChannel.channelName) }
@@ -139,6 +152,83 @@ fun AutomationHubScreen(
     var musicWaveformData by remember { mutableStateOf<List<Float>>(emptyList()) }
 
     var activeTab by remember { mutableIntStateOf(0) } // 0: Channel & Web Series, 1: Review & Green Signal, 2: Lyria AI Music, 3: Multi-App APIs
+
+    if (showOwnerPinDialog) {
+        AlertDialog(
+            onDismissRequest = {
+                showOwnerPinDialog = false
+                pinError = ""
+                ownerPinInput = ""
+            },
+            title = {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text("👑", fontSize = 20.sp)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = AppLocaleStrings.tr(lang, "Owner PIN Verification", "ओनर पिन सत्यापन"),
+                        color = MaterialTheme.colorScheme.onSurface,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 16.sp
+                    )
+                }
+            },
+            text = {
+                Column {
+                    Text(
+                        text = AppLocaleStrings.tr(
+                            lang,
+                            "Enter Owner Master PIN (Default: 1234):",
+                            "ओनर मास्टर पिन दर्ज करें (डिफ़ॉल्ट: 1234):"
+                        ),
+                        color = TextSecondary,
+                        fontSize = 12.sp
+                    )
+                    Spacer(modifier = Modifier.height(10.dp))
+                    OutlinedTextField(
+                        value = ownerPinInput,
+                        onValueChange = {
+                            ownerPinInput = it
+                            pinError = ""
+                        },
+                        placeholder = { Text("1234", color = TextMuted) },
+                        visualTransformation = PasswordVisualTransformation(),
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    if (pinError.isNotBlank()) {
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(text = pinError, color = Color(0xFFEF4444), fontSize = 11.sp)
+                    }
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        if (viewModel.unlockOwnerWithPin(ownerPinInput)) {
+                            showOwnerPinDialog = false
+                            pinError = ""
+                            ownerPinInput = ""
+                            Toast.makeText(context, "👑 Owner verified!", Toast.LENGTH_SHORT).show()
+                        } else {
+                            pinError = if (AppLocaleStrings.isHindi(lang)) "गलत पिन! (डिफ़ॉल्ट: 1234)" else "Invalid PIN! (Default: 1234)"
+                        }
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = AnimeGold)
+                ) {
+                    Text("Unlock", color = Color.Black, fontWeight = FontWeight.Bold)
+                }
+            },
+            dismissButton = {
+                androidx.compose.material3.TextButton(onClick = {
+                    showOwnerPinDialog = false
+                    pinError = ""
+                    ownerPinInput = ""
+                }) {
+                    Text("Cancel", color = TextSecondary)
+                }
+            }
+        )
+    }
 
     Column(
         modifier = modifier
@@ -174,6 +264,18 @@ fun AutomationHubScreen(
                     ) {
                         Text("YOUTUBE AUTO", color = Color.White, fontSize = 9.sp, fontWeight = FontWeight.Bold)
                     }
+                    if (isOwner) {
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(6.dp))
+                                .background(AnimeGold.copy(alpha = 0.2f))
+                                .border(1.dp, AnimeGold, RoundedCornerShape(6.dp))
+                                .padding(horizontal = 6.dp, vertical = 2.dp)
+                        ) {
+                            Text("👑 OWNER", color = AnimeGold, fontSize = 9.sp, fontWeight = FontWeight.Bold)
+                        }
+                    }
                 }
                 Text(
                     text = "Automated video creation, review & upload on green signal",
@@ -184,6 +286,116 @@ fun AutomationHubScreen(
         }
 
         Spacer(modifier = Modifier.height(14.dp))
+
+        // 1. OWNER MASTER CONTROL CARD
+        if (isOwner) {
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 14.dp),
+                colors = CardDefaults.cardColors(containerColor = AnimeGold.copy(alpha = 0.12f)),
+                border = BorderStroke(1.dp, AnimeGold),
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(12.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = "👑 " + AppLocaleStrings.tr(
+                                lang,
+                                "Master Owner Control: YouTube Automation",
+                                "ओनर मास्टर नियंत्रण: YouTube ऑटोमेशन"
+                            ),
+                            color = AnimeGold,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 13.sp
+                        )
+                        Text(
+                            text = if (isGloballyEnabled)
+                                AppLocaleStrings.tr(
+                                    lang,
+                                    "Enabled for other users (Toggle OFF to lock)",
+                                    "अन्य उपयोगकर्ताओं के लिए चालू है (आप बंद कर सकते हैं)"
+                                )
+                            else
+                                AppLocaleStrings.tr(
+                                    lang,
+                                    "Disabled for other users • Only Owner has access",
+                                    "अन्य उपयोगकर्ताओं के लिए बंद है • केवल ओनर को अनुमति"
+                                ),
+                            color = TextSecondary,
+                            fontSize = 11.sp
+                        )
+                    }
+                    Switch(
+                        checked = isGloballyEnabled,
+                        onCheckedChange = { enable ->
+                            viewModel.setYouTubeAutomationGloballyEnabled(enable)
+                            Toast.makeText(
+                                context,
+                                if (enable) "👑 YouTube Automation enabled for users" else "👑 YouTube Automation disabled for users",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        },
+                        colors = SwitchDefaults.colors(
+                            checkedThumbColor = AnimeGold,
+                            checkedTrackColor = AnimeGold.copy(alpha = 0.4f)
+                        ),
+                        modifier = Modifier.testTag("owner_automation_hub_toggle")
+                    )
+                }
+            }
+        } else if (!isGloballyEnabled) {
+            // Locked for non-owners because Owner disabled it
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 12.dp),
+                colors = CardDefaults.cardColors(containerColor = AnimeSurfaceVariant),
+                border = BorderStroke(1.5.dp, Color(0xFFFF0000)),
+                shape = RoundedCornerShape(14.dp)
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(20.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Icon(Icons.Default.Lock, contentDescription = null, tint = Color(0xFFFF0000), modifier = Modifier.size(40.dp))
+                    Spacer(modifier = Modifier.height(10.dp))
+                    Text(
+                        text = AppLocaleStrings.tr(lang, "YouTube Automation Disabled by Owner", "YouTube ऑटोमेशन ओनर द्वारा बंद है"),
+                        color = Color(0xFFFF6B6B),
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 15.sp
+                    )
+                    Spacer(modifier = Modifier.height(6.dp))
+                    Text(
+                        text = AppLocaleStrings.tr(
+                            lang,
+                            "YouTube automation access is restricted exclusively to the Owner. Other users cannot configure or execute automated uploads without Owner authorization.",
+                            "YouTube ऑटोमेशन का एक्सेस केवल ओनर के लिए है। बाकी सभी के लिए यह ओनर द्वारा नियंत्रित है।"
+                        ),
+                        color = TextSecondary,
+                        fontSize = 12.sp,
+                        textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                    )
+                    Spacer(modifier = Modifier.height(14.dp))
+                    Button(
+                        onClick = { showOwnerPinDialog = true },
+                        colors = ButtonDefaults.buttonColors(containerColor = AnimeGold),
+                        shape = RoundedCornerShape(10.dp)
+                    ) {
+                        Text("👑 " + AppLocaleStrings.tr(lang, "Enter Owner PIN to Unlock", "ओनर पिन दर्ज करें"), color = Color.Black, fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                    }
+                }
+            }
+        }
 
         // System Live Status Message Banner
         if (statusMessage.isNotBlank()) {

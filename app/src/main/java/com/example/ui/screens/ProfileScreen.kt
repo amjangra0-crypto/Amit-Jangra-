@@ -532,12 +532,16 @@ fun ProfileScreen(
         )
     }
 
-    // Modal Sheet: Owner Multi-Currency Wallet
+    // Modal Sheet: Owner Multi-Currency Wallet (STRICT OWNER ONLY)
     if (showOwnerWalletModal) {
-        OwnerWalletBottomSheet(
-            viewModel = viewModel,
-            onDismiss = { showOwnerWalletModal = false }
-        )
+        if (currentUser.isOwner) {
+            OwnerWalletBottomSheet(
+                viewModel = viewModel,
+                onDismiss = { showOwnerWalletModal = false }
+            )
+        } else {
+            showOwnerWalletModal = false
+        }
     }
 
     // Dialog: Logout Confirmation

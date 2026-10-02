@@ -1,6 +1,5 @@
 package com.example.ui.screens
 
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -22,7 +21,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.CloudDownload
-import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Key
 import androidx.compose.material.icons.filled.NewReleases
 import androidx.compose.material.icons.filled.Security
@@ -48,6 +46,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.BuildConfig
+import com.example.localization.AppLocaleStrings
 import com.example.ui.AnimeViewModel
 import com.example.ui.theme.AnimeCyan
 import com.example.ui.theme.AnimeCyanLight
@@ -64,6 +63,8 @@ import com.example.ui.theme.TextSecondary
 @Composable
 fun UpdateSettingsScreen(viewModel: AnimeViewModel) {
     val updateState by viewModel.updateState.collectAsState()
+    val uiState by viewModel.uiState.collectAsState()
+    val lang = uiState.selectedLanguage
     val scrollState = rememberScrollState()
 
     Column(
@@ -89,13 +90,17 @@ fun UpdateSettingsScreen(viewModel: AnimeViewModel) {
                 ) {
                     Column {
                         Text(
-                            text = "ऐप अपडेट एवं सिस्टम स्थिति",
+                            text = AppLocaleStrings.tr(
+                                lang,
+                                "App Update & System Status",
+                                "ऐप अपडेट एवं सिस्टम स्थिति"
+                            ),
                             color = TextPrimary,
                             fontSize = 18.sp,
                             fontWeight = FontWeight.Bold
                         )
                         Text(
-                            text = "वर्तमान संस्करण: v${updateState.currentVersion}",
+                            text = "${AppLocaleStrings.tr(lang, "Current Version:", "वर्तमान संस्करण:")} v${updateState.currentVersion}",
                             color = AnimeCyan,
                             fontSize = 13.sp,
                             fontWeight = FontWeight.SemiBold
@@ -109,7 +114,7 @@ fun UpdateSettingsScreen(viewModel: AnimeViewModel) {
                             .padding(horizontal = 10.dp, vertical = 4.dp)
                     ) {
                         Text(
-                            text = "Play Store Ready",
+                            text = AppLocaleStrings.tr(lang, "Play Store Ready", "प्ले स्टोर रेडी"),
                             color = AnimeGreen,
                             fontSize = 11.sp,
                             fontWeight = FontWeight.Bold
@@ -140,7 +145,18 @@ fun UpdateSettingsScreen(viewModel: AnimeViewModel) {
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = if (updateState.isUpdateAvailable) "नया फीचर अपडेट उपलब्ध है (v${updateState.latestVersion})" else "आपका ऐप पूरी तरह से अप-टू-डेट है!",
+                        text = if (updateState.isUpdateAvailable)
+                            AppLocaleStrings.tr(
+                                lang,
+                                "New feature update available (v${updateState.latestVersion})",
+                                "नया फीचर अपडेट उपलब्ध है (v${updateState.latestVersion})"
+                            )
+                        else
+                            AppLocaleStrings.tr(
+                                lang,
+                                "Your app is up to date!",
+                                "आपका ऐप पूरी तरह से अप-टू-डेट है!"
+                            ),
                         color = TextPrimary,
                         fontSize = 15.sp,
                         fontWeight = FontWeight.Bold
@@ -151,7 +167,7 @@ fun UpdateSettingsScreen(viewModel: AnimeViewModel) {
 
                 if (updateState.isUpdateAvailable) {
                     Text(
-                        text = "रिलीज नोट्स एवं नए फीचर्स (${updateState.releaseDate}):",
+                        text = "${AppLocaleStrings.tr(lang, "Release Notes & Features", "रिलीज नोट्स एवं नए फीचर्स")} (${updateState.releaseDate}):",
                         color = AnimeCyan,
                         fontSize = 12.sp,
                         fontWeight = FontWeight.SemiBold
@@ -180,7 +196,11 @@ fun UpdateSettingsScreen(viewModel: AnimeViewModel) {
                             )
                             Spacer(modifier = Modifier.width(10.dp))
                             Text(
-                                text = "अपडेट डाउनलोड व इंस्टॉल हो रहा है...",
+                                text = AppLocaleStrings.tr(
+                                    lang,
+                                    "Downloading and installing update...",
+                                    "अपडेट डाउनलोड व इंस्टॉल हो रहा है..."
+                                ),
                                 color = AnimeCyanLight,
                                 fontSize = 12.sp
                             )
@@ -197,7 +217,11 @@ fun UpdateSettingsScreen(viewModel: AnimeViewModel) {
                             Icon(Icons.Default.CloudDownload, contentDescription = null, tint = Color.White)
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
-                                text = "अब अपडेट करें (Install Feature Drop)",
+                                text = AppLocaleStrings.tr(
+                                    lang,
+                                    "Update Now (Install Feature Drop)",
+                                    "अब अपडेट करें (Install Feature Drop)"
+                                ),
                                 color = Color.White,
                                 fontSize = 13.sp,
                                 fontWeight = FontWeight.Bold
@@ -206,7 +230,11 @@ fun UpdateSettingsScreen(viewModel: AnimeViewModel) {
                     }
                 } else {
                     Text(
-                        text = "भविष्य में आने वाले नए एनिमे मॉडल, वॉइस पैक और वीडियो टूल्स यहां एक क्लिक में उपलब्ध होंगे।",
+                        text = AppLocaleStrings.tr(
+                            lang,
+                            "Upcoming anime models, voice packs, and video creation tools will be available here with one-click installation.",
+                            "भविष्य में आने वाले नए एनिमे मॉडल, वॉइस पैक और वीडियो टूल्स यहां एक क्लिक में उपलब्ध होंगे।"
+                        ),
                         color = TextSecondary,
                         fontSize = 12.sp
                     )
@@ -228,7 +256,11 @@ fun UpdateSettingsScreen(viewModel: AnimeViewModel) {
                     Icon(Icons.Default.Security, contentDescription = null, tint = AnimeGreen)
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = "गूगल प्ले स्टोर अनुपालन (Play Store Checklist)",
+                        text = AppLocaleStrings.tr(
+                            lang,
+                            "Google Play Store Compliance Checklist",
+                            "गूगल प्ले स्टोर अनुपालन (Play Store Checklist)"
+                        ),
                         color = TextPrimary,
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Bold
@@ -236,13 +268,23 @@ fun UpdateSettingsScreen(viewModel: AnimeViewModel) {
                 }
                 Spacer(modifier = Modifier.height(10.dp))
 
-                val complianceItems = listOf(
-                    "सुरक्षित अनुमतियां: किसी भी अनावश्यक स्टोरेज अनुमति के बिना स्वच्छ आर्किटेक्चर",
-                    "गूगल प्ले सुरक्षा दिशानिर्देश: शून्य गैरकानूनी डायनामिक कोड लोडिंग (No DCL)",
-                    "डेटा सुरक्षा: संपूर्ण डेटा स्थानीय रूम डेटाबेस (Room SQLite) में एन्क्रिप्टेड",
-                    "अद्यतन अनुकूल: नए फीचर्स जोड़ने हेतु मॉड्यूलर जेटपैक कंपोज़ UI आर्किटेक्चर",
-                    "स्मार्ट फॉलबैक: नेटवर्क अनुपलब्ध होने पर भी निर्बाध एनिमे निर्माण"
-                )
+                val complianceItems = if (AppLocaleStrings.isHindi(lang)) {
+                    listOf(
+                        "सुरक्षित अनुमतियां: किसी भी अनावश्यक स्टोरेज अनुमति के बिना स्वच्छ आर्किटेक्चर",
+                        "गूगल प्ले सुरक्षा दिशानिर्देश: शून्य गैरकानूनी डायनामिक कोड लोडिंग (No DCL)",
+                        "डेटा सुरक्षा: संपूर्ण डेटा स्थानीय रूम डेटाबेस (Room SQLite) में एन्क्रिप्टेड",
+                        "अद्यतन अनुकूल: नए फीचर्स जोड़ने हेतु मॉड्यूलर जेटपैक कंपोज़ UI आर्किटेक्चर",
+                        "स्मार्ट फॉलबैक: नेटवर्क अनुपलब्ध होने पर भी निर्बाध एनिमे निर्माण"
+                    )
+                } else {
+                    listOf(
+                        "Permission Safety: Clean architecture with zero unnecessary storage permissions",
+                        "Google Play Guidelines: Zero Dynamic Code Loading (No DCL) for policy compliance",
+                        "Data Protection: Complete data securely encrypted in local Room SQLite database",
+                        "Update Scalability: Modular Jetpack Compose UI architecture for feature drops",
+                        "Smart Fallback: Seamless offline & local animation generation even without network"
+                    )
+                }
 
                 complianceItems.forEach { item ->
                     Row(
@@ -280,7 +322,11 @@ fun UpdateSettingsScreen(viewModel: AnimeViewModel) {
                     Icon(Icons.Default.Key, contentDescription = null, tint = AnimeGold)
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = "एआई इंजन स्थिति (AI Engine Status)",
+                        text = AppLocaleStrings.tr(
+                            lang,
+                            "AI Engine & Model Status",
+                            "एआई इंजन स्थिति (AI Engine Status)"
+                        ),
                         color = TextPrimary,
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Bold
@@ -303,7 +349,18 @@ fun UpdateSettingsScreen(viewModel: AnimeViewModel) {
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = if (hasKey) "Gemini 3.5 Flash API सक्रिय है" else "लोकल स्मार्ट एनिमे जनरेटर + Gemini Fallback सक्रिय है",
+                        text = if (hasKey)
+                            AppLocaleStrings.tr(
+                                lang,
+                                "Gemini 1.5 Flash API is active",
+                                "Gemini 1.5 Flash API सक्रिय है"
+                            )
+                        else
+                            AppLocaleStrings.tr(
+                                lang,
+                                "Local Smart Anime Generator + Gemini Fallback is active",
+                                "लोकल स्मार्ट एनिमे जनरेटर + Gemini Fallback सक्रिय है"
+                            ),
                         color = TextPrimary,
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Medium
@@ -311,7 +368,11 @@ fun UpdateSettingsScreen(viewModel: AnimeViewModel) {
                 }
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = "नोट: यदि आप अपनी व्यक्तिगत Gemini API Key लगाना चाहते हैं तो AI Studio के Secrets पैनल में GEMINI_API_KEY दर्ज कर सकते हैं।",
+                    text = AppLocaleStrings.tr(
+                        lang,
+                        "Note: If you want to use your personal Gemini API Key, you can configure GEMINI_API_KEY in the AI Studio Secrets panel.",
+                        "नोट: यदि आप अपनी व्यक्तिगत Gemini API Key लगाना चाहते हैं तो AI Studio के Secrets पैनल में GEMINI_API_KEY दर्ज कर सकते हैं।"
+                    ),
                     color = TextMuted,
                     fontSize = 10.sp
                 )

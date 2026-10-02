@@ -560,12 +560,16 @@ fun SubscriptionAdminScreen(viewModel: AnimeViewModel) {
         }
     }
 
-    // Modal: Owner Wallet Sheet
+    // Modal: Owner Wallet Sheet (STRICT OWNER ONLY)
     if (showOwnerWalletSheet) {
-        OwnerWalletBottomSheet(
-            viewModel = viewModel,
-            onDismiss = { showOwnerWalletSheet = false }
-        )
+        if (currentUser.isOwner) {
+            OwnerWalletBottomSheet(
+                viewModel = viewModel,
+                onDismiss = { showOwnerWalletSheet = false }
+            )
+        } else {
+            showOwnerWalletSheet = false
+        }
     }
 
     // Modal: Owner Pricing Editor Dialog

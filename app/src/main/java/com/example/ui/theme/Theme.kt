@@ -60,12 +60,20 @@ fun getVibrantColorScheme(theme: String, isDark: Boolean): androidx.compose.mate
 
 @Composable
 fun MyApplicationTheme(
-    darkTheme: Boolean = AppThemeController.isDarkMode,
+    darkTheme: Boolean = if (AppThemeController.isFollowSystemTheme) androidx.compose.foundation.isSystemInDarkTheme() else AppThemeController.isDarkMode,
     vibrantTheme: String = AppThemeController.currentThemeKey,
-    dynamicColor: Boolean = false,
+    dynamicColor: Boolean = AppThemeController.isFollowSystemTheme,
     content: @Composable () -> Unit
 ) {
-    val colorScheme = getVibrantColorScheme(vibrantTheme, darkTheme)
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val colorScheme = when {
+        dynamicColor && android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S -> {
+            if (darkTheme) androidx.compose.material3.dynamicDarkColorScheme(context)
+            else androidx.compose.material3.dynamicLightColorScheme(context)
+        }
+        else -> getVibrantColorScheme(vibrantTheme, darkTheme)
+    }
+
     val view = LocalView.current
     if (!view.isInEditMode) {
         SideEffect {

@@ -18,6 +18,7 @@ object AppThemeController {
     private const val KEY_IS_DARK = "theme_is_dark"
     private const val KEY_THEME_KEY = "theme_key"
     private const val KEY_CUSTOM_COLOR_ARGB = "theme_custom_color_argb"
+    private const val KEY_FOLLOW_SYSTEM = "theme_follow_system"
 
     // Default is Light Mode (Pure White everywhere)
     var isDarkMode by mutableStateOf(false)
@@ -30,11 +31,16 @@ object AppThemeController {
     var customAccentColor by mutableStateOf<Color?>(null)
         private set
 
+    // Default Mobile Theme (Follow System phone theme)
+    var isFollowSystemTheme by mutableStateOf(false)
+        private set
+
     fun initialize(context: Context) {
         try {
             val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
             isDarkMode = prefs.getBoolean(KEY_IS_DARK, false) // Default: Light White everywhere
             currentThemeKey = prefs.getString(KEY_THEME_KEY, "WHITE_MINIMAL") ?: "WHITE_MINIMAL"
+            isFollowSystemTheme = prefs.getBoolean(KEY_FOLLOW_SYSTEM, false)
             if (prefs.contains(KEY_CUSTOM_COLOR_ARGB)) {
                 val argb = prefs.getInt(KEY_CUSTOM_COLOR_ARGB, 0)
                 customAccentColor = if (argb != 0) Color(argb) else null
@@ -45,21 +51,30 @@ object AppThemeController {
     fun setTheme(themeKey: String, isDark: Boolean = isDarkMode, context: Context? = null) {
         currentThemeKey = themeKey
         isDarkMode = isDark
+        isFollowSystemTheme = false // Custom theme overrides system theme
         persist(context)
     }
 
     fun toggleDarkMode(context: Context? = null) {
         isDarkMode = !isDarkMode
+        isFollowSystemTheme = false
         persist(context)
     }
 
     fun setDarkMode(dark: Boolean, context: Context? = null) {
         isDarkMode = dark
+        isFollowSystemTheme = false
+        persist(context)
+    }
+
+    fun setFollowSystemTheme(follow: Boolean, context: Context? = null) {
+        isFollowSystemTheme = follow
         persist(context)
     }
 
     fun setCustomAccent(color: Color, context: Context? = null) {
         customAccentColor = color
+        isFollowSystemTheme = false
         persist(context)
     }
 
@@ -72,6 +87,7 @@ object AppThemeController {
         isDarkMode = false
         currentThemeKey = "WHITE_MINIMAL"
         customAccentColor = null
+        isFollowSystemTheme = false
         persist(context)
     }
 
@@ -82,6 +98,7 @@ object AppThemeController {
             val editor = prefs.edit()
                 .putBoolean(KEY_IS_DARK, isDarkMode)
                 .putString(KEY_THEME_KEY, currentThemeKey)
+                .putBoolean(KEY_FOLLOW_SYSTEM, isFollowSystemTheme)
             if (customAccentColor != null) {
                 editor.putInt(KEY_CUSTOM_COLOR_ARGB, customAccentColor!!.toArgb())
             } else {
@@ -252,6 +269,111 @@ object VibrantThemePresets {
             mutedColor = Color(0xFFF1F5F9),
             mutedForeground = Color(0xFF64748B),
             accentColor = Color(0xFF4F46E5)
+        ),
+
+        // ==========================================
+        // DUAL / MULTICOLOUR THEMES (User Requested)
+        // e.g. White & Golden, White & Black, etc.
+        // ==========================================
+        VibrantThemeInfo(
+            key = "DUAL_WHITE_GOLD",
+            nameEn = "White & Golden (Dual)",
+            nameHi = "सफेद व सुनहरा (डुअल)",
+            emoji = "👑",
+            category = "Dual Colour Themes",
+            primaryColor = Color(0xFFD97706), // Rich Royal Gold
+            secondaryColor = Color(0xFFF59E0B),
+            lightBackground = Color(0xFFFFFFFF),
+            lightSurface = Color(0xFFFFFFFF),
+            lightSurfaceVariant = Color(0xFFFFFBEB),
+            lightBorderColor = Color(0xFFFDE68A),
+            accentGold = Color(0xFFF59E0B),
+            accentPink = Color(0xFFB45309),
+            accentColor = Color(0xFFD97706)
+        ),
+        VibrantThemeInfo(
+            key = "DUAL_WHITE_BLACK",
+            nameEn = "White & Black (Dual)",
+            nameHi = "सफेद व काला (डुअल)",
+            emoji = "☯️",
+            category = "Dual Colour Themes",
+            primaryColor = Color(0xFF18181B), // Onyx Black
+            secondaryColor = Color(0xFF3F3F46),
+            lightBackground = Color(0xFFFFFFFF),
+            lightSurface = Color(0xFFFFFFFF),
+            lightSurfaceVariant = Color(0xFFF4F4F5),
+            lightBorderColor = Color(0xFF18181B),
+            accentColor = Color(0xFF18181B)
+        ),
+        VibrantThemeInfo(
+            key = "DUAL_WHITE_ROSE",
+            nameEn = "White & Rose Pink (Dual)",
+            nameHi = "सफेद व गुलाबी (डुअल)",
+            emoji = "🌹",
+            category = "Dual Colour Themes",
+            primaryColor = Color(0xFFE11D48), // Rose Red
+            secondaryColor = Color(0xFFFB7185),
+            lightBackground = Color(0xFFFFFFFF),
+            lightSurface = Color(0xFFFFFFFF),
+            lightSurfaceVariant = Color(0xFFFFF1F2),
+            lightBorderColor = Color(0xFFFECDD3),
+            accentColor = Color(0xFFE11D48)
+        ),
+        VibrantThemeInfo(
+            key = "DUAL_WHITE_BLUE",
+            nameEn = "White & Royal Blue (Dual)",
+            nameHi = "सफेद व रॉयल ब्लू (डुअल)",
+            emoji = "💎",
+            category = "Dual Colour Themes",
+            primaryColor = Color(0xFF1D4ED8), // Royal Blue
+            secondaryColor = Color(0xFF3B82F6),
+            lightBackground = Color(0xFFFFFFFF),
+            lightSurface = Color(0xFFFFFFFF),
+            lightSurfaceVariant = Color(0xFFEFF6FF),
+            lightBorderColor = Color(0xFFBFDBFE),
+            accentColor = Color(0xFF1D4ED8)
+        ),
+        VibrantThemeInfo(
+            key = "DUAL_WHITE_EMERALD",
+            nameEn = "White & Emerald Green (Dual)",
+            nameHi = "सफेद व पन्ना हरा (डुअल)",
+            emoji = "🍃",
+            category = "Dual Colour Themes",
+            primaryColor = Color(0xFF047857), // Emerald Green
+            secondaryColor = Color(0xFF10B981),
+            lightBackground = Color(0xFFFFFFFF),
+            lightSurface = Color(0xFFFFFFFF),
+            lightSurfaceVariant = Color(0xFFECFDF5),
+            lightBorderColor = Color(0xFFA7F3D0),
+            accentColor = Color(0xFF047857)
+        ),
+        VibrantThemeInfo(
+            key = "DUAL_WHITE_PURPLE",
+            nameEn = "White & Regal Purple (Dual)",
+            nameHi = "सफेद व शाही बैंगनी (डुअल)",
+            emoji = "🔮",
+            category = "Dual Colour Themes",
+            primaryColor = Color(0xFF7E22CE), // Regal Purple
+            secondaryColor = Color(0xFFA855F7),
+            lightBackground = Color(0xFFFFFFFF),
+            lightSurface = Color(0xFFFFFFFF),
+            lightSurfaceVariant = Color(0xFFFAF5FF),
+            lightBorderColor = Color(0xFFE9D5FF),
+            accentColor = Color(0xFF7E22CE)
+        ),
+        VibrantThemeInfo(
+            key = "DUAL_WHITE_AMBER",
+            nameEn = "White & Sunset Orange (Dual)",
+            nameHi = "सफेद व नारंगी (डुअल)",
+            emoji = "🌅",
+            category = "Dual Colour Themes",
+            primaryColor = Color(0xFFC2410C), // Sunset Orange
+            secondaryColor = Color(0xFFF97316),
+            lightBackground = Color(0xFFFFFFFF),
+            lightSurface = Color(0xFFFFFFFF),
+            lightSurfaceVariant = Color(0xFFFFF7ED),
+            lightBorderColor = Color(0xFFFED7AA),
+            accentColor = Color(0xFFC2410C)
         ),
 
         // ==========================================

@@ -30,8 +30,10 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.CurrencyExchange
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.History
+import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Payments
 import androidx.compose.material.icons.filled.PhoneAndroid
+import androidx.compose.material.icons.filled.Security
 import androidx.compose.material.icons.filled.Send
 import androidx.compose.material.icons.filled.Stars
 import androidx.compose.material.icons.filled.SwapHoriz
@@ -72,6 +74,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.model.CurrencyType
@@ -79,6 +82,7 @@ import com.example.data.model.CurrencyWallet
 import com.example.data.model.PaymentGateway
 import com.example.data.model.TransactionType
 import com.example.data.model.WalletTransaction
+import com.example.localization.AppLocaleStrings
 import com.example.ui.AnimeViewModel
 import com.example.ui.theme.AnimeCyan
 import com.example.ui.theme.AnimeGold
@@ -102,15 +106,98 @@ fun OwnerWalletBottomSheet(
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val currentUser by viewModel.currentUser.collectAsState()
+    val uiState by viewModel.uiState.collectAsState()
+    val lang = uiState.selectedLanguage
     val wallets by viewModel.wallets.collectAsState()
     val transactions by viewModel.transactions.collectAsState()
     val connectedBankAccount by viewModel.connectedBankAccount.collectAsState()
+    val isOwnerUnlocked by viewModel.isOwnerAccessUnlocked.collectAsState()
 
     var selectedCurrency by remember { mutableStateOf(CurrencyType.INR) }
     var showWithdrawModal by remember { mutableStateOf(false) }
     var showExchangeModal by remember { mutableStateOf(false) }
     var showEditBankModal by remember { mutableStateOf(false) }
+    var showOwnerPinModal by remember { mutableStateOf(false) }
+    var ownerPinInput by remember { mutableStateOf("") }
+    var ownerPinError by remember { mutableStateOf("") }
+    var pendingBankEditAction by remember { mutableStateOf(false) }
     var withdrawalFeedback by remember { mutableStateOf("") }
+
+    // STRICT OWNER ONLY ACCESS RESTRICTION
+    if (!currentUser.isOwner) {
+        ModalBottomSheet(
+            onDismissRequest = onDismiss,
+            sheetState = sheetState,
+            containerColor = AnimeSurface,
+            dragHandle = null
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(24.dp)
+                    .padding(bottom = 36.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(64.dp)
+                        .clip(CircleShape)
+                        .background(Color(0xFFE53935).copy(alpha = 0.2f))
+                        .border(1.5.dp, Color(0xFFE53935), CircleShape),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Lock,
+                        contentDescription = "Access Restricted",
+                        tint = Color(0xFFE53935),
+                        modifier = Modifier.size(32.dp)
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Text(
+                    text = AppLocaleStrings.tr(
+                        lang,
+                        "Access Restricted: Owner Only",
+                        "प्रतिबंधित पहुंच: केवल ओनर के लिए"
+                    ),
+                    color = Color(0xFFE53935),
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Text(
+                    text = AppLocaleStrings.tr(
+                        lang,
+                        "Wallet balances, transactions, and bank details are confidential. Only the verified App Owner can view, access, or change them.",
+                        "वॉलेट बैलेंस, लेन-देन और बैंक विवरण अत्यंत गोपनीय हैं। केवल सत्यापित ऐप ओनर ही इन्हें देख, एक्सेस या बदल सकते हैं।"
+                    ),
+                    color = TextSecondary,
+                    fontSize = 13.sp,
+                    textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                    lineHeight = 18.sp
+                )
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                Button(
+                    onClick = onDismiss,
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
+                    modifier = Modifier.fillMaxWidth().height(46.dp)
+                ) {
+                    Text(
+                        text = AppLocaleStrings.tr(lang, "Close", "बंद करें"),
+                        color = MaterialTheme.colorScheme.onSurface,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
+        }
+        return
+    }
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
@@ -152,9 +239,13 @@ fun OwnerWalletBottomSheet(
                     Column {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Text(
-                                text = "ओनर रेवेन्यू वॉलेट (Owner Treasury)",
+                                text = AppLocaleStrings.tr(
+                                    lang,
+                                    "👑 Owner Revenue Wallet (Treasury)",
+                                    "👑 ओनर रेवेन्यू वॉलेट (Owner Treasury)"
+                                ),
                                 color = AnimeGold,
-                                fontSize = 17.sp,
+                                fontSize = 16.sp,
                                 fontWeight = FontWeight.Bold
                             )
                             Spacer(modifier = Modifier.width(6.dp))
@@ -164,18 +255,31 @@ fun OwnerWalletBottomSheet(
                                     .background(AnimeGold.copy(alpha = 0.2f))
                                     .padding(horizontal = 4.dp, vertical = 1.dp)
                             ) {
-                                Text("PRIVATE", color = AnimeGold, fontSize = 9.sp, fontWeight = FontWeight.Bold)
+                                Text(
+                                    text = AppLocaleStrings.tr(lang, "OWNER ONLY", "केवल ओनर"),
+                                    color = AnimeGold,
+                                    fontSize = 9.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
                             }
                         }
                         Text(
-                            text = "सब्सक्रिप्शन की सीधी जमा राशि और निकासी हब",
+                            text = AppLocaleStrings.tr(
+                                lang,
+                                "Direct subscription deposits & bank payout settlement hub",
+                                "सब्सक्रिप्शन की सीधी जमा राशि और निकासी हब"
+                            ),
                             color = TextSecondary,
                             fontSize = 11.sp
                         )
                     }
                 }
                 IconButton(onClick = onDismiss, modifier = Modifier.testTag("owner_wallet_close_btn")) {
-                    Icon(Icons.Default.Close, contentDescription = "Close", tint = TextMuted)
+                    Icon(
+                        Icons.Default.Close,
+                        contentDescription = AppLocaleStrings.tr(lang, "Close", "बंद करें"),
+                        tint = TextMuted
+                    )
                 }
             }
 
@@ -248,7 +352,11 @@ fun OwnerWalletBottomSheet(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = "${activeWallet.currency.title} वॉलेट बैलेंस",
+                            text = AppLocaleStrings.tr(
+                                lang,
+                                "${activeWallet.currency.title} Wallet Balance",
+                                "${activeWallet.currency.title} वॉलेट बैलेंस"
+                            ),
                             color = TextSecondary,
                             fontSize = 12.sp,
                             fontWeight = FontWeight.Medium
@@ -259,7 +367,12 @@ fun OwnerWalletBottomSheet(
                                 .background(AnimeGreen.copy(alpha = 0.15f))
                                 .padding(horizontal = 6.dp, vertical = 2.dp)
                         ) {
-                            Text("जमा खाता सक्रिय", color = AnimeGreen, fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                            Text(
+                                text = AppLocaleStrings.tr(lang, "Deposit Account Active", "जमा खाता सक्रिय"),
+                                color = AnimeGreen,
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.Bold
+                            )
                         }
                     }
 
@@ -279,7 +392,11 @@ fun OwnerWalletBottomSheet(
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Column {
-                            Text("कुल जमा राशि (Total Received):", color = TextMuted, fontSize = 11.sp)
+                            Text(
+                                text = AppLocaleStrings.tr(lang, "Total Received:", "कुल जमा राशि:"),
+                                color = TextMuted,
+                                fontSize = 11.sp
+                            )
                             Text(
                                 "${activeWallet.currency.symbol}${String.format("%,.2f", activeWallet.totalReceived)}",
                                 color = AnimeGreen,
@@ -288,7 +405,11 @@ fun OwnerWalletBottomSheet(
                             )
                         }
                         Column(horizontalAlignment = Alignment.End) {
-                            Text("कुल निकाली गई राशि (Withdrawn):", color = TextMuted, fontSize = 11.sp)
+                            Text(
+                                text = AppLocaleStrings.tr(lang, "Total Withdrawn:", "कुल निकाली गई राशि:"),
+                                color = TextMuted,
+                                fontSize = 11.sp
+                            )
                             Text(
                                 "${activeWallet.currency.symbol}${String.format("%,.2f", activeWallet.totalWithdrawn)}",
                                 color = AnimeCyan,
@@ -315,7 +436,12 @@ fun OwnerWalletBottomSheet(
                 ) {
                     Icon(Icons.Default.Send, contentDescription = null, tint = Color.Black, modifier = Modifier.size(16.dp))
                     Spacer(modifier = Modifier.width(6.dp))
-                    Text("रुपये / राशि निकालें (Withdraw)", color = Color.Black, fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                    Text(
+                        text = AppLocaleStrings.tr(lang, "Withdraw Funds", "रुपये / राशि निकालें"),
+                        color = Color.Black,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 12.sp
+                    )
                 }
 
                 Spacer(modifier = Modifier.width(10.dp))
@@ -331,7 +457,12 @@ fun OwnerWalletBottomSheet(
                 ) {
                     Icon(Icons.Default.SwapHoriz, contentDescription = null, tint = AnimeCyan, modifier = Modifier.size(16.dp))
                     Spacer(modifier = Modifier.width(6.dp))
-                    Text("मुद्रा एक्सचेंज (Currency Transfer)", color = AnimeCyan, fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                    Text(
+                        text = AppLocaleStrings.tr(lang, "Currency Transfer", "मुद्रा एक्सचेंज"),
+                        color = AnimeCyan,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 12.sp
+                    )
                 }
             }
 
@@ -389,7 +520,10 @@ fun OwnerWalletBottomSheet(
                                             .padding(horizontal = 5.dp, vertical = 1.dp)
                                     ) {
                                         Text(
-                                            text = if (connectedBankAccount.isConnected) "● CONNECTED" else "DISCONNECTED",
+                                            text = if (connectedBankAccount.isConnected)
+                                                AppLocaleStrings.tr(lang, "● CONNECTED", "● कनेक्टेड")
+                                            else
+                                                AppLocaleStrings.tr(lang, "DISCONNECTED", "डिस्कनेक्टेड"),
                                             color = if (connectedBankAccount.isConnected) AnimeGreen else TextMuted,
                                             fontSize = 9.sp,
                                             fontWeight = FontWeight.Bold
@@ -405,7 +539,14 @@ fun OwnerWalletBottomSheet(
                         }
 
                         Button(
-                            onClick = { showEditBankModal = true },
+                            onClick = {
+                                if (isOwnerUnlocked) {
+                                    showEditBankModal = true
+                                } else {
+                                    pendingBankEditAction = true
+                                    showOwnerPinModal = true
+                                }
+                            },
                             colors = ButtonDefaults.buttonColors(containerColor = AnimeGold.copy(alpha = 0.2f)),
                             shape = RoundedCornerShape(8.dp),
                             border = BorderStroke(1.dp, AnimeGold),
@@ -414,7 +555,12 @@ fun OwnerWalletBottomSheet(
                         ) {
                             Icon(Icons.Default.Edit, contentDescription = null, tint = AnimeGold, modifier = Modifier.size(12.dp))
                             Spacer(modifier = Modifier.width(4.dp))
-                            Text("Change Bank", color = AnimeGold, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                            Text(
+                                text = AppLocaleStrings.tr(lang, "Change Bank", "बैंक बदलें"),
+                                color = AnimeGold,
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold
+                            )
                         }
                     }
 
@@ -426,7 +572,7 @@ fun OwnerWalletBottomSheet(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = "Holder: ${connectedBankAccount.holderName} (${connectedBankAccount.accountType})",
+                            text = "${AppLocaleStrings.tr(lang, "Holder", "धारक")}: ${connectedBankAccount.holderName} (${connectedBankAccount.accountType})",
                             color = TextMuted,
                             fontSize = 10.sp
                         )
@@ -451,7 +597,11 @@ fun OwnerWalletBottomSheet(
             ) {
                 Column(modifier = Modifier.padding(14.dp)) {
                     Text(
-                        text = "🚀 उपलब्ध ट्रांसफर व विथड्रॉल विकल्प (Withdrawal Gateways):",
+                        text = AppLocaleStrings.tr(
+                            lang,
+                            "🚀 Supported Withdrawal Options (Instant Settlement):",
+                            "🚀 उपलब्ध ट्रांसफर व विथड्रॉल विकल्प (Withdrawal Gateways):"
+                        ),
                         color = TextPrimary,
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Bold
@@ -461,7 +611,7 @@ fun OwnerWalletBottomSheet(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        TransferPill("🏦 बैंक ट्रांसफर (IMPS/NEFT)")
+                        TransferPill(AppLocaleStrings.tr(lang, "🏦 Bank Transfer (IMPS/NEFT)", "🏦 बैंक ट्रांसफर (IMPS/NEFT)"))
                         TransferPill("📱 PhonePe")
                     }
                     Spacer(modifier = Modifier.height(6.dp))
@@ -484,13 +634,17 @@ fun OwnerWalletBottomSheet(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "📋 हाल की जमा व निकासी लेन-देन (Transactions):",
+                    text = AppLocaleStrings.tr(
+                        lang,
+                        "📋 Recent Wallet Transactions:",
+                        "📋 हाल की जमा व निकासी लेन-देन:"
+                    ),
                     color = TextPrimary,
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Bold
                 )
                 Text(
-                    text = "${transactions.size} Records",
+                    text = "${transactions.size} " + AppLocaleStrings.tr(lang, "Records", "रिकॉर्ड"),
                     color = TextMuted,
                     fontSize = 11.sp
                 )
@@ -499,10 +653,103 @@ fun OwnerWalletBottomSheet(
             Spacer(modifier = Modifier.height(10.dp))
 
             transactions.take(8).forEach { txn ->
-                TransactionRow(txn = txn)
+                TransactionRow(txn = txn, lang = lang)
                 Spacer(modifier = Modifier.height(8.dp))
             }
         }
+    }
+
+    // Owner PIN Unlock Dialog for Security
+    if (showOwnerPinModal) {
+        AlertDialog(
+            onDismissRequest = {
+                showOwnerPinModal = false
+                ownerPinError = ""
+                ownerPinInput = ""
+            },
+            title = {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Default.Security, contentDescription = null, tint = AnimeGold)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = AppLocaleStrings.tr(lang, "Owner PIN Verification", "ओनर पिन सत्यापन"),
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            },
+            text = {
+                Column {
+                    Text(
+                        text = AppLocaleStrings.tr(
+                            lang,
+                            "Enter Owner PIN to view or change bank details (Default: 1234):",
+                            "बैंक विवरण देखने या बदलने के लिए ओनर पिन दर्ज करें (डिफ़ॉल्ट: 1234):"
+                        ),
+                        color = TextSecondary,
+                        fontSize = 12.sp
+                    )
+                    Spacer(modifier = Modifier.height(10.dp))
+                    OutlinedTextField(
+                        value = ownerPinInput,
+                        onValueChange = {
+                            ownerPinInput = it
+                            ownerPinError = ""
+                        },
+                        label = { Text(AppLocaleStrings.tr(lang, "Owner PIN", "ओनर पिन")) },
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword),
+                        visualTransformation = PasswordVisualTransformation(),
+                        modifier = Modifier.fillMaxWidth().testTag("wallet_owner_pin_input"),
+                        shape = RoundedCornerShape(10.dp)
+                    )
+                    if (ownerPinError.isNotBlank()) {
+                        Spacer(modifier = Modifier.height(6.dp))
+                        Text(text = ownerPinError, color = AnimePink, fontSize = 11.sp)
+                    }
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        if (viewModel.unlockOwnerWithPin(ownerPinInput)) {
+                            showOwnerPinModal = false
+                            ownerPinError = ""
+                            ownerPinInput = ""
+                            if (pendingBankEditAction) {
+                                pendingBankEditAction = false
+                                showEditBankModal = true
+                            }
+                        } else {
+                            ownerPinError = AppLocaleStrings.tr(
+                                lang,
+                                "Invalid PIN! (Default: 1234)",
+                                "गलत पिन! (डिफ़ॉल्ट: 1234)"
+                            )
+                        }
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = AnimeGold),
+                    modifier = Modifier.testTag("wallet_pin_submit_btn")
+                ) {
+                    Text(
+                        text = AppLocaleStrings.tr(lang, "Unlock", "अनलॉक करें"),
+                        color = Color.Black,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = {
+                    showOwnerPinModal = false
+                    pendingBankEditAction = false
+                    ownerPinError = ""
+                    ownerPinInput = ""
+                }) {
+                    Text(AppLocaleStrings.tr(lang, "Cancel", "रद्द करें"), color = TextMuted)
+                }
+            },
+            containerColor = AnimeSurface
+        )
     }
 
     // Modal for Withdrawal: Bank, PhonePe, GPay, PayPal
@@ -510,6 +757,7 @@ fun OwnerWalletBottomSheet(
         WithdrawalActionDialog(
             viewModel = viewModel,
             currentCurrency = selectedCurrency,
+            lang = lang,
             onSuccess = { msg ->
                 withdrawalFeedback = msg
                 showWithdrawModal = false
@@ -523,6 +771,7 @@ fun OwnerWalletBottomSheet(
         CurrencyExchangeDialog(
             viewModel = viewModel,
             sourceCurrency = selectedCurrency,
+            lang = lang,
             onSuccess = { msg ->
                 withdrawalFeedback = msg
                 showExchangeModal = false
@@ -534,7 +783,7 @@ fun OwnerWalletBottomSheet(
     if (showEditBankModal) {
         OwnerBankDetailsDialog(
             currentAccount = connectedBankAccount,
-            selectedLanguage = "English",
+            selectedLanguage = lang,
             onSave = { updated ->
                 viewModel.updateOwnerBankAccount(updated)
                 showEditBankModal = false
@@ -558,7 +807,7 @@ private fun TransferPill(title: String) {
 }
 
 @Composable
-fun TransactionRow(txn: WalletTransaction) {
+fun TransactionRow(txn: WalletTransaction, lang: String = "English") {
     val isCredit = txn.type.isCredit
     val dateFormat = SimpleDateFormat("dd MMM, hh:mm a", Locale.getDefault())
     val dateStr = dateFormat.format(Date(txn.timestamp))
@@ -626,6 +875,7 @@ fun TransactionRow(txn: WalletTransaction) {
 fun WithdrawalActionDialog(
     viewModel: AnimeViewModel,
     currentCurrency: CurrencyType,
+    lang: String = "English",
     onSuccess: (String) -> Unit,
     onDismiss: () -> Unit
 ) {
@@ -650,7 +900,11 @@ fun WithdrawalActionDialog(
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(Icons.Default.AccountBalance, contentDescription = null, tint = AnimeGold)
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("वॉलेट से ट्रांसफर व निकासी", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                Text(
+                    text = AppLocaleStrings.tr(lang, "Transfer / Withdraw from Wallet", "वॉलेट से ट्रांसफर व निकासी"),
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold
+                )
             }
         },
         text = {
@@ -660,7 +914,11 @@ fun WithdrawalActionDialog(
                     .verticalScroll(rememberScrollState())
             ) {
                 Text(
-                    text = "निकासी का माध्यम चुनें (${currentCurrency.code} ${currentCurrency.symbol}):",
+                    text = AppLocaleStrings.tr(
+                        lang,
+                        "Select Withdrawal Method (${currentCurrency.code} ${currentCurrency.symbol}):",
+                        "निकासी का माध्यम चुनें (${currentCurrency.code} ${currentCurrency.symbol}):"
+                    ),
                     color = TextSecondary,
                     fontSize = 12.sp,
                     modifier = Modifier.padding(bottom = 8.dp)
@@ -671,7 +929,7 @@ fun WithdrawalActionDialog(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
-                    WithdrawMethodChip("🏦 बैंक", selectedMethod == "BANK") { selectedMethod = "BANK" }
+                    WithdrawMethodChip(AppLocaleStrings.tr(lang, "🏦 Bank", "🏦 बैंक"), selectedMethod == "BANK") { selectedMethod = "BANK" }
                     WithdrawMethodChip("📱 PhonePe", selectedMethod == "PHONEPE") { selectedMethod = "PHONEPE" }
                     WithdrawMethodChip("🌐 GPay", selectedMethod == "GPAY") { selectedMethod = "GPAY" }
                     WithdrawMethodChip("💳 PayPal", selectedMethod == "PAYPAL") { selectedMethod = "PAYPAL" }
@@ -682,8 +940,12 @@ fun WithdrawalActionDialog(
                 OutlinedTextField(
                     value = amountInput,
                     onValueChange = { amountInput = it },
-                    label = { Text("निकासी राशि (${currentCurrency.symbol})") },
-                    placeholder = { Text("उदा: 5000", color = TextMuted) },
+                    label = {
+                        Text(AppLocaleStrings.tr(lang, "Withdraw Amount (${currentCurrency.symbol})", "निकासी राशि (${currentCurrency.symbol})"))
+                    },
+                    placeholder = {
+                        Text(AppLocaleStrings.tr(lang, "e.g. 5000", "उदा: 5000"), color = TextMuted)
+                    },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     singleLine = true,
                     colors = OutlinedTextFieldDefaults.colors(
@@ -702,7 +964,7 @@ fun WithdrawalActionDialog(
                         OutlinedTextField(
                             value = bankAccountNo,
                             onValueChange = { bankAccountNo = it },
-                            label = { Text("खाता संख्या (Bank Account No)") },
+                            label = { Text(AppLocaleStrings.tr(lang, "Bank Account Number", "खाता संख्या (Bank Account No)")) },
                             singleLine = true,
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                             shape = RoundedCornerShape(10.dp),
@@ -712,7 +974,7 @@ fun WithdrawalActionDialog(
                         OutlinedTextField(
                             value = ifscCode,
                             onValueChange = { ifscCode = it },
-                            label = { Text("IFSC कोड / SWIFT") },
+                            label = { Text(AppLocaleStrings.tr(lang, "IFSC / SWIFT Code", "IFSC कोड / SWIFT")) },
                             singleLine = true,
                             shape = RoundedCornerShape(10.dp),
                             modifier = Modifier.fillMaxWidth().testTag("withdraw_ifsc_input")
@@ -721,7 +983,7 @@ fun WithdrawalActionDialog(
                         OutlinedTextField(
                             value = accountHolderName,
                             onValueChange = { accountHolderName = it },
-                            label = { Text("खाता धारक का नाम (Account Holder Name)") },
+                            label = { Text(AppLocaleStrings.tr(lang, "Account Holder Name", "खाता धारक का नाम (Account Holder Name)")) },
                             singleLine = true,
                             shape = RoundedCornerShape(10.dp),
                             modifier = Modifier.fillMaxWidth().testTag("withdraw_holder_input")
@@ -731,7 +993,7 @@ fun WithdrawalActionDialog(
                         OutlinedTextField(
                             value = phonePeUpi,
                             onValueChange = { phonePeUpi = it },
-                            label = { Text("PhonePe UPI ID या रजिस्टर्ड नंबर") },
+                            label = { Text(AppLocaleStrings.tr(lang, "PhonePe UPI ID or Registered Number", "PhonePe UPI ID या रजिस्टर्ड नंबर")) },
                             placeholder = { Text("9876543210@ybl") },
                             singleLine = true,
                             shape = RoundedCornerShape(10.dp),
@@ -742,7 +1004,7 @@ fun WithdrawalActionDialog(
                         OutlinedTextField(
                             value = gpayUpi,
                             onValueChange = { gpayUpi = it },
-                            label = { Text("Google Pay UPI ID या रजिस्टर्ड नंबर") },
+                            label = { Text(AppLocaleStrings.tr(lang, "Google Pay UPI ID or Registered Number", "Google Pay UPI ID या रजिस्टर्ड नंबर")) },
                             placeholder = { Text("user@okhdfcbank") },
                             singleLine = true,
                             shape = RoundedCornerShape(10.dp),
@@ -753,7 +1015,7 @@ fun WithdrawalActionDialog(
                         OutlinedTextField(
                             value = payPalEmail,
                             onValueChange = { payPalEmail = it },
-                            label = { Text("PayPal रजिस्टर्ड ईमेल एड्रेस") },
+                            label = { Text(AppLocaleStrings.tr(lang, "PayPal Registered Email Address", "PayPal रजिस्टर्ड ईमेल एड्रेस")) },
                             placeholder = { Text("user@example.com") },
                             singleLine = true,
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
@@ -774,7 +1036,7 @@ fun WithdrawalActionDialog(
                 onClick = {
                     val amt = amountInput.toDoubleOrNull()
                     if (amt == null || amt <= 0) {
-                        errorMsg = "कृपया मान्य राशि दर्ज करें"
+                        errorMsg = AppLocaleStrings.tr(lang, "Please enter a valid amount", "कृपया मान्य राशि दर्ज करें")
                         return@Button
                     }
                     when (selectedMethod) {
@@ -799,12 +1061,16 @@ fun WithdrawalActionDialog(
                 colors = ButtonDefaults.buttonColors(containerColor = AnimeGold),
                 modifier = Modifier.testTag("confirm_withdraw_submit_btn")
             ) {
-                Text("ट्रांसफर पुष्टि करें", color = Color.Black, fontWeight = FontWeight.Bold)
+                Text(
+                    text = AppLocaleStrings.tr(lang, "Confirm Transfer", "ट्रांसफर पुष्टि करें"),
+                    color = Color.Black,
+                    fontWeight = FontWeight.Bold
+                )
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("रद्द करें", color = TextMuted)
+                Text(AppLocaleStrings.tr(lang, "Cancel", "रद्द करें"), color = TextMuted)
             }
         },
         containerColor = AnimeSurface
@@ -815,6 +1081,7 @@ fun WithdrawalActionDialog(
 fun CurrencyExchangeDialog(
     viewModel: AnimeViewModel,
     sourceCurrency: CurrencyType,
+    lang: String = "English",
     onSuccess: (String) -> Unit,
     onDismiss: () -> Unit
 ) {
@@ -830,20 +1097,28 @@ fun CurrencyExchangeDialog(
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(Icons.Default.CurrencyExchange, contentDescription = null, tint = AnimeCyan)
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("अंतर-वॉलेट मुद्रा एक्सचेंज", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                Text(
+                    text = AppLocaleStrings.tr(lang, "Inter-Wallet Currency Exchange", "अंतर-वॉलेट मुद्रा एक्सचेंज"),
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold
+                )
             }
         },
         text = {
             Column {
                 Text(
-                    text = "एक वॉलेट से दूसरे वॉलेट में तुरंत राशि ट्रांसफर करें:",
+                    text = AppLocaleStrings.tr(
+                        lang,
+                        "Transfer funds instantly between wallets:",
+                        "एक वॉलेट से दूसरे वॉलेट में तुरंत राशि ट्रांसफर करें:"
+                    ),
                     color = TextSecondary,
                     fontSize = 12.sp,
                     modifier = Modifier.padding(bottom = 12.dp)
                 )
 
                 Text(
-                    text = "स्रोत वॉलेट: ${sourceCurrency.code} (${sourceCurrency.symbol})",
+                    text = "${AppLocaleStrings.tr(lang, "Source Wallet:", "स्रोत वॉलेट:")} ${sourceCurrency.code} (${sourceCurrency.symbol})",
                     color = TextPrimary,
                     fontWeight = FontWeight.Bold,
                     fontSize = 13.sp
@@ -852,7 +1127,7 @@ fun CurrencyExchangeDialog(
                 Spacer(modifier = Modifier.height(8.dp))
 
                 Text(
-                    text = "लक्षित वॉलेट चुनें:",
+                    text = AppLocaleStrings.tr(lang, "Select Target Wallet:", "लक्षित वॉलेट चुनें:"),
                     color = TextSecondary,
                     fontSize = 12.sp
                 )
@@ -872,7 +1147,9 @@ fun CurrencyExchangeDialog(
                 OutlinedTextField(
                     value = amountInput,
                     onValueChange = { amountInput = it },
-                    label = { Text("एक्सचेंज राशि (${sourceCurrency.symbol})") },
+                    label = {
+                        Text(AppLocaleStrings.tr(lang, "Exchange Amount (${sourceCurrency.symbol})", "एक्सचेंज राशि (${sourceCurrency.symbol})"))
+                    },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     singleLine = true,
                     colors = OutlinedTextFieldDefaults.colors(
@@ -890,7 +1167,7 @@ fun CurrencyExchangeDialog(
                     val converted = inrValue / targetCurrency.exchangeToInr
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        text = "प्राप्त राशि लगभग: ${targetCurrency.symbol}${String.format("%.2f", converted)}",
+                        text = "${AppLocaleStrings.tr(lang, "Estimated Received Amount:", "प्राप्त राशि लगभग:")} ${targetCurrency.symbol}${String.format("%.2f", converted)}",
                         color = AnimeGreen,
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Bold
@@ -908,7 +1185,7 @@ fun CurrencyExchangeDialog(
                 onClick = {
                     val amt = amountInput.toDoubleOrNull()
                     if (amt == null || amt <= 0) {
-                        errorMsg = "कृपया सही राशि दर्ज करें"
+                        errorMsg = AppLocaleStrings.tr(lang, "Please enter a valid amount", "कृपया सही राशि दर्ज करें")
                         return@Button
                     }
                     val res = viewModel.interWalletTransfer(sourceCurrency, targetCurrency, amt)
@@ -917,12 +1194,16 @@ fun CurrencyExchangeDialog(
                 colors = ButtonDefaults.buttonColors(containerColor = AnimeCyan),
                 modifier = Modifier.testTag("confirm_exchange_btn")
             ) {
-                Text("एक्सचेंज ट्रांसफर करें", color = Color.Black, fontWeight = FontWeight.Bold)
+                Text(
+                    text = AppLocaleStrings.tr(lang, "Execute Exchange Transfer", "एक्सचेंज ट्रांसफर करें"),
+                    color = Color.Black,
+                    fontWeight = FontWeight.Bold
+                )
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("रद्द करें", color = TextMuted)
+                Text(AppLocaleStrings.tr(lang, "Cancel", "रद्द करें"), color = TextMuted)
             }
         },
         containerColor = AnimeSurface

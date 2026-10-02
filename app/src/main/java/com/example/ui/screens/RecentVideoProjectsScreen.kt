@@ -360,6 +360,7 @@ fun RecentVideoProjectsScreen(viewModel: AnimeViewModel) {
             item {
                 EmptyProjectsCard(
                     isSearchActive = searchQuery.isNotBlank() || selectedFilter != "All",
+                    lang = state.selectedLanguage,
                     onClearFilter = {
                         searchQuery = ""
                         selectedFilter = "All"
@@ -370,7 +371,7 @@ fun RecentVideoProjectsScreen(viewModel: AnimeViewModel) {
         } else {
             items(filteredProjects, key = { it.id }) { entity ->
                 val script = parsedScriptsMap[entity.id]
-                val statusInfo = getProjectStatus(entity, script)
+                val statusInfo = getProjectStatus(entity, script, state.selectedLanguage)
 
                 RecentVideoProjectCard(
                     entity = entity,
@@ -972,7 +973,7 @@ private fun RecentVideoProjectCard(
 /**
  * Calculates human-friendly status indicator for each project
  */
-private fun getProjectStatus(entity: SavedScriptEntity, script: AnimeScript?): ProjectStatusInfo {
+private fun getProjectStatus(entity: SavedScriptEntity, script: AnimeScript?, lang: String = "English"): ProjectStatusInfo {
     val totalScenes = script?.scenes?.size ?: 0
     val totalDialogues = script?.scenes?.sumOf { it.dialogues.size } ?: 0
 
@@ -982,28 +983,44 @@ private fun getProjectStatus(entity: SavedScriptEntity, script: AnimeScript?): P
             labelEnglish = "Ready to Stream",
             color = AnimeGreen,
             progress = 1.0f,
-            description = "वीडियो रेंडर्ड, $totalScenes सीन्स व $totalDialogues संवाद तैयार हैं"
+            description = AppLocaleStrings.tr(
+                lang,
+                "Video rendered, $totalScenes scenes & $totalDialogues dialogues ready",
+                "वीडियो रेंडर्ड, $totalScenes सीन्स व $totalDialogues संवाद तैयार हैं"
+            )
         )
         entity.artStyle.contains("Manhwa", ignoreCase = true) -> ProjectStatusInfo(
             labelHindi = "⚡ Manhwa Series Episode",
             labelEnglish = "Manhwa Series",
             color = AnimePurple,
             progress = 1.0f,
-            description = "डार्क शैडो ऑरा व नीली आंखों का एफएक्स सक्रिय"
+            description = AppLocaleStrings.tr(
+                lang,
+                "Dark shadow aura & glowing eye effects active",
+                "डार्क शैडो ऑरा व नीली आंखों का एफएक्स सक्रिय"
+            )
         )
         script?.characters?.isNotEmpty() == true -> ProjectStatusInfo(
             labelHindi = "🎙️ Voice Dub & Sync",
             labelEnglish = "Voice Synced",
             color = AnimeCyan,
             progress = 1.0f,
-            description = "बहुभाषी पात्र संवाद व ऑडियो पिच कैलिब्रेटेड"
+            description = AppLocaleStrings.tr(
+                lang,
+                "Multilingual voiceover and dialogue sync calibrated",
+                "बहुभाषी पात्र संवाद व ऑडियो पिच कैलिब्रेटेड"
+            )
         )
         else -> ProjectStatusInfo(
             labelHindi = "📝 Draft Script",
             labelEnglish = "Draft Saved",
             color = AnimeGold,
             progress = 0.85f,
-            description = "रूम डेटाबेस में सुरक्षित स्क्रिप्ट"
+            description = AppLocaleStrings.tr(
+                lang,
+                "Script securely saved in local database",
+                "रूम डेटाबेस में सुरक्षित स्क्रिप्ट"
+            )
         )
     }
 }
@@ -1014,6 +1031,7 @@ private fun getProjectStatus(entity: SavedScriptEntity, script: AnimeScript?): P
 @Composable
 private fun EmptyProjectsCard(
     isSearchActive: Boolean,
+    lang: String = "English",
     onClearFilter: () -> Unit,
     onCreateProject: () -> Unit
 ) {
@@ -1049,7 +1067,10 @@ private fun EmptyProjectsCard(
             Spacer(modifier = Modifier.height(16.dp))
 
             Text(
-                text = if (isSearchActive) "No projects found" else "No saved video projects yet",
+                text = if (isSearchActive)
+                    AppLocaleStrings.tr(lang, "No projects found", "कोई प्रोजेक्ट नहीं मिला")
+                else
+                    AppLocaleStrings.tr(lang, "No saved video projects yet", "अभी तक कोई वीडियो प्रोजेक्ट नहीं है"),
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Bold,
                 color = TextPrimary
@@ -1059,9 +1080,17 @@ private fun EmptyProjectsCard(
 
             Text(
                 text = if (isSearchActive) {
-                    "No videos matched your search or filters. Reset filters to see all."
+                    AppLocaleStrings.tr(
+                        lang,
+                        "No videos matched your search or filters. Reset filters to see all.",
+                        "आपकी खोज से कोई वीडियो मेल नहीं खाया। सभी देखने के लिए फ़िल्टर रीसेट करें।"
+                    )
                 } else {
-                    "एआई ऑटोमेशन या स्टूडियो में जाकर अपना पहला एनिमे वीडियो बनाएं। यह स्वचालित रूप से रूम डेटाबेस में सुरक्षित रहेगा।"
+                    AppLocaleStrings.tr(
+                        lang,
+                        "Create your first anime video in Studio or AI Automation. It will be safely saved in local storage.",
+                        "एआई ऑटोमेशन या स्टूडियो में जाकर अपना पहला एनिमे वीडियो बनाएं। यह स्वचालित रूप से रूम डेटाबेस में सुरक्षित रहेगा।"
+                    )
                 },
                 fontSize = 13.sp,
                 color = TextSecondary,
@@ -1076,7 +1105,7 @@ private fun EmptyProjectsCard(
                     onClick = onClearFilter,
                     shape = RoundedCornerShape(12.dp)
                 ) {
-                    Text("Clear Filters", color = AnimeCyan)
+                    Text(AppLocaleStrings.tr(lang, "Clear Filters", "फ़िल्टर हटाएं"), color = AnimeCyan)
                 }
             } else {
                 Button(
@@ -1087,7 +1116,7 @@ private fun EmptyProjectsCard(
                     Icon(Icons.Default.AutoAwesome, contentDescription = null, tint = Color.Black, modifier = Modifier.size(18.dp))
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = "🚀 Create New Anime Video",
+                        text = AppLocaleStrings.tr(lang, "🚀 Create New Anime Video", "🚀 नया एनिमे वीडियो बनाएं"),
                         color = Color.Black,
                         fontWeight = FontWeight.Bold
                     )

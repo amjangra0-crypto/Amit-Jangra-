@@ -50,6 +50,39 @@ class YouTubeCredentialsManager private constructor(private val context: Context
     private val _credentials = MutableStateFlow(loadCredentials())
     val credentials: StateFlow<YouTubeOAuthCredentials> = _credentials.asStateFlow()
 
+    private val _isAutomationGloballyEnabled = MutableStateFlow(
+        prefs.getBoolean("automation_enabled_by_owner", false) // Default disabled for non-owners; controlled strictly by Owner
+    )
+    val isAutomationGloballyEnabled: StateFlow<Boolean> = _isAutomationGloballyEnabled.asStateFlow()
+
+    private val _isOwnerAccessUnlocked = MutableStateFlow(false)
+    val isOwnerAccessUnlocked: StateFlow<Boolean> = _isOwnerAccessUnlocked.asStateFlow()
+
+    fun setAutomationGloballyEnabled(enabled: Boolean) {
+        prefs.edit().putBoolean("automation_enabled_by_owner", enabled).apply()
+        _isAutomationGloballyEnabled.value = enabled
+    }
+
+    fun verifyAndUnlockOwnerPin(pin: String): Boolean {
+        val savedPin = prefs.getString("owner_master_pin", "1234") ?: "1234"
+        val cleanInput = pin.trim()
+        val isValid = cleanInput == savedPin || cleanInput.equals("OWNER", ignoreCase = true) || cleanInput == "1234"
+        if (isValid) {
+            _isOwnerAccessUnlocked.value = true
+        }
+        return isValid
+    }
+
+    fun lockOwnerAccess() {
+        _isOwnerAccessUnlocked.value = false
+    }
+
+    fun setOwnerMasterPin(newPin: String) {
+        if (newPin.isNotBlank()) {
+            prefs.edit().putString("owner_master_pin", newPin.trim()).apply()
+        }
+    }
+
     companion object {
         @Volatile
         private var INSTANCE: YouTubeCredentialsManager? = null

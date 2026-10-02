@@ -412,23 +412,23 @@ fun OwnerBankDetailsDialog(
             Button(
                 onClick = {
                     if (holderName.isBlank()) {
-                        errorMessage = "Please enter Account Holder Name"
+                        errorMessage = AppLocaleStrings.tr(selectedLanguage, "Please enter Account Holder Name", "कृपया खाताधारक का नाम दर्ज करें")
                         return@Button
                     }
                     if (bankName.isBlank()) {
-                        errorMessage = "Please enter Bank Name"
+                        errorMessage = AppLocaleStrings.tr(selectedLanguage, "Please enter Bank Name", "कृपया बैंक का नाम दर्ज करें")
                         return@Button
                     }
                     if (accountNumber.isBlank() || accountNumber.length < 6) {
-                        errorMessage = "Please enter a valid Account Number (min 6 digits)"
+                        errorMessage = AppLocaleStrings.tr(selectedLanguage, "Please enter a valid Account Number (min 6 digits)", "कृपया सही खाता संख्या दर्ज करें (कम से कम 6 अंक)")
                         return@Button
                     }
                     if (accountNumber != confirmAccountNumber) {
-                        errorMessage = "Account numbers do not match!"
+                        errorMessage = AppLocaleStrings.tr(selectedLanguage, "Account numbers do not match!", "खाता संख्या मेल नहीं खाती!")
                         return@Button
                     }
                     if (ifscCode.isBlank()) {
-                        errorMessage = "Please enter IFSC or SWIFT Code"
+                        errorMessage = AppLocaleStrings.tr(selectedLanguage, "Please enter IFSC or SWIFT Code", "कृपया IFSC या SWIFT कोड दर्ज करें")
                         return@Button
                     }
 
@@ -445,7 +445,12 @@ fun OwnerBankDetailsDialog(
                         lastUpdated = System.currentTimeMillis()
                     )
                     onSave(updated)
-                    Toast.makeText(context, "✅ Bank Account Connected: ${updated.bankName}", Toast.LENGTH_SHORT).show()
+                    val toastMsg = AppLocaleStrings.tr(
+                        selectedLanguage,
+                        "✅ Bank Account Connected: ${updated.bankName}",
+                        "✅ बैंक खाता कनेक्ट हुआ: ${updated.bankName}"
+                    )
+                    Toast.makeText(context, toastMsg, Toast.LENGTH_SHORT).show()
                     onDismiss()
                 },
                 colors = ButtonDefaults.buttonColors(containerColor = AnimeGold),

@@ -552,6 +552,46 @@ fun AppSettingsScreen(
 
                 Spacer(modifier = Modifier.height(12.dp))
 
+                // Option: Default Mobile Theme (Follow System phone theme)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = "📱 " + AppLocaleStrings.tr(lang, "Default Mobile Theme", "फ़ोन की डिफ़ॉल्ट थीम"),
+                            color = TextPrimary,
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Text(
+                            text = if (com.example.ui.theme.AppThemeController.isFollowSystemTheme)
+                                AppLocaleStrings.tr(lang, "Active • Matches your mobile device theme & colors", "सक्रिय • आपके मोबाइल के अनुसार थीम व रंग")
+                            else
+                                AppLocaleStrings.tr(lang, "Turn ON to automatically match your phone's theme", "ऑन करने पर मोबाइल में जो थीम है, वही हो जाएगी"),
+                            color = TextSecondary,
+                            fontSize = 11.sp
+                        )
+                    }
+                    Switch(
+                        checked = com.example.ui.theme.AppThemeController.isFollowSystemTheme,
+                        onCheckedChange = { follow ->
+                            com.example.ui.theme.AppThemeController.setFollowSystemTheme(follow, context)
+                            Toast.makeText(
+                                context,
+                                if (follow) AppLocaleStrings.tr(lang, "📱 Follow System Mobile Theme Enabled", "📱 फ़ोन की डिफ़ॉल्ट थीम लागू!")
+                                else AppLocaleStrings.tr(lang, "Custom theme active", "कस्टम थीम सक्रिय"),
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        },
+                        colors = SwitchDefaults.colors(checkedThumbColor = AnimeCyan, checkedTrackColor = AnimeCyan.copy(alpha = 0.35f)),
+                        modifier = Modifier.testTag("settings_follow_system_theme_switch")
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
+
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -578,8 +618,80 @@ fun AppSettingsScreen(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
+                // MULTICOLOUR & DUAL COLOUR THEMES (User Requested: White with Golden, White and Black, etc.)
                 Text(
-                    text = AppLocaleStrings.tr(lang, "Vibrant & Colourful Page Themes:", "वाइब्रेंट रंगीन पेज थीम्स:"),
+                    text = "✨ " + AppLocaleStrings.tr(
+                        lang,
+                        "Multi-colour & Dual Themes (White & Gold, White & Black):",
+                        "मल्टी-कलर व डुअल थीम्स (सफेद व सुनहरा, सफेद व काला आदि):"
+                    ),
+                    color = AnimeGold,
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Bold
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                val dualPresets = VibrantThemePresets.all.filter { it.category == "Dual Colour Themes" }
+                FlowRow(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    dualPresets.forEach { preset ->
+                        val isSelected = state.vibrantTheme.equals(preset.key, ignoreCase = true)
+                        val themeName = if (AppLocaleStrings.isHindi(lang)) preset.nameHi else preset.nameEn
+
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(10.dp))
+                                .background(if (isSelected) preset.primaryColor.copy(alpha = 0.25f) else AnimeSurfaceVariant)
+                                .border(
+                                    1.5.dp,
+                                    if (isSelected) preset.primaryColor else AnimeGold.copy(alpha = 0.3f),
+                                    RoundedCornerShape(10.dp)
+                                )
+                                .clickable {
+                                    viewModel.setVibrantTheme(preset.key)
+                                    Toast.makeText(context, "✨ Dual Theme: ${preset.nameEn}", Toast.LENGTH_SHORT).show()
+                                }
+                                .padding(horizontal = 10.dp, vertical = 7.dp)
+                                .testTag("settings_dual_${preset.key.lowercase()}")
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text(text = preset.emoji, fontSize = 14.sp)
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text(
+                                    text = themeName,
+                                    color = if (isSelected) preset.primaryColor else TextPrimary,
+                                    fontWeight = if (isSelected) FontWeight.ExtraBold else FontWeight.Medium,
+                                    fontSize = 11.sp
+                                )
+                                Spacer(modifier = Modifier.width(6.dp))
+                                // Dual indicator circles
+                                Box(
+                                    modifier = Modifier
+                                        .size(10.dp)
+                                        .clip(CircleShape)
+                                        .background(preset.lightBackground)
+                                        .border(1.dp, Color.Gray, CircleShape)
+                                )
+                                Spacer(modifier = Modifier.width(3.dp))
+                                Box(
+                                    modifier = Modifier
+                                        .size(10.dp)
+                                        .clip(CircleShape)
+                                        .background(preset.primaryColor)
+                                )
+                            }
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Text(
+                    text = "🎨 " + AppLocaleStrings.tr(lang, "All Vibrant Page Themes:", "सभी वाइब्रेंट पेज थीम्स:"),
                     color = TextPrimary,
                     fontSize = 12.sp,
                     fontWeight = FontWeight.Bold
@@ -587,12 +699,13 @@ fun AppSettingsScreen(
 
                 Spacer(modifier = Modifier.height(8.dp))
 
+                val otherPresets = VibrantThemePresets.all.filter { it.category != "Dual Colour Themes" }
                 FlowRow(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    VibrantThemePresets.all.forEach { preset ->
+                    otherPresets.forEach { preset ->
                         val isSelected = state.vibrantTheme.equals(preset.key, ignoreCase = true)
                         val themeName = if (AppLocaleStrings.isHindi(lang)) preset.nameHi else preset.nameEn
 
@@ -789,7 +902,7 @@ fun AppSettingsScreen(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Text("Temporary Video Cache:", color = TextMuted, fontSize = 12.sp)
+                    Text(AppLocaleStrings.tr(lang, "Temporary Video Cache:", "अस्थायी वीडियो कैश:"), color = TextMuted, fontSize = 12.sp)
                     Text("24.8 MB", color = TextPrimary, fontSize = 12.sp, fontWeight = FontWeight.Bold)
                 }
 
@@ -799,7 +912,7 @@ fun AppSettingsScreen(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Text("Audio Vocal Buffer:", color = TextMuted, fontSize = 12.sp)
+                    Text(AppLocaleStrings.tr(lang, "Audio Vocal Buffer:", "ऑडियो वोकल बफ़र:"), color = TextMuted, fontSize = 12.sp)
                     Text("12.4 MB", color = TextPrimary, fontSize = 12.sp, fontWeight = FontWeight.Bold)
                 }
 
@@ -990,10 +1103,10 @@ fun AppSettingsScreen(
                 Text("${AppLocaleStrings.get("version_label", lang)} 2.7.0 (Enterprise AI Studio)", color = TextSecondary, fontSize = 12.sp)
                 if (currentUser.isOwner) {
                     Text("${AppLocaleStrings.get("owner_info", lang)} Aman Jangra (amjangra0@gmail.com)", color = AnimeGold, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
-                    Text("License Status: VIP Owner Lifetime Master Access", color = AnimeGold, fontSize = 11.sp)
+                    Text(AppLocaleStrings.tr(lang, "License Status: VIP Owner Lifetime Master Access", "लाइसेंस स्थिति: वीआईपी ओनर लाइफटाइम मास्टर एक्सेस"), color = AnimeGold, fontSize = 11.sp)
                 } else {
-                    Text("Studio Architecture: Enterprise AI Creative Suite", color = TextMuted, fontSize = 12.sp)
-                    Text("License Status: Active Creator License", color = AnimeCyan, fontSize = 11.sp)
+                    Text(AppLocaleStrings.tr(lang, "Studio Architecture: Enterprise AI Creative Suite", "स्टूडियो आर्किटेक्चर: एंटरप्राइज एआई क्रिएटिव सुइट"), color = TextMuted, fontSize = 12.sp)
+                    Text(AppLocaleStrings.tr(lang, "License Status: Active Creator License", "लाइसेंस स्थिति: सक्रिय क्रिएटर लाइसेंस"), color = AnimeCyan, fontSize = 11.sp)
                 }
             }
         }

@@ -409,8 +409,24 @@ fun ProfileSettingsScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Column(modifier = Modifier.weight(1f)) {
-                        Text("सब्सक्रिप्शन व जमा अलर्ट", color = TextPrimary, fontSize = 13.sp)
-                        Text("नया सब्सक्रिप्शन आने पर तत्काल सूचना", color = TextMuted, fontSize = 11.sp)
+                        Text(
+                            text = com.example.localization.AppLocaleStrings.tr(
+                                viewModel.uiState.value.selectedLanguage,
+                                "Subscription & Deposit Alerts",
+                                "सब्सक्रिप्शन व जमा अलर्ट"
+                            ),
+                            color = TextPrimary,
+                            fontSize = 13.sp
+                        )
+                        Text(
+                            text = com.example.localization.AppLocaleStrings.tr(
+                                viewModel.uiState.value.selectedLanguage,
+                                "Instant notification on new subscription deposit",
+                                "नया सब्सक्रिप्शन आने पर तत्काल सूचना"
+                            ),
+                            color = TextMuted,
+                            fontSize = 11.sp
+                        )
                     }
                     Switch(
                         checked = notificationsEnabled,
@@ -427,8 +443,24 @@ fun ProfileSettingsScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Column(modifier = Modifier.weight(1f)) {
-                        Text("ऑटो लिप-सिंक वॉइस डबिंग", color = TextPrimary, fontSize = 13.sp)
-                        Text("संवाद के अनुसार स्वतः कैडेंस सिंक", color = TextMuted, fontSize = 11.sp)
+                        Text(
+                            text = com.example.localization.AppLocaleStrings.tr(
+                                viewModel.uiState.value.selectedLanguage,
+                                "Auto Lip-Sync Voice Dubbing",
+                                "ऑटो लिप-सिंक वॉइस डबिंग"
+                            ),
+                            color = TextPrimary,
+                            fontSize = 13.sp
+                        )
+                        Text(
+                            text = com.example.localization.AppLocaleStrings.tr(
+                                viewModel.uiState.value.selectedLanguage,
+                                "Automatic cadence sync per dialogue",
+                                "संवाद के अनुसार स्वतः कैडेंस सिंक"
+                            ),
+                            color = TextMuted,
+                            fontSize = 11.sp
+                        )
                     }
                     Switch(
                         checked = autoSyncDubbing,
@@ -470,7 +502,11 @@ fun ProfileSettingsScreen(
                     notifications = notificationsEnabled,
                     autoSync = autoSyncDubbing
                 )
-                feedbackMessage = "✓ प्रोफ़ाइल सेटिंग्स सफलतापूर्वक सहेजी गईं! (Profile Updated)"
+                feedbackMessage = com.example.localization.AppLocaleStrings.tr(
+                    viewModel.uiState.value.selectedLanguage,
+                    "✓ Profile settings updated successfully!",
+                    "✓ प्रोफ़ाइल सेटिंग्स सफलतापूर्वक सहेजी गईं! (Profile Updated)"
+                )
             },
             colors = ButtonDefaults.buttonColors(containerColor = AnimeCyan),
             shape = RoundedCornerShape(12.dp),
@@ -482,7 +518,11 @@ fun ProfileSettingsScreen(
             Icon(Icons.Default.Save, contentDescription = null, tint = Color.Black, modifier = Modifier.size(18.dp))
             Spacer(modifier = Modifier.width(8.dp))
             Text(
-                text = "सेटिंग्स सहेजें (Save Changes)",
+                text = com.example.localization.AppLocaleStrings.tr(
+                    viewModel.uiState.value.selectedLanguage,
+                    "Save Changes",
+                    "सेटिंग्स सहेजें (Save Changes)"
+                ),
                 color = Color.Black,
                 fontWeight = FontWeight.Bold,
                 fontSize = 14.sp
