@@ -81,6 +81,10 @@ class YouTubeCredentialsManager private constructor(private val context: Context
         _isOwnerAccessUnlocked.value = false
     }
 
+    fun getOwnerMasterPin(): String {
+        return prefs.getString("owner_master_pin", "1234") ?: "1234"
+    }
+
     fun setOwnerMasterPin(newPin: String) {
         if (newPin.isNotBlank()) {
             prefs.edit().putString("owner_master_pin", newPin.trim()).apply()

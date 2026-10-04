@@ -222,9 +222,55 @@ class AnimeRepository(
             voiceGender = character.voiceGender,
             voicePersona = character.voicePersona,
             voiceAccent = character.voiceAccent,
-            sampleDialogue = character.sampleDialogue
+            sampleDialogue = character.sampleDialogue,
+            emotion = character.emotion,
+            hairLength = character.hairLength,
+            hairVolume = character.hairVolume,
+            hairShine = character.hairShine,
+            eyeSize = character.eyeSize,
+            eyeTilt = character.eyeTilt,
+            eyePupilGlow = character.eyePupilGlow,
+            outfitFit = character.outfitFit,
+            outfitGlow = character.outfitGlow,
+            capeLength = character.capeLength
         )
         dao.insertCharacter(entity)
+    }
+
+    fun entityToCharacter(e: CustomCharacterEntity): CharacterProfile {
+        return CharacterProfile(
+            id = e.id,
+            name = e.name,
+            gender = e.gender,
+            role = e.role,
+            personality = e.personality,
+            voicePitch = e.voicePitch,
+            voiceSpeed = e.voiceSpeed,
+            voiceType = e.voiceType,
+            avatarDrawableName = e.avatarDrawableName,
+            promptVisualDescription = e.promptVisualDescription,
+            hairStyle = e.hairStyle,
+            hairColor = e.hairColor,
+            eyeColor = e.eyeColor,
+            outfit = e.outfit,
+            outfitColor = e.outfitColor,
+            accessoryAura = e.accessoryAura,
+            expression = e.expression,
+            voiceGender = e.voiceGender,
+            voicePersona = e.voicePersona,
+            voiceAccent = e.voiceAccent,
+            sampleDialogue = e.sampleDialogue,
+            emotion = e.emotion,
+            hairLength = e.hairLength,
+            hairVolume = e.hairVolume,
+            hairShine = e.hairShine,
+            eyeSize = e.eyeSize,
+            eyeTilt = e.eyeTilt,
+            eyePupilGlow = e.eyePupilGlow,
+            outfitFit = e.outfitFit,
+            outfitGlow = e.outfitGlow,
+            capeLength = e.capeLength
+        )
     }
 
     suspend fun deleteCharacter(id: String) {

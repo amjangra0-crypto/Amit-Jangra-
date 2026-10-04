@@ -56,6 +56,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -84,6 +85,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.model.StorageTargetType
 import androidx.compose.material.icons.filled.Security
+import androidx.compose.material.icons.filled.CameraAlt
+import androidx.compose.material.icons.filled.PhotoLibrary
+import androidx.compose.material.icons.filled.OpenInNew
+import androidx.compose.material.icons.filled.Shield
+import com.example.util.PermissionManager
 import com.example.localization.AppLocaleStrings
 import com.example.ui.AnimeViewModel
 import com.example.ui.components.AppPermissionsOnboardingDialog
@@ -127,6 +133,39 @@ fun AppSettingsScreen(
     var isSyncingToDrive by remember { mutableStateOf(false) }
 
     val resolutions = listOf("720p HD", "1080p Full HD", "4K Ultra HD (VIP)")
+
+    val permissionManager = remember { PermissionManager.getInstance(context) }
+    val userMicAllowed by permissionManager.userMicrophoneAllowedFlow.collectAsState(initial = permissionManager.isMicrophoneGranted())
+    val userCameraAllowed by permissionManager.userCameraAllowedFlow.collectAsState(initial = permissionManager.isCameraGranted())
+    val userStorageAllowed by permissionManager.userStorageAllowedFlow.collectAsState(initial = permissionManager.isStorageGranted())
+
+    var sysMicGranted by remember { mutableStateOf(permissionManager.isMicrophoneGranted()) }
+    var sysCameraGranted by remember { mutableStateOf(permissionManager.isCameraGranted()) }
+    var sysStorageGranted by remember { mutableStateOf(permissionManager.isStorageGranted()) }
+
+    val micLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+        sysMicGranted = granted
+        coroutineScope.launch {
+            permissionManager.setUserMicrophoneAllowed(granted)
+            permissionManager.markAlreadyRequestedOnInstall()
+        }
+    }
+
+    val cameraLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+        sysCameraGranted = granted
+        coroutineScope.launch {
+            permissionManager.setUserCameraAllowed(granted)
+            permissionManager.markAlreadyRequestedOnInstall()
+        }
+    }
+
+    val storageLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+        sysStorageGranted = granted
+        coroutineScope.launch {
+            permissionManager.setUserStorageAllowed(granted)
+            permissionManager.markAlreadyRequestedOnInstall()
+        }
+    }
 
     val quickLanguages = listOf(
         Pair("Hindi", "🇮🇳 हिन्दी"),
@@ -945,16 +984,12 @@ fun AppSettingsScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // App Permissions Status Card (Only 1 Permission Required)
-        val isMicGranted = ContextCompat.checkSelfPermission(
-            context,
-            Manifest.permission.RECORD_AUDIO
-        ) == PackageManager.PERMISSION_GRANTED
-
+        // App Permissions Status & Allow / Deallow Control Card (DataStore Tracked)
         Card(
             modifier = Modifier.fillMaxWidth(),
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-            shape = RoundedCornerShape(16.dp)
+            shape = RoundedCornerShape(16.dp),
+            border = BorderStroke(1.dp, AnimePurple.copy(alpha = 0.4f))
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
                 Row(
@@ -967,38 +1002,30 @@ fun AppSettingsScreen(
                         modifier = Modifier.weight(1f)
                     ) {
                         Icon(
-                            Icons.Default.Mic,
+                            Icons.Default.Shield,
                             contentDescription = null,
-                            tint = if (isMicGranted) AnimeGreen else AnimeCyan
+                            tint = AnimeGold
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Column {
                             Text(
                                 text = AppLocaleStrings.tr(
                                     lang,
-                                    "App Permission (Only 1 Required)",
-                                    "ऐप अनुमति (केवल 1 अनुमति आवश्यक)"
+                                    "App Permissions (Allow / Deallow)",
+                                    "ऐप अनुमतियाँ (चालू / बंद नियंत्रण)"
                                 ),
                                 color = TextPrimary,
                                 fontSize = 14.sp,
                                 fontWeight = FontWeight.Bold
                             )
                             Text(
-                                text = if (isMicGranted) {
-                                    AppLocaleStrings.tr(
-                                        lang,
-                                        "Microphone granted • Never asks again",
-                                        "माइक्रोफ़ोन अनुमति स्वीकृत • बार-बार नहीं पूछा जाएगा"
-                                    )
-                                } else {
-                                    AppLocaleStrings.tr(
-                                        lang,
-                                        "Microphone for AI Voice Dubbing (Optional)",
-                                        "AI वॉइस डबिंग के लिए माइक्रोफ़ोन (वैकल्पिक)"
-                                    )
-                                },
+                                text = AppLocaleStrings.tr(
+                                    lang,
+                                    "Prompts only 1 time on install • Control access manually anytime",
+                                    "इंस्टॉल पर केवल 1 बार परमिशन • उसके बाद यूजर कभी भी चालू/बंद कर सकता है"
+                                ),
                                 color = TextSecondary,
-                                fontSize = 11.sp
+                                fontSize = 10.sp
                             )
                         }
                     }
@@ -1006,72 +1033,199 @@ fun AppSettingsScreen(
                     Box(
                         modifier = Modifier
                             .clip(RoundedCornerShape(6.dp))
-                            .background(
-                                if (isMicGranted) AnimeGreen.copy(alpha = 0.2f)
-                                else AnimeCyan.copy(alpha = 0.2f)
-                            )
+                            .background(AnimeGreen.copy(alpha = 0.2f))
                             .padding(horizontal = 8.dp, vertical = 4.dp)
                     ) {
                         Text(
-                            text = if (isMicGranted) "✓ GRANTED" else "OPTIONAL",
-                            color = if (isMicGranted) AnimeGreen else AnimeCyan,
-                            fontSize = 11.sp,
+                            text = "DATASTORE SAVED",
+                            color = AnimeGreen,
+                            fontSize = 9.sp,
                             fontWeight = FontWeight.Bold
                         )
                     }
                 }
 
-                Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(14.dp))
+
+                // PERMISSION 1: MICROPHONE
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(modifier = Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically) {
+                        Box(
+                            modifier = Modifier
+                                .size(32.dp)
+                                .clip(CircleShape)
+                                .background(AnimePink.copy(alpha = 0.15f)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(Icons.Default.Mic, contentDescription = null, tint = AnimePink, modifier = Modifier.size(16.dp))
+                        }
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Column {
+                            Text(
+                                text = AppLocaleStrings.tr(lang, "Microphone (Record Audio)", "माइक्रोफ़ोन (ऑडियो रिकॉर्डिंग)"),
+                                color = TextPrimary,
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                            Text(
+                                text = if (userMicAllowed && sysMicGranted) "✓ ALLOWED (सक्रिय)" else "DEALLOWED (अक्रिय)",
+                                color = if (userMicAllowed && sysMicGranted) AnimeGreen else AnimePink,
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
+                    Switch(
+                        checked = userMicAllowed,
+                        onCheckedChange = { targetAllow ->
+                            coroutineScope.launch {
+                                permissionManager.setUserMicrophoneAllowed(targetAllow)
+                                if (targetAllow && !sysMicGranted) {
+                                    micLauncher.launch(Manifest.permission.RECORD_AUDIO)
+                                }
+                            }
+                        },
+                        colors = SwitchDefaults.colors(
+                            checkedThumbColor = AnimeGreen,
+                            checkedTrackColor = AnimeGreen.copy(alpha = 0.4f),
+                            uncheckedThumbColor = AnimePink,
+                            uncheckedTrackColor = AnimePink.copy(alpha = 0.25f)
+                        ),
+                        modifier = Modifier.testTag("app_settings_mic_toggle")
+                    )
+                }
+
+                HorizontalDivider(color = TextMuted.copy(alpha = 0.2f), modifier = Modifier.padding(vertical = 10.dp))
+
+                // PERMISSION 2: CAMERA
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(modifier = Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically) {
+                        Box(
+                            modifier = Modifier
+                                .size(32.dp)
+                                .clip(CircleShape)
+                                .background(AnimeCyan.copy(alpha = 0.15f)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(Icons.Default.CameraAlt, contentDescription = null, tint = AnimeCyan, modifier = Modifier.size(16.dp))
+                        }
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Column {
+                            Text(
+                                text = AppLocaleStrings.tr(lang, "Camera Access", "कैमरा एक्सेस"),
+                                color = TextPrimary,
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                            Text(
+                                text = if (userCameraAllowed && sysCameraGranted) "✓ ALLOWED (सक्रिय)" else "DEALLOWED (अक्रिय)",
+                                color = if (userCameraAllowed && sysCameraGranted) AnimeGreen else AnimePink,
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
+                    Switch(
+                        checked = userCameraAllowed,
+                        onCheckedChange = { targetAllow ->
+                            coroutineScope.launch {
+                                permissionManager.setUserCameraAllowed(targetAllow)
+                                if (targetAllow && !sysCameraGranted) {
+                                    cameraLauncher.launch(Manifest.permission.CAMERA)
+                                }
+                            }
+                        },
+                        colors = SwitchDefaults.colors(
+                            checkedThumbColor = AnimeGreen,
+                            checkedTrackColor = AnimeGreen.copy(alpha = 0.4f),
+                            uncheckedThumbColor = AnimePink,
+                            uncheckedTrackColor = AnimePink.copy(alpha = 0.25f)
+                        ),
+                        modifier = Modifier.testTag("app_settings_camera_toggle")
+                    )
+                }
+
+                HorizontalDivider(color = TextMuted.copy(alpha = 0.2f), modifier = Modifier.padding(vertical = 10.dp))
+
+                // PERMISSION 3: STORAGE & GALLERY
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(modifier = Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically) {
+                        Box(
+                            modifier = Modifier
+                                .size(32.dp)
+                                .clip(CircleShape)
+                                .background(AnimeGold.copy(alpha = 0.15f)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(Icons.Default.PhotoLibrary, contentDescription = null, tint = AnimeGold, modifier = Modifier.size(16.dp))
+                        }
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Column {
+                            Text(
+                                text = AppLocaleStrings.tr(lang, "Storage & Gallery Access", "स्टोरेज व गैलरी एक्सेस"),
+                                color = TextPrimary,
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                            Text(
+                                text = if (userStorageAllowed && sysStorageGranted) "✓ ALLOWED (सक्रिय)" else "DEALLOWED (अक्रिय)",
+                                color = if (userStorageAllowed && sysStorageGranted) AnimeGreen else AnimePink,
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
+                    Switch(
+                        checked = userStorageAllowed,
+                        onCheckedChange = { targetAllow ->
+                            coroutineScope.launch {
+                                permissionManager.setUserStorageAllowed(targetAllow)
+                                if (targetAllow && !sysStorageGranted) {
+                                    storageLauncher.launch(Manifest.permission.READ_EXTERNAL_STORAGE)
+                                }
+                            }
+                        },
+                        colors = SwitchDefaults.colors(
+                            checkedThumbColor = AnimeGreen,
+                            checkedTrackColor = AnimeGreen.copy(alpha = 0.4f),
+                            uncheckedThumbColor = AnimePink,
+                            uncheckedTrackColor = AnimePink.copy(alpha = 0.25f)
+                        ),
+                        modifier = Modifier.testTag("app_settings_storage_toggle")
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(14.dp))
 
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    OutlinedButton(
-                        onClick = { showManualPermissionsDialog = true },
+                    Button(
+                        onClick = { permissionManager.openAppSettings() },
+                        colors = ButtonDefaults.buttonColors(containerColor = AnimeCyan),
                         shape = RoundedCornerShape(8.dp),
-                        border = BorderStroke(1.dp, AnimeCyan.copy(alpha = 0.6f)),
-                        modifier = Modifier
-                            .weight(1f)
-                            .testTag("settings_review_permissions_btn")
+                        modifier = Modifier.fillMaxWidth().height(38.dp).testTag("app_settings_system_perm_btn")
                     ) {
-                        Icon(
-                            Icons.Default.Security,
-                            contentDescription = null,
-                            tint = AnimeCyan,
-                            modifier = Modifier.size(16.dp)
-                        )
+                        Icon(Icons.Default.OpenInNew, contentDescription = null, tint = Color.Black, modifier = Modifier.size(14.dp))
                         Spacer(modifier = Modifier.width(6.dp))
                         Text(
-                            text = AppLocaleStrings.tr(
-                                lang,
-                                if (isMicGranted) "Permission Details" else "Grant Permission",
-                                if (isMicGranted) "अनुमति विवरण" else "अनुमति दें"
-                            ),
-                            color = AnimeCyan,
-                            fontSize = 12.sp,
+                            text = AppLocaleStrings.tr(lang, "Open Android System Permissions", "फोन की सिस्टम परमिशन सेटिंग्स खोलें"),
+                            color = Color.Black,
+                            fontSize = 11.sp,
                             fontWeight = FontWeight.Bold
-                        )
-                    }
-
-                    OutlinedButton(
-                        onClick = {
-                            try {
-                                val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
-                                    data = Uri.fromParts("package", context.packageName, null)
-                                }
-                                context.startActivity(intent)
-                            } catch (_: Exception) {}
-                        },
-                        shape = RoundedCornerShape(8.dp),
-                        border = BorderStroke(1.dp, AnimePurple.copy(alpha = 0.4f)),
-                        modifier = Modifier.testTag("settings_system_permissions_btn")
-                    ) {
-                        Icon(
-                            Icons.Default.Settings,
-                            contentDescription = null,
-                            tint = TextMuted,
-                            modifier = Modifier.size(16.dp)
                         )
                     }
                 }

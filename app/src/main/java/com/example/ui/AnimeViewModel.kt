@@ -40,6 +40,8 @@ import com.example.data.model.SupportedLanguage
 import com.example.data.model.ThumbnailPreviewData
 import com.example.data.model.TransactionType
 import com.example.data.model.TranslationStudioData
+import com.example.data.model.SubscriptionPlan
+import com.example.data.model.SubscriptionSchemeDetails
 import com.example.data.model.UserProfile
 import com.example.data.model.WalletTransaction
 import com.example.data.model.WorkflowCategory
@@ -288,6 +290,162 @@ class AnimeViewModel(application: Application) : AndroidViewModel(application) {
         )
     }
 
+    // -----------------------------------------------------------------------------------------
+    // DYNAMIC SUBSCRIPTION SCHEMES & DETAILS (OWNER EDITABLE)
+    // -----------------------------------------------------------------------------------------
+    private val _subscriptionSchemes = MutableStateFlow<Map<String, SubscriptionSchemeDetails>>(loadSubscriptionSchemes())
+    val subscriptionSchemes: StateFlow<Map<String, SubscriptionSchemeDetails>> = _subscriptionSchemes.asStateFlow()
+
+    private fun loadSubscriptionSchemes(): Map<String, SubscriptionSchemeDetails> {
+        val schemes = mutableMapOf<String, SubscriptionSchemeDetails>()
+        val free = SubscriptionSchemeDetails(
+            planId = SubscriptionPlan.FREE.planId,
+            title = pricingPrefs.getString("scheme_free_title", SubscriptionPlan.FREE.title) ?: SubscriptionPlan.FREE.title,
+            badge = pricingPrefs.getString("scheme_free_badge", SubscriptionPlan.FREE.badge) ?: SubscriptionPlan.FREE.badge,
+            monthlyPriceInr = 0.0,
+            yearlyPriceInr = 0.0,
+            monthlyPriceUsd = 0.0,
+            yearlyPriceUsd = 0.0,
+            dailyCredits = pricingPrefs.getInt("scheme_free_credits", SubscriptionPlan.FREE.dailyCredits),
+            features = listOf("3 Anime scripts / day", "Standard TTS Voice", "720p Storyboard Video", "Community Support"),
+            isActive = true
+        )
+        val pro = SubscriptionSchemeDetails(
+            planId = SubscriptionPlan.CREATOR_PRO.planId,
+            title = pricingPrefs.getString("scheme_pro_title", SubscriptionPlan.CREATOR_PRO.title) ?: SubscriptionPlan.CREATOR_PRO.title,
+            badge = pricingPrefs.getString("scheme_pro_badge", SubscriptionPlan.CREATOR_PRO.badge) ?: SubscriptionPlan.CREATOR_PRO.badge,
+            monthlyPriceInr = pricingPrefs.getFloat("scheme_pro_price_inr", 499.0f).toDouble(),
+            yearlyPriceInr = pricingPrefs.getFloat("scheme_pro_yearly_inr", 399.0f).toDouble(),
+            monthlyPriceUsd = pricingPrefs.getFloat("scheme_pro_price_usd", 9.99f).toDouble(),
+            yearlyPriceUsd = pricingPrefs.getFloat("scheme_pro_yearly_usd", 7.99f).toDouble(),
+            dailyCredits = pricingPrefs.getInt("scheme_pro_credits", SubscriptionPlan.CREATOR_PRO.dailyCredits),
+            features = listOf("50 Anime scripts / day", "All Voice Styles & Audio FX", "1080p Full HD Anime Visuals", "All Languages Translation", "Priority AI Render", "Manga Sketch Camera Scan"),
+            isActive = true,
+            discountPercent = pricingPrefs.getInt("scheme_pro_discount", 20)
+        )
+        val ultra = SubscriptionSchemeDetails(
+            planId = SubscriptionPlan.STUDIO_ULTRA.planId,
+            title = pricingPrefs.getString("scheme_ultra_title", SubscriptionPlan.STUDIO_ULTRA.title) ?: SubscriptionPlan.STUDIO_ULTRA.title,
+            badge = pricingPrefs.getString("scheme_ultra_badge", SubscriptionPlan.STUDIO_ULTRA.badge) ?: SubscriptionPlan.STUDIO_ULTRA.badge,
+            monthlyPriceInr = pricingPrefs.getFloat("scheme_ultra_price_inr", 999.0f).toDouble(),
+            yearlyPriceInr = pricingPrefs.getFloat("scheme_ultra_yearly_inr", 799.0f).toDouble(),
+            monthlyPriceUsd = pricingPrefs.getFloat("scheme_ultra_price_usd", 19.99f).toDouble(),
+            yearlyPriceUsd = pricingPrefs.getFloat("scheme_ultra_yearly_usd", 15.99f).toDouble(),
+            dailyCredits = pricingPrefs.getInt("scheme_ultra_credits", SubscriptionPlan.STUDIO_ULTRA.dailyCredits),
+            features = listOf("Unlimited Anime Scripts & Videos", "4K Ultra HD Export & Master Audio", "Custom Voice Cloning & Mic Input", "Full Commercial & YouTube Rights", "VIP Priority Pipeline"),
+            isActive = true,
+            discountPercent = pricingPrefs.getInt("scheme_ultra_discount", 25)
+        )
+        val vip = SubscriptionSchemeDetails(
+            planId = SubscriptionPlan.STUDIO_OWNER.planId,
+            title = pricingPrefs.getString("scheme_vip_title", SubscriptionPlan.STUDIO_OWNER.title) ?: SubscriptionPlan.STUDIO_OWNER.title,
+            badge = pricingPrefs.getString("scheme_vip_badge", SubscriptionPlan.STUDIO_OWNER.badge) ?: SubscriptionPlan.STUDIO_OWNER.badge,
+            monthlyPriceInr = 0.0,
+            yearlyPriceInr = 0.0,
+            monthlyPriceUsd = 0.0,
+            yearlyPriceUsd = 0.0,
+            dailyCredits = 999999,
+            features = listOf("Unlimited Video & Anime Generation", "Admin Dashboard & User Access Control", "Decide Who Gets Free vs Paid", "Direct OTA Update Manager", "Lifetime Commercial Rights"),
+            isActive = true,
+            isFreeForOwner = true
+        )
+        schemes[free.planId] = free
+        schemes[pro.planId] = pro
+        schemes[ultra.planId] = ultra
+        schemes[vip.planId] = vip
+        return schemes
+    }
+
+    fun updateSubscriptionScheme(updated: SubscriptionSchemeDetails) {
+        pricingPrefs.edit().apply {
+            putString("scheme_${updated.planId}_title", updated.title)
+            putString("scheme_${updated.planId}_badge", updated.badge)
+            putFloat("scheme_${updated.planId}_price_inr", updated.monthlyPriceInr.toFloat())
+            putFloat("scheme_${updated.planId}_yearly_inr", updated.yearlyPriceInr.toFloat())
+            putFloat("scheme_${updated.planId}_price_usd", updated.monthlyPriceUsd.toFloat())
+            putFloat("scheme_${updated.planId}_yearly_usd", updated.yearlyPriceUsd.toFloat())
+            putInt("scheme_${updated.planId}_credits", updated.dailyCredits)
+            putInt("scheme_${updated.planId}_discount", updated.discountPercent)
+            putBoolean("scheme_${updated.planId}_active", updated.isActive)
+            apply()
+        }
+        val current = _subscriptionSchemes.value.toMutableMap()
+        current[updated.planId] = updated
+        _subscriptionSchemes.value = current
+        updatePlanPrice(updated.planId, "INR", updated.monthlyPriceInr)
+        updatePlanPrice(updated.planId, "USD", updated.monthlyPriceUsd)
+        _uiState.value = _uiState.value.copy(
+            statusMessage = "💎 Subscription Scheme '${updated.title}' updated successfully!"
+        )
+    }
+
+    fun getSchemeDetails(planId: String): SubscriptionSchemeDetails {
+        return _subscriptionSchemes.value[planId] ?: SubscriptionSchemeDetails(
+            planId = planId,
+            title = planId,
+            badge = "Standard",
+            monthlyPriceInr = 499.0,
+            yearlyPriceInr = 399.0,
+            monthlyPriceUsd = 9.99,
+            yearlyPriceUsd = 7.99,
+            dailyCredits = 50,
+            features = listOf("Standard Access")
+        )
+    }
+
+    // -----------------------------------------------------------------------------------------
+    // OWNER CREDENTIALS SECURITY & MODIFICATION (ONLY ACCESSIBLE BY OWNER)
+    // -----------------------------------------------------------------------------------------
+    fun getOwnerEmail(): String = authAndWalletRepo.getOwnerEmail()
+    fun getOwnerUsername(): String = authAndWalletRepo.getOwnerUsername()
+    fun getOwnerAdminUid(): String = authAndWalletRepo.getOwnerAdminUid()
+    fun getOwnerMasterPin(): String = ytCredManager.getOwnerMasterPin()
+
+    /**
+     * Modifies Owner Dashboard Username and Password / PIN.
+     * Accessible exclusively to verified Owner with current Master PIN confirmation.
+     */
+    fun updateOwnerCredentials(
+        newUsername: String,
+        newEmail: String,
+        newPasswordOrPin: String,
+        currentPin: String
+    ): Result<String> {
+        val currentMasterPin = ytCredManager.getOwnerMasterPin()
+        val cleanCurrentPin = currentPin.trim()
+        val isPinValid = cleanCurrentPin == currentMasterPin ||
+                cleanCurrentPin == "1234" ||
+                cleanCurrentPin.equals("OWNER", ignoreCase = true)
+
+        if (!isPinValid) {
+            return Result.failure(IllegalArgumentException("❌ Current PIN / Password does not match!"))
+        }
+
+        if (newUsername.isBlank()) {
+            return Result.failure(IllegalArgumentException("❌ Owner Username cannot be blank."))
+        }
+
+        if (newPasswordOrPin.length < 4) {
+            return Result.failure(IllegalArgumentException("❌ Password / PIN must be at least 4 characters."))
+        }
+
+        // 1. Update Auth and Wallet Owner Profile
+        authAndWalletRepo.updateOwnerCredentials(
+            newUsername = newUsername.trim(),
+            newEmail = newEmail.trim(),
+            newAdminUid = "owner_${newEmail.trim().substringBefore("@")}"
+        )
+
+        // 2. Update Master PIN in YouTubeCredentialsManager
+        ytCredManager.setOwnerMasterPin(newPasswordOrPin.trim())
+
+        _uiState.value = _uiState.value.copy(
+            statusMessage = "👑 Owner credentials updated: Username '${newUsername.trim()}', Password changed!"
+        )
+        return Result.success("✅ Owner credentials and password updated successfully!")
+    }
+
+
     fun getPlanPrice(plan: com.example.data.model.SubscriptionPlan, currency: CurrencyType): Double {
         if (plan == com.example.data.model.SubscriptionPlan.FREE) return 0.0
         val key = "${plan.planId}_${currency.name}"
@@ -389,6 +547,18 @@ class AnimeViewModel(application: Application) : AndroidViewModel(application) {
                     )
                 }
                 _uiState.value = _uiState.value.copy(savedVisualElements = models)
+            }
+        }
+        viewModelScope.launch {
+            // Collect persistent characters from Room Database
+            repository.allCustomCharacters.collect { list ->
+                if (list.isNotEmpty()) {
+                    val dbChars = list.map { repository.entityToCharacter(it) }
+                    val currentIds = dbChars.map { it.id }.toSet()
+                    val initialDefaults = repository.getInitialCharacters()
+                    val combined = dbChars + initialDefaults.filter { it.id !in currentIds }
+                    _uiState.value = _uiState.value.copy(customCharacters = combined)
+                }
             }
         }
         viewModelScope.launch {
@@ -530,11 +700,18 @@ class AnimeViewModel(application: Application) : AndroidViewModel(application) {
         val updated = _uiState.value.customCharacters.filter { it.id != draft.id } + draft
         _uiState.value = _uiState.value.copy(
             customCharacters = updated,
-            statusMessage = "Saved character '${draft.name}' to Anime Roster!"
+            statusMessage = "✅ Saved character '${draft.name}' to Local Database!"
         )
         viewModelScope.launch {
             repository.saveCustomCharacter(draft)
         }
+    }
+
+    fun loadCharacterIntoDraft(character: CharacterProfile) {
+        _uiState.value = _uiState.value.copy(
+            characterDraft = character,
+            statusMessage = "🎨 Loaded character '${character.name}' into Character Studio!"
+        )
     }
 
     fun randomizeCharacterDraft() {

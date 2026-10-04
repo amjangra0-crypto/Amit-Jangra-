@@ -13,7 +13,7 @@ import androidx.room.RoomDatabase
         AdminAccessEntity::class,
         ExportedVideoEntity::class
     ],
-    version = 3,
+    version = 4,
     exportSchema = false
 )
 abstract class AnimeDatabase : RoomDatabase() {

@@ -118,20 +118,38 @@ fun MicVoiceInputButton(
 
     IconButton(
         onClick = {
-            val hasPermission = ContextCompat.checkSelfPermission(
+            val permissionManager = com.example.util.PermissionManager.getInstance(context)
+            val hasSystemPermission = ContextCompat.checkSelfPermission(
                 context,
                 Manifest.permission.RECORD_AUDIO
             ) == PackageManager.PERMISSION_GRANTED
 
-            if (hasPermission) {
+            val isUserAllowed = kotlinx.coroutines.runBlocking {
+                try {
+                    permissionManager.canUseMicrophone()
+                } catch (_: Throwable) {
+                    hasSystemPermission
+                }
+            }
+
+            if (!isUserAllowed) {
+                val msg = if (AppLocaleStrings.isHindi(language)) {
+                    "माइक्रोफोन सेटिंग्स में बंद (Deallow) है। आप सेटिंग्स में जाकर इसे चालू (Allow) कर सकते हैं।"
+                } else {
+                    "Microphone is deallowed in Settings. You can enable it in Settings or type your prompt directly."
+                }
+                Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
+                return@IconButton
+            }
+
+            if (hasSystemPermission) {
                 isListening = true
                 launchSpeechIntent(context, localeTag, speechRecognizerLauncher)
             } else {
-                // Do not re-request permission repeatedly anywhere in the app
                 val msg = if (AppLocaleStrings.isHindi(language)) {
-                    "माइक अनुमति वैकल्पिक है। आप टेक्स्ट लिखकर भी प्रॉम्प्ट बना सकते हैं।"
+                    "माइक अनुमति वैकल्पिक है। आप सेटिंग्स में जाकर अनुमति दे सकते हैं या सीधे टाइप कर सकते हैं।"
                 } else {
-                    "Microphone is optional. You can enter your text prompt directly."
+                    "Microphone permission is optional. You can grant it in Settings or enter text directly."
                 }
                 Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
             }

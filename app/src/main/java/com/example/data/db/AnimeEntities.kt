@@ -39,7 +39,17 @@ data class CustomCharacterEntity(
     val voiceGender: String = "Female",
     val voicePersona: String = "Sweet Kawaii Heroine",
     val voiceAccent: String = "Standard Anime (Japanese Cadence)",
-    val sampleDialogue: String = "私を信じて！一緒に未来を変えよう！"
+    val sampleDialogue: String = "私を信じて！一緒に未来を変えよう！",
+    val emotion: String = "Joy",
+    val hairLength: Float = 1.0f,
+    val hairVolume: Float = 1.0f,
+    val hairShine: Float = 0.5f,
+    val eyeSize: Float = 1.0f,
+    val eyeTilt: Float = 0.0f,
+    val eyePupilGlow: Float = 0.7f,
+    val outfitFit: Float = 1.0f,
+    val outfitGlow: Float = 0.5f,
+    val capeLength: Float = 1.0f
 )
 
 @Entity(tableName = "saved_visual_elements")

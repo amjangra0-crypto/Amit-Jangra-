@@ -77,7 +77,8 @@ enum class TransactionType(val title: String, val isCredit: Boolean) {
     WITHDRAWAL_PHONEPE("PhonePe Withdrawal", false),
     WITHDRAWAL_GPAY("Google Pay Withdrawal", false),
     WITHDRAWAL_PAYPAL("PayPal Withdrawal", false),
-    WALLET_EXCHANGE_TRANSFER("Wallet Currency Exchange", true)
+    WALLET_EXCHANGE_TRANSFER("Wallet Currency Exchange", true),
+    SECURITY_CREDENTIAL_CHANGE("Owner Security Credentials Modified", false)
 }
 
 data class WalletTransaction(

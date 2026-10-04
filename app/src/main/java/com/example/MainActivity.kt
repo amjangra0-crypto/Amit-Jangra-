@@ -78,6 +78,9 @@ import com.example.ui.components.StorageDestinationDialog
 import com.example.data.model.StorageTargetType
 import com.example.ui.screens.AnimePlayerScreen
 import com.example.ui.screens.AppSettingsScreen
+import com.example.ui.screens.SettingsScreen
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.launch
 import com.example.ui.screens.CharacterBuilderScreen
 import com.example.ui.screens.CharacterStudioScreen
 import com.example.ui.screens.MyProjectsScreen
@@ -114,18 +117,25 @@ class MainActivity : ComponentActivity() {
             val currentUser by viewModel.currentUser.collectAsState()
             val selectedCountry by viewModel.selectedCountry.collectAsState()
             var isShowingProfileSettings by remember { mutableStateOf(false) }
+            var isShowingAdvancedSettings by remember { mutableStateOf(false) }
             var showCountryPickerSheet by remember { mutableStateOf(false) }
 
             // Strictly one-time permission request upon installation/first launch only
+            val permissionManager = remember { com.example.util.PermissionManager.getInstance(this@MainActivity) }
             val installPermissionLauncher = rememberLauncherForActivityResult(
                 contract = ActivityResultContracts.RequestPermission()
             ) { _: Boolean ->
                 com.example.util.PermissionPreferenceManager.markPermissionRequestedOnInstall(this@MainActivity)
+                lifecycleScope.launch {
+                    permissionManager.markAlreadyRequestedOnInstall()
+                }
             }
 
             LaunchedEffect(Unit) {
-                if (com.example.util.PermissionPreferenceManager.shouldTriggerInitialPermissionRequest(this@MainActivity)) {
+                if (permissionManager.shouldRequestPermissionOnInstall() &&
+                    com.example.util.PermissionPreferenceManager.shouldTriggerInitialPermissionRequest(this@MainActivity)) {
                     com.example.util.PermissionPreferenceManager.markPermissionRequestedOnInstall(this@MainActivity)
+                    permissionManager.markAlreadyRequestedOnInstall()
                     installPermissionLauncher.launch(android.Manifest.permission.RECORD_AUDIO)
                 }
             }
@@ -399,10 +409,18 @@ class MainActivity : ComponentActivity() {
                                 }
                             }
                             AppTab.SETTINGS -> {
-                                AppSettingsScreen(
-                                    viewModel = viewModel,
-                                    onNavigateBack = { viewModel.setTab(AppTab.PROFILE) }
-                                )
+                                if (isShowingAdvancedSettings) {
+                                    AppSettingsScreen(
+                                        viewModel = viewModel,
+                                        onNavigateBack = { isShowingAdvancedSettings = false }
+                                    )
+                                } else {
+                                    SettingsScreen(
+                                        viewModel = viewModel,
+                                        onNavigateBack = { viewModel.setTab(AppTab.PROFILE) },
+                                        onNavigateToAdvancedSettings = { isShowingAdvancedSettings = true }
+                                    )
+                                }
                             }
                             AppTab.OWNER_DASHBOARD -> {
                                 OwnerDashboardScreen(

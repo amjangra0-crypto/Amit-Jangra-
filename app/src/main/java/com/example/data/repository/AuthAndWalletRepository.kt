@@ -25,7 +25,12 @@ class AuthAndWalletRepository(private val context: Context) {
     companion object {
         const val OWNER_EMAIL = "amjangra0@gmail.com"
         const val OWNER_PHONE = "+91 98765 43210"
+        const val OWNER_UID = "owner_amjangra0"
     }
+
+    fun getOwnerEmail(): String = prefs.getString("custom_owner_email", OWNER_EMAIL) ?: OWNER_EMAIL
+    fun getOwnerUsername(): String = prefs.getString("custom_owner_username", "Aman Jangra (Owner)") ?: "Aman Jangra (Owner)"
+    fun getOwnerAdminUid(): String = prefs.getString("custom_owner_uid", OWNER_UID) ?: OWNER_UID
 
     private val _currentUser = MutableStateFlow(loadUserProfile())
     val currentUser: StateFlow<UserProfile> = _currentUser.asStateFlow()
@@ -45,11 +50,12 @@ class AuthAndWalletRepository(private val context: Context) {
 
     fun loginWithGmail(email: String, name: String? = null): Boolean {
         val cleanEmail = email.trim()
-        val isOwner = cleanEmail.equals(OWNER_EMAIL, ignoreCase = true)
-        val defaultName = if (isOwner) "Aman Jangra (Owner)" else name ?: cleanEmail.substringBefore("@").replaceFirstChar { it.uppercase() }
+        val currentOwnerEmail = getOwnerEmail()
+        val isOwner = cleanEmail.equals(currentOwnerEmail, ignoreCase = true) || cleanEmail.equals(OWNER_EMAIL, ignoreCase = true)
+        val defaultName = if (isOwner) getOwnerUsername() else name ?: cleanEmail.substringBefore("@").replaceFirstChar { it.uppercase() }
 
         val updated = _currentUser.value.copy(
-            userId = if (isOwner) "owner_${cleanEmail.substringBefore("@")}" else "user_${UUID.randomUUID().toString().take(8)}",
+            userId = if (isOwner) getOwnerAdminUid() else "user_${UUID.randomUUID().toString().take(8)}",
             displayName = defaultName,
             email = cleanEmail,
             phoneNumber = _currentUser.value.phoneNumber.takeIf { it?.isNotBlank() == true } ?: if (isOwner) OWNER_PHONE else null,
@@ -62,6 +68,50 @@ class AuthAndWalletRepository(private val context: Context) {
         )
         _currentUser.value = updated
         saveUserProfile(updated)
+        return true
+    }
+
+    /**
+     * Strictly allows the verified Owner to modify Owner Dashboard Username, Email & Admin UID
+     */
+    fun updateOwnerCredentials(newUsername: String, newEmail: String, newAdminUid: String? = null): Boolean {
+        val cleanEmail = newEmail.trim()
+        val cleanUsername = newUsername.trim()
+        val cleanUid = newAdminUid?.trim()?.ifBlank { null } ?: "owner_${cleanEmail.substringBefore("@")}"
+
+        prefs.edit()
+            .putString("custom_owner_email", cleanEmail)
+            .putString("custom_owner_username", cleanUsername)
+            .putString("custom_owner_uid", cleanUid)
+            .apply()
+
+        // If currently signed-in user is Owner, reflect immediately
+        val current = _currentUser.value
+        if (current.isOwner) {
+            val updated = current.copy(
+                displayName = cleanUsername,
+                email = cleanEmail,
+                userId = cleanUid
+            )
+            _currentUser.value = updated
+            saveUserProfile(updated)
+        }
+
+        // Add Security Transaction Record
+        val auditTxn = WalletTransaction(
+            id = "SEC_${System.currentTimeMillis()}",
+            timestamp = System.currentTimeMillis(),
+            type = TransactionType.SECURITY_CREDENTIAL_CHANGE,
+            currency = CurrencyType.INR,
+            amount = 0.0,
+            targetAccountOrUser = "Owner Security Portal",
+            description = "Owner credentials updated: Username='$cleanUsername', Email='$cleanEmail', UID='$cleanUid'",
+            status = "Security Audit Verified",
+            referenceId = "SEC-OWNER-${UUID.randomUUID().toString().uppercase().take(6)}"
+        )
+        val updatedTxns = listOf(auditTxn) + _transactions.value
+        _transactions.value = updatedTxns
+        saveTransactions(updatedTxns)
         return true
     }
 
@@ -407,16 +457,17 @@ class AuthAndWalletRepository(private val context: Context) {
     private fun loadUserProfile(): UserProfile {
         val isLoggedIn = prefs.getBoolean("is_logged_in", true)
         val isOwner = prefs.getBoolean("is_owner", true)
-        val email = prefs.getString("user_email", OWNER_EMAIL)
+        val defaultOwnerEmail = getOwnerEmail()
+        val email = prefs.getString("user_email", defaultOwnerEmail)
         val phone = prefs.getString("user_phone", OWNER_PHONE)
-        val name = prefs.getString("user_display_name", if (isOwner) "Aman Jangra" else "Creator") ?: "Aman Jangra"
+        val name = prefs.getString("user_display_name", if (isOwner) getOwnerUsername() else "Creator") ?: getOwnerUsername()
         val avatar = prefs.getString("user_avatar", "char_shonen_hero") ?: "char_shonen_hero"
         val bio = prefs.getString("user_bio", "Lead Director & Founder at Anime Studio AI. Building next-generation anime narratives with AI.") ?: ""
         val specialty = prefs.getString("user_specialty", "Anime Film Director") ?: "Anime Film Director"
         val plan = prefs.getString("user_plan", if (isOwner) "VIP OWNER LIFETIME" else "PRO CREATOR") ?: "VIP OWNER LIFETIME"
 
         return UserProfile(
-            userId = prefs.getString("user_id", "owner_amjangra0") ?: "owner_amjangra0",
+            userId = prefs.getString("user_id", if (isOwner) getOwnerAdminUid() else "owner_amjangra0") ?: getOwnerAdminUid(),
             displayName = name,
             email = email,
             phoneNumber = phone,

@@ -23,7 +23,18 @@ data class CharacterProfile(
     val voiceGender: String = "Female", // "Male", "Female", "Child"
     val voicePersona: String = "Sweet Kawaii Heroine",
     val voiceAccent: String = "Standard Anime (Japanese Cadence)",
-    val sampleDialogue: String = "私を信じて！一緒に未来を変えよう！"
+    val sampleDialogue: String = "私を信じて！一緒に未来を変えよう！",
+    // Emotion, Eye Expression & Avatar Customization Sliders
+    val emotion: String = "Joy",
+    val hairLength: Float = 1.0f,
+    val hairVolume: Float = 1.0f,
+    val hairShine: Float = 0.5f,
+    val eyeSize: Float = 1.0f,
+    val eyeTilt: Float = 0.0f,
+    val eyePupilGlow: Float = 0.7f,
+    val outfitFit: Float = 1.0f,
+    val outfitGlow: Float = 0.5f,
+    val capeLength: Float = 1.0f
 )
 
 data class VoicePersonaOption(
@@ -312,3 +323,25 @@ enum class SubscriptionPlan(
         features = listOf("Unlimited Video & Anime Generation", "Admin Dashboard & User Access Control", "Decide Who Gets Free vs Paid", "Direct OTA Update Manager", "Lifetime Commercial Rights")
     )
 }
+
+/**
+ * Mutable Subscription Scheme Model allowing App Owner to edit & modify details
+ */
+data class SubscriptionSchemeDetails(
+    val planId: String,
+    val title: String,
+    val badge: String,
+    val monthlyPriceInr: Double,
+    val yearlyPriceInr: Double,
+    val monthlyPriceUsd: Double,
+    val yearlyPriceUsd: Double,
+    val monthlyPriceEur: Double = 9.99,
+    val monthlyPriceGbp: Double = 8.99,
+    val monthlyPriceJpy: Double = 1480.0,
+    val dailyCredits: Int,
+    val features: List<String>,
+    val isActive: Boolean = true,
+    val discountPercent: Int = 0,
+    val isFreeForOwner: Boolean = false
+)
+

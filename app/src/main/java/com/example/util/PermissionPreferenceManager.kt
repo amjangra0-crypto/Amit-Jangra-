@@ -4,6 +4,9 @@ import android.Manifest
 import android.content.Context
 import android.content.pm.PackageManager
 import androidx.core.content.ContextCompat
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 /**
  * Dedicated manager for single-prompt install/onboarding permissions.
@@ -106,6 +109,13 @@ object PermissionPreferenceManager {
             if (!cacheMarker.exists()) {
                 cacheMarker.createNewFile()
                 cacheMarker.writeText("1")
+            }
+
+            // Sync with DataStore
+            kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.IO).launch {
+                try {
+                    PermissionManager.getInstance(context).markAlreadyRequestedOnInstall()
+                } catch (_: Throwable) {}
             }
         } catch (_: Exception) {}
     }
