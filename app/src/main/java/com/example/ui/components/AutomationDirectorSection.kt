@@ -245,6 +245,13 @@ fun AutomationDirectorSection(viewModel: AnimeViewModel) {
                 )
             )
 
+            Spacer(modifier = Modifier.height(6.dp))
+
+            CommandLearningSuggestionBar(
+                viewModel = viewModel,
+                currentRawCommand = state.automationCommandInput
+            )
+
             Spacer(modifier = Modifier.height(10.dp))
 
             // Quick Command Preset Chips

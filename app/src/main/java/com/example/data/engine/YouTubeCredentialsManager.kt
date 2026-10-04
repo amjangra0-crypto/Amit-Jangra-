@@ -2,11 +2,15 @@ package com.example.data.engine
 
 import android.content.Context
 import android.content.SharedPreferences
+import com.example.data.model.ManagedUserAccess
 import com.example.data.model.UploadPrivacyStatus
+import com.example.data.model.UserProfile
 import com.example.worker.AutomationWorkScheduler
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import org.json.JSONArray
+import org.json.JSONObject
 
 /**
  * YouTube OAuth 2.0 & Channel Configuration Model
@@ -83,7 +87,125 @@ class YouTubeCredentialsManager private constructor(private val context: Context
         }
     }
 
+    // -----------------------------------------------------------------------------------------
+    // GRANULAR USER-BY-USER YOUTUBE AUTOMATION PERMISSIONS (OWNER CONTROLLED)
+    // -----------------------------------------------------------------------------------------
+    private val _authorizedUserIds = MutableStateFlow(loadAuthorizedUserIds())
+    val authorizedUserIds: StateFlow<Set<String>> = _authorizedUserIds.asStateFlow()
+
+    private val _managedUsers = MutableStateFlow(loadManagedUsers())
+    val managedUsers: StateFlow<List<ManagedUserAccess>> = _managedUsers.asStateFlow()
+
+    /**
+     * Checks if a user has access to YouTube automation:
+     * - Owner always has full access
+     * - If globally enabled by Owner, all users have access
+     * - If user's ID or email is in the specific authorized list granted by the Owner
+     */
+    fun isAutomationAccessibleForUser(user: UserProfile): Boolean {
+        if (user.isOwner) return true
+        if (_isAutomationGloballyEnabled.value) return true
+        val ids = listOfNotNull(user.userId.lowercase(), user.email?.lowercase())
+        return ids.any { _authorizedUserIds.value.contains(it) }
+    }
+
+    /**
+     * Owner Control: Grant or revoke YouTube automation access for a specific person
+     */
+    fun setUserAutomationAccess(userIdOrEmail: String, isGranted: Boolean) {
+        val clean = userIdOrEmail.trim().lowercase()
+        if (clean.isBlank()) return
+        val currentSet = _authorizedUserIds.value.toMutableSet()
+        if (isGranted) currentSet.add(clean) else currentSet.remove(clean)
+        _authorizedUserIds.value = currentSet
+        prefs.edit().putStringSet(KEY_AUTHORIZED_USERS, currentSet).apply()
+
+        val list = _managedUsers.value.toMutableList()
+        val idx = list.indexOfFirst { it.userId.equals(clean, true) || it.email.equals(clean, true) }
+        if (idx != -1) {
+            list[idx] = list[idx].copy(isGranted = isGranted)
+        } else {
+            list.add(
+                ManagedUserAccess(
+                    userId = clean,
+                    displayName = clean.substringBefore("@").replaceFirstChar { it.uppercase() },
+                    email = if (clean.contains("@")) clean else "$clean@gmail.com",
+                    role = "YouTube Automation Authorized",
+                    isGranted = isGranted
+                )
+            )
+        }
+        _managedUsers.value = list
+        saveManagedUsers(list)
+    }
+
+    /**
+     * Owner Control: Remove user completely from registry
+     */
+    fun removeUserAutomationAccess(userIdOrEmail: String) {
+        val clean = userIdOrEmail.trim().lowercase()
+        val currentSet = _authorizedUserIds.value.toMutableSet()
+        currentSet.remove(clean)
+        _authorizedUserIds.value = currentSet
+        prefs.edit().putStringSet(KEY_AUTHORIZED_USERS, currentSet).apply()
+
+        val list = _managedUsers.value.filterNot { it.userId.equals(clean, true) || it.email.equals(clean, true) }
+        _managedUsers.value = list
+        saveManagedUsers(list)
+    }
+
+    private fun loadAuthorizedUserIds(): Set<String> {
+        return prefs.getStringSet(KEY_AUTHORIZED_USERS, emptySet()) ?: emptySet()
+    }
+
+    private fun loadManagedUsers(): List<ManagedUserAccess> {
+        val jsonStr = prefs.getString(KEY_MANAGED_USERS_JSON, null) ?: return listOf(
+            ManagedUserAccess("amjangra0", "Aman Jangra", "amjangra0@gmail.com", "👑 Owner", true),
+            ManagedUserAccess("studio_partner", "Studio Partner", "partner@animestudio.ai", "Collaborator", false),
+            ManagedUserAccess("content_team", "Content Team", "team@animestudio.ai", "Automation Specialist", false)
+        )
+        return try {
+            val arr = JSONArray(jsonStr)
+            val list = mutableListOf<ManagedUserAccess>()
+            for (i in 0 until arr.length()) {
+                val obj = arr.getJSONObject(i)
+                list.add(
+                    ManagedUserAccess(
+                        userId = obj.optString("userId"),
+                        displayName = obj.optString("displayName"),
+                        email = obj.optString("email"),
+                        role = obj.optString("role"),
+                        isGranted = obj.optBoolean("isGranted", true)
+                    )
+                )
+            }
+            list
+        } catch (_: Exception) {
+            emptyList()
+        }
+    }
+
+    private fun saveManagedUsers(users: List<ManagedUserAccess>) {
+        try {
+            val arr = JSONArray()
+            for (u in users) {
+                val obj = JSONObject().apply {
+                    put("userId", u.userId)
+                    put("displayName", u.displayName)
+                    put("email", u.email)
+                    put("role", u.role)
+                    put("isGranted", u.isGranted)
+                }
+                arr.put(obj)
+            }
+            prefs.edit().putString(KEY_MANAGED_USERS_JSON, arr.toString()).apply()
+        } catch (_: Exception) {}
+    }
+
     companion object {
+        private const val KEY_AUTHORIZED_USERS = "youtube_authorized_users_set"
+        private const val KEY_MANAGED_USERS_JSON = "youtube_managed_users_json"
+
         @Volatile
         private var INSTANCE: YouTubeCredentialsManager? = null
 

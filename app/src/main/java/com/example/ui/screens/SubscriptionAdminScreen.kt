@@ -256,18 +256,18 @@ fun SubscriptionAdminScreen(viewModel: AnimeViewModel) {
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         Button(
-                            onClick = { showOwnerWalletSheet = true },
+                            onClick = { viewModel.setTab(com.example.ui.AppTab.OWNER_DASHBOARD) },
                             colors = ButtonDefaults.buttonColors(containerColor = AnimeGold),
                             shape = RoundedCornerShape(10.dp),
                             modifier = Modifier
                                 .weight(1f)
                                 .height(44.dp)
-                                .testTag("subscription_open_owner_wallet_btn")
+                                .testTag("subscription_open_owner_dashboard_btn")
                         ) {
-                            Icon(Icons.Default.AccountBalance, contentDescription = null, tint = Color.Black, modifier = Modifier.size(16.dp))
+                            Icon(Icons.Default.Security, contentDescription = null, tint = Color.Black, modifier = Modifier.size(16.dp))
                             Spacer(modifier = Modifier.width(6.dp))
                             Text(
-                                text = AppLocaleStrings.tr(lang, "Open Wallet", "वॉलेट खोलें"),
+                                text = AppLocaleStrings.tr(lang, "Owner Dashboard", "ओनर डैशबोर्ड"),
                                 color = Color.Black,
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 12.sp

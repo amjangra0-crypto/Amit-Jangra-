@@ -131,10 +131,14 @@ fun AutomationHubScreen(
     val currentUser by viewModel.currentUser.collectAsState()
     val isOwnerUnlocked by viewModel.isOwnerAccessUnlocked.collectAsState()
     val isGloballyEnabled by viewModel.isYouTubeAutomationGloballyEnabled.collectAsState()
+    val ytManagedUsers by viewModel.youtubeManagedUsers.collectAsState()
+    val isUserSpecificallyAuthorized = viewModel.isYouTubeAutomationAccessibleForCurrentUser()
     val isOwner = currentUser.isOwner || isOwnerUnlocked
+    val hasAutomationAccess = isOwner || isGloballyEnabled || isUserSpecificallyAuthorized
     val lang = state.selectedLanguage
 
     var showOwnerPinDialog by remember { mutableStateOf(false) }
+    var showYtUserAccessModal by remember { mutableStateOf(false) }
     var ownerPinInput by remember { mutableStateOf("") }
     var pinError by remember { mutableStateOf("") }
 
@@ -287,12 +291,12 @@ fun AutomationHubScreen(
 
         Spacer(modifier = Modifier.height(14.dp))
 
-        // 1. OWNER MASTER CONTROL CARD
+        // 1. OWNER MASTER CONTROL CARDS
         if (isOwner) {
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(bottom = 14.dp),
+                    .padding(bottom = 12.dp),
                 colors = CardDefaults.cardColors(containerColor = AnimeGold.copy(alpha = 0.12f)),
                 border = BorderStroke(1.dp, AnimeGold),
                 shape = RoundedCornerShape(12.dp)
@@ -325,8 +329,8 @@ fun AutomationHubScreen(
                             else
                                 AppLocaleStrings.tr(
                                     lang,
-                                    "Disabled for other users • Only Owner has access",
-                                    "अन्य उपयोगकर्ताओं के लिए बंद है • केवल ओनर को अनुमति"
+                                    "Disabled for other users • Only Owner & specific authorized persons",
+                                    "अन्य उपयोगकर्ताओं के लिए बंद है • केवल ओनर व अधिकृत विशिष्ट व्यक्ति"
                                 ),
                             color = TextSecondary,
                             fontSize = 11.sp
@@ -350,8 +354,57 @@ fun AutomationHubScreen(
                     )
                 }
             }
-        } else if (!isGloballyEnabled) {
-            // Locked for non-owners because Owner disabled it
+
+            // SPECIFIC PERSON ACCESS CONTROL CARD (OWNER CAN GRANT / REVOKE FOR ANY PERSON)
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 14.dp),
+                colors = CardDefaults.cardColors(containerColor = AnimeSurfaceVariant),
+                border = BorderStroke(1.dp, AnimeCyan.copy(alpha = 0.5f)),
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(12.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = "👤 " + AppLocaleStrings.tr(
+                                lang,
+                                "Specific Person Access Control",
+                                "विशिष्ट व्यक्ति हेतु एक्सेस नियंत्रण"
+                            ),
+                            color = AnimeCyanLight,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 13.sp
+                        )
+                        Text(
+                            text = AppLocaleStrings.tr(
+                                lang,
+                                "Activate or deactivate access for specific persons (${ytManagedUsers.count { it.isGranted }} authorized)",
+                                "विशिष्ट व्यक्तियों के लिए YouTube ऑटोमेशन चालू/बंद करें (${ytManagedUsers.count { it.isGranted }} अधिकृत)"
+                            ),
+                            color = TextSecondary,
+                            fontSize = 11.sp
+                        )
+                    }
+                    Button(
+                        onClick = { showYtUserAccessModal = true },
+                        colors = ButtonDefaults.buttonColors(containerColor = AnimeCyan),
+                        shape = RoundedCornerShape(8.dp),
+                        contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 10.dp, vertical = 4.dp),
+                        modifier = Modifier.height(32.dp).testTag("automation_manage_persons_btn")
+                    ) {
+                        Text("Manage (${ytManagedUsers.count { it.isGranted }})", color = Color.Black, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                    }
+                }
+            }
+        } else if (!isGloballyEnabled && !isUserSpecificallyAuthorized) {
+            // Locked for non-owners because Owner disabled it and not specifically authorized
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -378,8 +431,8 @@ fun AutomationHubScreen(
                     Text(
                         text = AppLocaleStrings.tr(
                             lang,
-                            "YouTube automation access is restricted exclusively to the Owner. Other users cannot configure or execute automated uploads without Owner authorization.",
-                            "YouTube ऑटोमेशन का एक्सेस केवल ओनर के लिए है। बाकी सभी के लिए यह ओनर द्वारा नियंत्रित है।"
+                            "YouTube automation access is restricted exclusively to the Owner and authorized persons. Contact owner (amjangra0@gmail.com) for access.",
+                            "YouTube ऑटोमेशन का एक्सेस केवल ओनर व अधिकृत विशिष्ट व्यक्तियों के लिए है। अनुमति हेतु ओनर से संपर्क करें।"
                         ),
                         color = TextSecondary,
                         fontSize = 12.sp,
@@ -395,6 +448,40 @@ fun AutomationHubScreen(
                     }
                 }
             }
+        } else if (!isGloballyEnabled && isUserSpecificallyAuthorized) {
+            // Authorized specific person badge
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 14.dp),
+                colors = CardDefaults.cardColors(containerColor = AnimeGreen.copy(alpha = 0.15f)),
+                border = BorderStroke(1.dp, AnimeGreen),
+                shape = RoundedCornerShape(10.dp)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(10.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(Icons.Default.CheckCircle, contentDescription = null, tint = AnimeGreen, modifier = Modifier.size(18.dp))
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = AppLocaleStrings.tr(
+                            lang,
+                            "✓ You have been granted YouTube Automation access by the Owner",
+                            "✓ आपको ऐप ओनर द्वारा YouTube ऑटोमेशन की विशेष अनुमति दी गई है"
+                        ),
+                        color = AnimeGreen,
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
+        }
+
+        // If user does not have permission, gate remaining automation controls
+        if (!hasAutomationAccess) {
+            Spacer(modifier = Modifier.height(30.dp))
+            return
         }
 
         // System Live Status Message Banner
@@ -545,6 +632,23 @@ fun AutomationHubScreen(
                 )
             }
         }
+    }
+
+    if (showYtUserAccessModal) {
+        YouTubeSpecificUserAccessDialog(
+            managedUsers = ytManagedUsers,
+            lang = lang,
+            onGrantUser = { idOrEmail ->
+                viewModel.setYouTubeAutomationUserAccess(idOrEmail, true)
+            },
+            onToggleUser = { idOrEmail, granted ->
+                viewModel.setYouTubeAutomationUserAccess(idOrEmail, granted)
+            },
+            onRemoveUser = { idOrEmail ->
+                viewModel.removeYouTubeAutomationUser(idOrEmail)
+            },
+            onDismiss = { showYtUserAccessModal = false }
+        )
     }
 }
 

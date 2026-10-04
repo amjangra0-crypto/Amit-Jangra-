@@ -67,7 +67,8 @@ enum class AppTab(val title: String, val iconName: String) {
     SUBSCRIPTION("VIP & Admin", "workspace_premium"),
     UPDATES("Updates", "system_update"),
     PROFILE("Profile", "account_circle"),
-    SETTINGS("Settings", "settings")
+    SETTINGS("Settings", "settings"),
+    OWNER_DASHBOARD("Owner Dashboard", "security")
 }
 
 data class AnimeStudioUiState(
@@ -236,6 +237,16 @@ class AnimeViewModel(application: Application) : AndroidViewModel(application) {
     val youtubeCredentials: StateFlow<com.example.data.engine.YouTubeOAuthCredentials> = ytCredManager.credentials
     val isYouTubeAutomationGloballyEnabled: StateFlow<Boolean> = ytCredManager.isAutomationGloballyEnabled
     val isOwnerAccessUnlocked: StateFlow<Boolean> = ytCredManager.isOwnerAccessUnlocked
+    val youtubeAuthorizedUsers: StateFlow<Set<String>> = ytCredManager.authorizedUserIds
+    val youtubeManagedUsers: StateFlow<List<com.example.data.model.ManagedUserAccess>> = ytCredManager.managedUsers
+
+    val commandLearningEngine = com.example.data.engine.CommandLearningEngine.getInstance(application)
+    val commandLearningSettings = commandLearningEngine.settings
+    val learnedCommands = commandLearningEngine.learnedRecords
+    val commandSuggestions = commandLearningEngine.recentSuggestions
+    val lastImprovedCommand = commandLearningEngine.lastImprovedCommand
+    val isCommandLearningProcessing = commandLearningEngine.isLearning
+    val managedCommandUsers = commandLearningEngine.managedUsers
 
     private val _selectedCountry = MutableStateFlow(CountryCodeProvider.detectDeviceCountry(application))
     val selectedCountry: StateFlow<CountryCode> = _selectedCountry.asStateFlow()
@@ -698,6 +709,17 @@ class AnimeViewModel(application: Application) : AndroidViewModel(application) {
                 voiceAccent = state.selectedVoiceAccent
             )
 
+            if (isCommandLearningAccessibleForCurrentUser() && input.isNotBlank()) {
+                launch {
+                    commandLearningEngine.learnAndImproveCommand(
+                        rawCommand = input,
+                        currentLanguage = state.selectedLanguage,
+                        geminiApiService = geminiService,
+                        userId = currentUser.value.userId
+                    )
+                }
+            }
+
             repository.saveScript(script)
 
             _uiState.value = _uiState.value.copy(
@@ -884,6 +906,25 @@ class AnimeViewModel(application: Application) : AndroidViewModel(application) {
         )
     }
 
+    fun setYouTubeAutomationUserAccess(userIdOrEmail: String, isGranted: Boolean) {
+        ytCredManager.setUserAutomationAccess(userIdOrEmail, isGranted)
+        _uiState.value = _uiState.value.copy(
+            statusMessage = if (isGranted) "✓ Granted YouTube Automation access to $userIdOrEmail"
+                            else "🔒 Revoked YouTube Automation access for $userIdOrEmail"
+        )
+    }
+
+    fun removeYouTubeAutomationUser(userIdOrEmail: String) {
+        ytCredManager.removeUserAutomationAccess(userIdOrEmail)
+        _uiState.value = _uiState.value.copy(
+            statusMessage = "Removed $userIdOrEmail from YouTube automation registry"
+        )
+    }
+
+    fun isYouTubeAutomationAccessibleForCurrentUser(): Boolean {
+        return ytCredManager.isAutomationAccessibleForUser(currentUser.value)
+    }
+
     fun unlockOwnerWithPin(pin: String): Boolean {
         val success = ytCredManager.verifyAndUnlockOwnerPin(pin)
         if (success) {
@@ -900,6 +941,74 @@ class AnimeViewModel(application: Application) : AndroidViewModel(application) {
     fun setOwnerMasterPin(newPin: String) {
         ytCredManager.setOwnerMasterPin(newPin)
         _uiState.value = _uiState.value.copy(statusMessage = "🔑 Owner master PIN updated!")
+    }
+
+    // ---------------------------------------------------------------------------------
+    // AI ADAPTIVE COMMAND LEARNING & AUTO-IMPROVEMENT ACTIONS (OWNER CONTROLLED)
+    // ---------------------------------------------------------------------------------
+    fun isCommandLearningAccessibleForCurrentUser(): Boolean {
+        return commandLearningEngine.isFeatureAccessibleForUser(currentUser.value)
+    }
+
+    fun learnAndImproveCurrentCommand(rawCommand: String) {
+        viewModelScope.launch {
+            val (improved, suggestions) = commandLearningEngine.learnAndImproveCommand(
+                rawCommand = rawCommand,
+                currentLanguage = _uiState.value.selectedLanguage,
+                geminiApiService = geminiService,
+                userId = currentUser.value.userId
+            )
+            if (improved.isNotBlank()) {
+                _uiState.value = _uiState.value.copy(
+                    statusMessage = "🧠 AI Command Learned & Improved!"
+                )
+            }
+        }
+    }
+
+    fun applyImprovedCommandToPrompt(improved: String) {
+        setPromptInput(improved)
+        _uiState.value = _uiState.value.copy(
+            statusMessage = "✓ Applied AI-improved command to studio!"
+        )
+    }
+
+    fun applySuggestionToPrompt(suggestion: String) {
+        val clean = suggestion.replace(Regex("^[⚔️🌌🌸🔥⚡🎬]\\s*(\\[.*?\\]:\\s*)?"), "")
+        val current = _uiState.value.promptInput
+        val updated = if (current.isBlank()) clean else "$current | $clean"
+        setPromptInput(updated)
+        _uiState.value = _uiState.value.copy(
+            statusMessage = "✓ Added creative suggestion to prompt"
+        )
+    }
+
+    fun setCommandLearningOwnerActive(active: Boolean) {
+        commandLearningEngine.setOwnerActive(active)
+        _uiState.value = _uiState.value.copy(
+            statusMessage = if (active) "👑 AI Command Learning ACTIVATED for Owner" else "👑 AI Command Learning DEACTIVATED for Owner"
+        )
+    }
+
+    fun setCommandLearningGlobalOthersActive(active: Boolean) {
+        commandLearningEngine.setGloballyActiveForOthers(active)
+        _uiState.value = _uiState.value.copy(
+            statusMessage = if (active) "👑 AI Command Learning ENABLED for all users" else "👑 AI Command Learning DISABLED for all users"
+        )
+    }
+
+    fun setCommandLearningUserAccess(userIdOrEmail: String, isGranted: Boolean) {
+        commandLearningEngine.setUserAuthorization(userIdOrEmail, isGranted)
+        _uiState.value = _uiState.value.copy(
+            statusMessage = if (isGranted) "✓ Granted command AI access to $userIdOrEmail" else "🔒 Revoked command AI access for $userIdOrEmail"
+        )
+    }
+
+    fun removeCommandLearningUser(userIdOrEmail: String) {
+        commandLearningEngine.removeUserFromRegistry(userIdOrEmail)
+        _uiState.value = _uiState.value.copy(
+            statusMessage = "Removed $userIdOrEmail from registry"
+        )
     }
 
     fun toggleStorageDialog(show: Boolean) {
@@ -1008,6 +1117,17 @@ class AnimeViewModel(application: Application) : AndroidViewModel(application) {
 
                 // Configure voice engine for the detected/generated language
                 voiceSyncEngine.setLanguage(script.language)
+
+                if (isCommandLearningAccessibleForCurrentUser() && input.isNotBlank()) {
+                    launch {
+                        commandLearningEngine.learnAndImproveCommand(
+                            rawCommand = input,
+                            currentLanguage = _uiState.value.selectedLanguage,
+                            geminiApiService = geminiService,
+                            userId = currentUser.value.userId
+                        )
+                    }
+                }
 
                 _uiState.value = _uiState.value.copy(
                     isAutonomousExecuting = false,
@@ -1986,6 +2106,16 @@ class AnimeViewModel(application: Application) : AndroidViewModel(application) {
         _uiState.value = _uiState.value.copy(
             statusMessage = "🏦 Bank Account Connected: ${bankAccount.bankName}"
         )
+    }
+
+    fun adjustWalletBalance(currency: CurrencyType, deltaAmount: Double, reason: String): Boolean {
+        val success = authAndWalletRepo.adjustWalletBalance(currency, deltaAmount, reason)
+        if (success) {
+            _uiState.value = _uiState.value.copy(
+                statusMessage = if (deltaAmount >= 0) "✓ Added ${currency.symbol}$deltaAmount to ${currency.code} wallet" else "✓ Deducted ${currency.symbol}${Math.abs(deltaAmount)} from ${currency.code} wallet"
+            )
+        }
+        return success
     }
 
     fun disconnectOwnerBankAccount() {

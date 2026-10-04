@@ -38,6 +38,7 @@ import androidx.compose.material.icons.filled.Wallet
 import androidx.compose.material.icons.filled.WorkspacePremium
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -74,9 +75,14 @@ import com.example.ui.theme.AnimeGold
 import com.example.ui.theme.AnimeGreen
 import com.example.ui.theme.AnimePink
 import com.example.ui.theme.AnimePurple
+import com.example.ui.theme.AnimeCyanLight
+import com.example.ui.theme.AnimeSurfaceVariant
 import com.example.ui.theme.TextMuted
 import com.example.ui.theme.TextPrimary
 import com.example.ui.theme.TextSecondary
+import com.example.ui.components.OwnerCommandLearningControlDialog
+import androidx.compose.material.icons.filled.Psychology
+import androidx.compose.material.icons.filled.Security
 
 @Composable
 fun ProfileScreen(
@@ -87,12 +93,15 @@ fun ProfileScreen(
     val state by viewModel.uiState.collectAsState()
     val currentUser by viewModel.currentUser.collectAsState()
     val wallets by viewModel.wallets.collectAsState()
+    val commandSettings by viewModel.commandLearningSettings.collectAsState()
+    val managedCommandUsers by viewModel.managedCommandUsers.collectAsState()
     val context = LocalContext.current
     val lang = state.selectedLanguage
 
     var showAuthModal by remember { mutableStateOf(false) }
     var showLogoutConfirm by remember { mutableStateOf(false) }
     var showOwnerWalletModal by remember { mutableStateOf(false) }
+    var showCommandAiHubModal by remember { mutableStateOf(false) }
 
     Column(
         modifier = Modifier
@@ -421,19 +430,184 @@ fun ProfileScreen(
                         Spacer(modifier = Modifier.height(14.dp))
 
                         Button(
-                            onClick = { showOwnerWalletModal = true },
+                            onClick = { viewModel.setTab(AppTab.OWNER_DASHBOARD) },
                             colors = ButtonDefaults.buttonColors(containerColor = AnimeGold),
                             shape = RoundedCornerShape(12.dp),
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(46.dp)
-                                .testTag("open_owner_wallet_btn")
+                                .testTag("open_owner_dashboard_btn")
                         ) {
-                            Icon(Icons.Default.AccountBalance, contentDescription = null, tint = Color.Black, modifier = Modifier.size(16.dp))
+                            Icon(Icons.Default.Security, contentDescription = null, tint = Color.Black, modifier = Modifier.size(18.dp))
                             Spacer(modifier = Modifier.width(6.dp))
                             Text(
-                                text = AppLocaleStrings.tr(lang, "Open Wallet & Transfer to Bank / UPI / PayPal", "वॉलेट खोलें व बैंक / UPI / PayPal में ट्रांसफर करें"),
+                                text = AppLocaleStrings.tr(lang, "👑 Open Owner Dashboard (Firebase Protected)", "👑 ओनर डैशबोर्ड खोलें (Firebase सुरक्षित)"),
                                 color = Color.Black,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 12.sp
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        OutlinedButton(
+                            onClick = { showOwnerWalletModal = true },
+                            border = BorderStroke(1.dp, AnimeGold),
+                            shape = RoundedCornerShape(12.dp),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(42.dp)
+                                .testTag("open_owner_wallet_btn")
+                        ) {
+                            Icon(Icons.Default.AccountBalance, contentDescription = null, tint = AnimeGold, modifier = Modifier.size(16.dp))
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(
+                                text = AppLocaleStrings.tr(lang, "Quick Wallet & Payout Sheet", "त्वरित वॉलेट व भुगतान शीट"),
+                                color = AnimeGold,
+                                fontWeight = FontWeight.SemiBold,
+                                fontSize = 11.sp
+                            )
+                        }
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(14.dp))
+
+            // VIP OWNER AI COMMAND LEARNING & USER PERMISSIONS HUB
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                shape = RoundedCornerShape(18.dp),
+                border = BorderStroke(1.dp, AnimePurple)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(
+                            Brush.verticalGradient(
+                                listOf(AnimePurple.copy(alpha = 0.18f), Color.Transparent)
+                            )
+                        )
+                        .padding(16.dp)
+                ) {
+                    Column {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(34.dp)
+                                        .clip(CircleShape)
+                                        .background(AnimePurple),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Icon(
+                                        Icons.Default.Psychology,
+                                        contentDescription = null,
+                                        tint = Color.White,
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                }
+                                Spacer(modifier = Modifier.width(10.dp))
+                                Column {
+                                    Text(
+                                        text = AppLocaleStrings.tr(
+                                            lang,
+                                            "👑 AI Command Learning & Access Hub",
+                                            "👑 AI कमांड लर्निंग व एक्सेस हब"
+                                        ),
+                                        color = AnimeCyanLight,
+                                        fontSize = 14.sp,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                    Text(
+                                        text = AppLocaleStrings.tr(
+                                            lang,
+                                            "Self-improves commands & manages user permissions",
+                                            "कमांड्स खुद सुधारें व यूजर अनुमतियां नियंत्रित करें"
+                                        ),
+                                        color = TextSecondary,
+                                        fontSize = 11.sp
+                                    )
+                                }
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(10.dp))
+
+                        // Status Row
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .background(AnimeSurfaceVariant)
+                                    .padding(8.dp)
+                            ) {
+                                Column {
+                                    Text(
+                                        text = AppLocaleStrings.tr(lang, "Owner Status", "ओनर स्थिति"),
+                                        fontSize = 10.sp,
+                                        color = TextMuted
+                                    )
+                                    Text(
+                                        text = if (commandSettings.isOwnerActive) AppLocaleStrings.tr(lang, "Active ✓", "सक्रिय ✓") else AppLocaleStrings.tr(lang, "Paused ⏸", "रुका हुआ ⏸"),
+                                        fontSize = 12.sp,
+                                        color = if (commandSettings.isOwnerActive) AnimeGreen else AnimePink,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                }
+                            }
+                            Box(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .background(AnimeSurfaceVariant)
+                                    .padding(8.dp)
+                            ) {
+                                Column {
+                                    Text(
+                                        text = AppLocaleStrings.tr(lang, "Other Users", "अन्य उपयोगकर्ता"),
+                                        fontSize = 10.sp,
+                                        color = TextMuted
+                                    )
+                                    Text(
+                                        text = if (commandSettings.isGloballyActiveForOthers) AppLocaleStrings.tr(lang, "All Active", "सभी सक्रिय") else "${commandSettings.authorizedUserIds.size} " + AppLocaleStrings.tr(lang, "Granted", "अधिकृत"),
+                                        fontSize = 12.sp,
+                                        color = if (commandSettings.isGloballyActiveForOthers) AnimeCyan else AnimeGold,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                }
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(12.dp))
+
+                        Button(
+                            onClick = { showCommandAiHubModal = true },
+                            colors = ButtonDefaults.buttonColors(containerColor = AnimePurple),
+                            shape = RoundedCornerShape(12.dp),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(44.dp)
+                                .testTag("open_owner_command_learning_hub_btn")
+                        ) {
+                            Icon(Icons.Default.Security, contentDescription = null, tint = Color.White, modifier = Modifier.size(16.dp))
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(
+                                text = AppLocaleStrings.tr(
+                                    lang,
+                                    "Open Command AI & User Permissions Hub",
+                                    "कमांड AI व यूजर अनुमतियां हब खोलें"
+                                ),
+                                color = Color.White,
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 12.sp
                             )
@@ -552,6 +726,17 @@ fun ProfileScreen(
                 showLogoutConfirm = false
             },
             onDismiss = { showLogoutConfirm = false }
+        )
+    }
+
+    // Modal Dialog: Owner Command AI & User Permissions Hub
+    if (showCommandAiHubModal && currentUser.isOwner) {
+        OwnerCommandLearningControlDialog(
+            viewModel = viewModel,
+            settings = commandSettings,
+            managedUsers = managedCommandUsers,
+            lang = lang,
+            onDismiss = { showCommandAiHubModal = false }
         )
     }
 }

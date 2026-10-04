@@ -40,6 +40,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
+import com.example.ui.theme.AnimeCyanLight
+import com.example.ui.screens.YouTubeSpecificUserAccessDialog
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
@@ -92,10 +94,13 @@ fun YouTubeOAuthCredentialsSection(
     val ytCreds by viewModel.youtubeCredentials.collectAsState()
     val isOwnerUnlocked by viewModel.isOwnerAccessUnlocked.collectAsState()
     val isGloballyEnabled by viewModel.isYouTubeAutomationGloballyEnabled.collectAsState()
+    val ytManagedUsers by viewModel.youtubeManagedUsers.collectAsState()
+    val isUserSpecificallyAuthorized = viewModel.isYouTubeAutomationAccessibleForCurrentUser()
     val isOwner = currentUser.isOwner || isOwnerUnlocked
     val lang = state.selectedLanguage
 
     var showOwnerPinDialog by remember { mutableStateOf(false) }
+    var showYtUserAccessModal by remember { mutableStateOf(false) }
     var ownerPinInput by remember { mutableStateOf("") }
     var pinError by remember { mutableStateOf("") }
 
@@ -332,7 +337,56 @@ fun YouTubeOAuthCredentialsSection(
                         )
                     }
                 }
-            } else if (!isGloballyEnabled) {
+
+                // 2. OWNER SPECIFIC PERSON ACCESS CONTROL CARD
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 12.dp),
+                    colors = CardDefaults.cardColors(containerColor = AnimeSurfaceVariant),
+                    border = BorderStroke(1.dp, AnimeCyan.copy(alpha = 0.5f)),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(12.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "👤 " + AppLocaleStrings.tr(
+                                    lang,
+                                    "Specific Person Access Control",
+                                    "विशिष्ट व्यक्ति हेतु एक्सेस कंट्रोल"
+                                ),
+                                color = AnimeCyanLight,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 13.sp
+                            )
+                            Text(
+                                text = AppLocaleStrings.tr(
+                                    lang,
+                                    "Activate or deactivate access for specific persons (${ytManagedUsers.count { it.isGranted }} authorized)",
+                                    "विशिष्ट व्यक्तियों के लिए YouTube ऑटोमेशन चालू/बंद करें (${ytManagedUsers.count { it.isGranted }} अधिकृत)"
+                                ),
+                                color = TextSecondary,
+                                fontSize = 11.sp
+                            )
+                        }
+                        Button(
+                            onClick = { showYtUserAccessModal = true },
+                            colors = ButtonDefaults.buttonColors(containerColor = AnimeCyan),
+                            shape = RoundedCornerShape(8.dp),
+                            contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 10.dp, vertical = 4.dp),
+                            modifier = Modifier.height(32.dp).testTag("owner_manage_yt_access_btn")
+                        ) {
+                            Text("Manage", color = Color.Black, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                        }
+                    }
+                }
+            } else if (!isGloballyEnabled && !isUserSpecificallyAuthorized) {
                 // Locked for non-owners because Owner disabled it
                 Card(
                     modifier = Modifier
@@ -360,8 +414,8 @@ fun YouTubeOAuthCredentialsSection(
                         Text(
                             text = AppLocaleStrings.tr(
                                 lang,
-                                "The app owner has disabled YouTube automation for other users. Only the Owner can enable or run it.",
-                                "YouTube ऑटोमेशन एक्सेस केवल ओनर के लिए है। बाकी सभी के लिए यह ओनर द्वारा बंद है।"
+                                "The app owner has disabled YouTube automation for other users. Only the Owner or authorized persons can use it.",
+                                "YouTube ऑटोमेशन एक्सेस केवल ओनर व अधिकृत व्यक्तियों के लिए है। बाकी सभी के लिए यह ओनर द्वारा बंद है।"
                             ),
                             color = TextSecondary,
                             fontSize = 11.sp,
@@ -375,6 +429,34 @@ fun YouTubeOAuthCredentialsSection(
                         ) {
                             Text("👑 " + AppLocaleStrings.tr(lang, "Enter Owner PIN to Unlock", "ओनर पिन से अनलॉक करें"), color = Color.Black, fontWeight = FontWeight.Bold, fontSize = 11.sp)
                         }
+                    }
+                }
+            } else if (!isGloballyEnabled && isUserSpecificallyAuthorized) {
+                // Granted specific access by Owner banner
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 12.dp),
+                    colors = CardDefaults.cardColors(containerColor = AnimeGreen.copy(alpha = 0.15f)),
+                    border = BorderStroke(1.dp, AnimeGreen),
+                    shape = RoundedCornerShape(10.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(10.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(Icons.Default.CheckCircle, contentDescription = null, tint = AnimeGreen, modifier = Modifier.size(18.dp))
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = AppLocaleStrings.tr(
+                                lang,
+                                "✓ You have been granted YouTube Automation access by the Owner",
+                                "✓ आपको ऐप ओनर द्वारा YouTube ऑटोमेशन की विशेष अनुमति दी गई है"
+                            ),
+                            color = AnimeGreen,
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold
+                        )
                     }
                 }
             }
@@ -939,5 +1021,16 @@ fun YouTubeOAuthCredentialsSection(
                 )
             }
         }
+    }
+
+    if (showYtUserAccessModal && isOwner) {
+        YouTubeSpecificUserAccessDialog(
+            managedUsers = ytManagedUsers,
+            lang = lang,
+            onGrantUser = { idOrEmail -> viewModel.setYouTubeAutomationUserAccess(idOrEmail, true) },
+            onToggleUser = { idOrEmail, granted -> viewModel.setYouTubeAutomationUserAccess(idOrEmail, granted) },
+            onRemoveUser = { idOrEmail -> viewModel.removeYouTubeAutomationUser(idOrEmail) },
+            onDismiss = { showYtUserAccessModal = false }
+        )
     }
 }

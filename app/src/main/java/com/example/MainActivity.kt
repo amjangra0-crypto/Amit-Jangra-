@@ -81,6 +81,7 @@ import com.example.ui.screens.AppSettingsScreen
 import com.example.ui.screens.CharacterBuilderScreen
 import com.example.ui.screens.CharacterStudioScreen
 import com.example.ui.screens.MyProjectsScreen
+import com.example.ui.screens.OwnerDashboardScreen
 import com.example.ui.screens.ProfileScreen
 import com.example.ui.screens.ProfileSettingsScreen
 import com.example.ui.screens.ProjectHistoryScreen
@@ -399,6 +400,12 @@ class MainActivity : ComponentActivity() {
                             }
                             AppTab.SETTINGS -> {
                                 AppSettingsScreen(
+                                    viewModel = viewModel,
+                                    onNavigateBack = { viewModel.setTab(AppTab.PROFILE) }
+                                )
+                            }
+                            AppTab.OWNER_DASHBOARD -> {
+                                OwnerDashboardScreen(
                                     viewModel = viewModel,
                                     onNavigateBack = { viewModel.setTab(AppTab.PROFILE) }
                                 )

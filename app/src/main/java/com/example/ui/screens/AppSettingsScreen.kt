@@ -1104,6 +1104,25 @@ fun AppSettingsScreen(
                 if (currentUser.isOwner) {
                     Text("${AppLocaleStrings.get("owner_info", lang)} Aman Jangra (amjangra0@gmail.com)", color = AnimeGold, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
                     Text(AppLocaleStrings.tr(lang, "License Status: VIP Owner Lifetime Master Access", "लाइसेंस स्थिति: वीआईपी ओनर लाइफटाइम मास्टर एक्सेस"), color = AnimeGold, fontSize = 11.sp)
+                    Spacer(modifier = Modifier.height(10.dp))
+                    Button(
+                        onClick = { viewModel.setTab(com.example.ui.AppTab.OWNER_DASHBOARD) },
+                        colors = ButtonDefaults.buttonColors(containerColor = AnimeGold),
+                        shape = RoundedCornerShape(10.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(44.dp)
+                            .testTag("settings_open_owner_dashboard_btn")
+                    ) {
+                        Icon(Icons.Default.Security, contentDescription = null, tint = Color.Black, modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = AppLocaleStrings.tr(lang, "👑 Open Owner Dashboard (Firebase Protected)", "👑 ओनर डैशबोर्ड खोलें (Firebase सुरक्षित)"),
+                            color = Color.Black,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 12.sp
+                        )
+                    }
                 } else {
                     Text(AppLocaleStrings.tr(lang, "Studio Architecture: Enterprise AI Creative Suite", "स्टूडियो आर्किटेक्चर: एंटरप्राइज एआई क्रिएटिव सुइट"), color = TextMuted, fontSize = 12.sp)
                     Text(AppLocaleStrings.tr(lang, "License Status: Active Creator License", "लाइसेंस स्थिति: सक्रिय क्रिएटर लाइसेंस"), color = AnimeCyan, fontSize = 11.sp)

@@ -367,6 +367,39 @@ class AuthAndWalletRepository(private val context: Context) {
         return Pair(true, "Exchanged ${sourceCurrency.symbol}$amount to ${targetCurrency.symbol}${String.format("%.2f", convertedAmount)}")
     }
 
+    /**
+     * Owner Balance Adjustment (Add funds or update balance securely from Owner Dashboard)
+     */
+    fun adjustWalletBalance(currency: CurrencyType, deltaAmount: Double, reason: String): Boolean {
+        val currentWallets = _wallets.value.toMutableMap()
+        val wallet = currentWallets[currency] ?: CurrencyWallet(currency, 0.0, 0.0, 0.0)
+        val newBalance = (wallet.balance + deltaAmount).coerceAtLeast(0.0)
+        val updatedWallet = if (deltaAmount >= 0) {
+            wallet.copy(balance = newBalance, totalReceived = wallet.totalReceived + deltaAmount)
+        } else {
+            wallet.copy(balance = newBalance, totalWithdrawn = wallet.totalWithdrawn + (-deltaAmount))
+        }
+        currentWallets[currency] = updatedWallet
+        _wallets.value = currentWallets
+        saveWallets(currentWallets)
+
+        val txn = WalletTransaction(
+            id = "ADJ_${System.currentTimeMillis()}",
+            timestamp = System.currentTimeMillis(),
+            type = if (deltaAmount >= 0) TransactionType.SUBSCRIPTION_DEPOSIT else TransactionType.WITHDRAWAL_BANK,
+            currency = currency,
+            amount = Math.abs(deltaAmount),
+            targetAccountOrUser = "👑 Owner Dashboard ($reason)",
+            description = if (deltaAmount >= 0) "Manual Balance Addition: $reason" else "Manual Balance Deduction: $reason",
+            status = "सफल (Balance Adjusted)",
+            referenceId = "ADJ-${UUID.randomUUID().toString().uppercase().take(8)}"
+        )
+        val updatedTxns = listOf(txn) + _transactions.value
+        _transactions.value = updatedTxns
+        saveTransactions(updatedTxns)
+        return true
+    }
+
     // -----------------------------------------------------------------------------------------
     // PERSISTENCE HELPERS
     // -----------------------------------------------------------------------------------------
