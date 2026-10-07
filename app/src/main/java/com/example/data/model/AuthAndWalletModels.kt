@@ -50,20 +50,41 @@ data class CurrencyWallet(
     val totalWithdrawn: Double
 )
 
+// Owner in-app Wallet Constants
+object OwnerWalletConstants {
+    const val OWNER_WALLET_ID = "WALLET_OWNER_AMJANGRA0_9999"
+    const val OWNER_DISPLAY_NAME = "Aman Jangra (Anime Studio Owner)"
+    const val OWNER_UPI_ID = "amjangra0@okhdfcbank"
+    const val OWNER_PAYTM_NUMBER = "9876543210"
+    const val OWNER_PAYPAL_EMAIL = "amjangra0@gmail.com"
+}
+
+enum class BankTransferProtocol(val title: String, val description: String) {
+    RTGS("RTGS", "Real Time Gross Settlement (Instant, for high value settlements)"),
+    NEFT("NEFT", "National Electronic Funds Transfer (Batch settlements)"),
+    SWIFT("SWIFT", "International SWIFT / BIC Wire (Multi-currency global wire)")
+}
+
 enum class PaymentGateway(val title: String, val description: String) {
+    OWNER_WALLET_BARCODE("Owner Wallet Barcode / QR", "Scan Owner's in-app Wallet Barcode & QR Code"),
+    OWNER_WALLET_ID("Owner Wallet ID Transfer", "Direct transfer to Owner in-app Wallet ID"),
     CARD("Debit / Credit Card (Global)", "Visa, MasterCard, RuPay, Amex & Discover"),
     UPI_GPAY("Google Pay (GPay)", "Instant UPI via Google Pay"),
     UPI_PHONEPE("PhonePe", "Instant UPI via PhonePe"),
+    PAYTM("Paytm Wallet / UPI", "Instant Paytm Wallet & UPI payment"),
     UPI_GENERIC("UPI ID / QR Code", "Scan & Pay with any UPI app"),
     PAYPAL("PayPal", "Fast global checkout for USD & EUR"),
-    BANK_TRANSFER("Direct Bank Transfer", "Direct NEFT / IMPS / SWIFT wire");
+    BANK_TRANSFER("Direct Bank Transfer", "Direct NEFT / RTGS / SWIFT wire");
 
     val displayName: String get() = title
     val iconEmoji: String
         get() = when (this) {
+            OWNER_WALLET_BARCODE -> "📷"
+            OWNER_WALLET_ID -> "👑"
             CARD -> "💳"
             UPI_GPAY -> "🟢"
             UPI_PHONEPE -> "🟣"
+            PAYTM -> "🔵"
             UPI_GENERIC -> "📲"
             PAYPAL -> "🅿️"
             BANK_TRANSFER -> "🏦"
@@ -71,12 +92,18 @@ enum class PaymentGateway(val title: String, val description: String) {
 }
 
 enum class TransactionType(val title: String, val isCredit: Boolean) {
-    SUBSCRIPTION_DEPOSIT("Subscription Received", true),
-    SUBSCRIPTION_CARD("Global Card Payment", true),
+    SUBSCRIPTION_DEPOSIT("Subscription Received into Owner Wallet", true),
+    SUBSCRIPTION_CARD("Global Card Payment into Owner Wallet", true),
     WITHDRAWAL_BANK("Bank Transfer Withdrawal", false),
+    WITHDRAWAL_RTGS("Bank RTGS Instant Settlement", false),
+    WITHDRAWAL_NEFT("Bank NEFT Electronic Transfer", false),
+    WITHDRAWAL_SWIFT("International SWIFT Wire", false),
+    WITHDRAWAL_PAYTM("Paytm Wallet Withdrawal", false),
+    WITHDRAWAL_UPI("Instant UPI Withdrawal", false),
     WITHDRAWAL_PHONEPE("PhonePe Withdrawal", false),
     WITHDRAWAL_GPAY("Google Pay Withdrawal", false),
     WITHDRAWAL_PAYPAL("PayPal Withdrawal", false),
+    WITHDRAWAL_BARCODE_SCAN("QR/Barcode Scanned Withdrawal", false),
     WALLET_EXCHANGE_TRANSFER("Wallet Currency Exchange", true),
     SECURITY_CREDENTIAL_CHANGE("Owner Security Credentials Modified", false)
 }

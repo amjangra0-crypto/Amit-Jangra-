@@ -54,6 +54,41 @@ object SourceIntelligenceEngine {
     }
 
     /**
+     * Extracts pure storyline theme from raw prompt, command, or web link.
+     * Guaranteed NEVER to repeat URLs, links, or prompt instructions in the storyline.
+     */
+    fun extractCleanStorylineTheme(input: String, language: String = "hi"): String {
+        var cleaned = input.trim()
+        // Strip URLs completely
+        cleaned = cleaned.replace(Regex("https?://\\S+"), "")
+            .replace(Regex("www\\.\\S+"), "")
+            .replace(Regex("\\b[a-zA-Z0-9.-]+\\.(com|org|net|in|io|co|be|ai|app)\\S*"), "")
+
+        // Strip command and prompt meta instructions
+        val metaPatterns = listOf(
+            Regex("(?i)^(\\s*(generate|make|create|produce|search|build|render)\\s+(a|an|the)?\\s*(anime|video|cartoon|movie|web\\s*series|short|reel|clip)?\\s*(about|of|on|from|with)?)+"),
+            Regex("(?i)^(\\s*(वीडियो|मूवी|वेब\\s*सीरीज|एनिमे|कार्टून)\\s*(बनाओ|जनरेट\\s*करो|तैयार\\s*करो|बनाएं)?\\s*(के\\s*बारे\\s*में|पर|से)?)+"),
+            Regex("(?i)^(\\s*(link|url|prompt|command|कहानी|लिंक):?\\s*)+")
+        )
+        for (pattern in metaPatterns) {
+            cleaned = cleaned.replace(pattern, "").trim()
+        }
+
+        cleaned = cleaned.replace(Regex("[_#*\\[\\]{}()]"), " ").trim()
+
+        if (cleaned.isNotBlank() && cleaned.length >= 3) {
+            return cleaned.take(100)
+        }
+
+        val isHindi = language.equals("Hindi", ignoreCase = true) || language.equals("hi", ignoreCase = true)
+        return if (isHindi) {
+            "ब्रह्मांडीय सौरमंडल, जादुई झरने और असीम योद्धाओं की दास्तान"
+        } else {
+            "Cosmic Odyssey of the Celestial Realms & Astral Warriors"
+        }
+    }
+
+    /**
      * Performs deep analysis of data and context across YouTube, Google, Instagram, Snapchat, Voice, and Text
      */
     fun analyzeSource(input: String, platform: SourcePlatform): SourceIntelligence {

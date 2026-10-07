@@ -166,6 +166,10 @@ class GeminiApiService {
             Language for dialogues: $language ${if (voiceAccent.isNotBlank()) "with $voiceAccent accent cadence" else ""}
             Required Scene Count: Exactly $targetSceneCount scenes.
             
+            CRITICAL STORYLINE PURITY RULE:
+            - NEVER repeat raw URLs, web links (e.g. http, https, www, youtube), prompt instructions, or meta commands inside dialogues, titles, visual prompts, or synopses.
+            - Only output pure cinematic in-universe storyline, rich emotional character dialogue, and vivid scene action. Stripped of all links.
+            
             Return a JSON with the following structure:
             {
               "title": "Compelling Title",
@@ -230,6 +234,14 @@ class GeminiApiService {
         script
     }
 
+    private fun sanitizeStorylineText(text: String): String {
+        return text.replace(Regex("https?://\\S+"), "")
+            .replace(Regex("www\\.\\S+"), "")
+            .replace(Regex("\\b[a-zA-Z0-9.-]+\\.(com|org|net|in|io|co|be|ai|app)\\S*"), "")
+            .replace(Regex("(?i)^(\\s*(link|url|prompt|command|कहानी|लिंक):?\\s*)+"), "")
+            .trim()
+    }
+
     private fun parseScriptJson(
         rawJson: String,
         input: String,
@@ -251,9 +263,11 @@ class GeminiApiService {
                 // Strip markdown backticks if present
                 val cleaned = rawJson.replace("```json", "").replace("```", "").trim()
                 val root = JSONObject(cleaned)
-                val title = root.optString("title", "Anime Chronicle")
+                val rawTitle = root.optString("title", "Anime Chronicle")
+                val title = sanitizeStorylineText(rawTitle).ifBlank { "Anime Chronicle" }
                 val genre = root.optString("genre", if (artStyle == AnimeArtStyle.MANHWA_WEBTOON) "Urban Hunter Fantasy" else "Fantasy Shonen")
-                val synopsis = root.optString("synopsis", "An extraordinary animation generated through AI.")
+                val rawSynopsis = root.optString("synopsis", "An extraordinary animation generated through AI.")
+                val synopsis = sanitizeStorylineText(rawSynopsis).ifBlank { "An extraordinary anime storyline generated through AI." }
 
                 val charactersList = mutableListOf<CharacterProfile>()
                 val charsArr = root.optJSONArray("characters")
@@ -301,7 +315,7 @@ class GeminiApiService {
                                 dialoguesList.add(
                                     DialogueLine(
                                         characterName = dObj.optString("characterName", "Narrator"),
-                                        text = dObj.optString("text", "..."),
+                                        text = sanitizeStorylineText(dObj.optString("text", "...")).ifBlank { "..." },
                                         emotion = dObj.optString("emotion", "Normal"),
                                         expression = dObj.optString("expression", "Confident Smirk"),
                                         motionEffect = dObj.optString("motionEffect", motionEffect.title),
@@ -749,7 +763,13 @@ class GeminiApiService {
         linkedEpisodeNumber: Int = 1,
         excludedCharacterNames: Set<String> = emptySet()
     ): AnimeScript {
-        val topic = if (input.isBlank()) "जादुई एनिमे व मन्हवा संसार" else input
+        val topic = SourceIntelligenceEngine.extractCleanStorylineTheme(input, language)
+        val lowerInput = input.lowercase()
+        val isCosmic = lowerInput.contains("planet") || lowerInput.contains("solar") || lowerInput.contains("ग्रह") || lowerInput.contains("सौरमंडल") || lowerInput.contains("cosmos") || lowerInput.contains("space")
+        val isNature = lowerInput.contains("waterfall") || lowerInput.contains("forest") || lowerInput.contains("झरना") || lowerInput.contains("जंगल") || lowerInput.contains("वृक्ष") || lowerInput.contains("water") || lowerInput.contains("नदी")
+        val isMecha = lowerInput.contains("machine") || lowerInput.contains("vehicle") || lowerInput.contains("plane") || lowerInput.contains("विमान") || lowerInput.contains("गाड़ी") || lowerInput.contains("रोबोट")
+        val isRomance = lowerInput.contains("love") || lowerInput.contains("romantic") || lowerInput.contains("प्यार") || lowerInput.contains("प्रेम")
+        val isFight = lowerInput.contains("fight") || lowerInput.contains("युद्ध") || lowerInput.contains("लड़ाई") || lowerInput.contains("lightning") || lowerInput.contains("बिजली")
         val isHindi = language.equals("Hindi", ignoreCase = true) || language.equals("hi", ignoreCase = true)
         val isKorean = language.equals("Korean", ignoreCase = true) || language.equals("ko", ignoreCase = true)
         val isJapanese = language.equals("Japanese", ignoreCase = true) || language.equals("ja", ignoreCase = true)
@@ -757,7 +777,7 @@ class GeminiApiService {
         val isManga = artStyle == AnimeArtStyle.CLASSIC_MANGA || topic.contains("manga", ignoreCase = true)
         val isMovie = productionFormat == com.example.data.model.ProductionFormat.CINEMATIC_MOVIE
         val isShorts = productionFormat == com.example.data.model.ProductionFormat.SHORTS_REEL
-        val isCyber = artStyle == AnimeArtStyle.CYBERPUNK_ANIME || topic.contains("cyber", ignoreCase = true)
+        val isCyber = artStyle == AnimeArtStyle.CYBERPUNK_ANIME || topic.contains("cyber", ignoreCase = true) || isMecha
 
         // Strict Novelty Rule: Generate 100% Brand-New Characters unless continuity mode is requested
         val charactersList = if (isSeriesContinuity && linkedScript != null && linkedScript.characters.isNotEmpty()) {
@@ -765,7 +785,7 @@ class GeminiApiService {
         } else {
             SourceIntelligenceEngine.generateNovelCharacters(
                 artStyleTitle = artStyle.title,
-                genre = if (isManhwa) "Manhwa Hunter" else if (isCyber) "Cyberpunk" else "Fantasy Shonen",
+                genre = if (isManhwa) "Manhwa Hunter" else if (isCyber) "Cyberpunk" else if (isCosmic) "Cosmic Sci-Fi" else "Fantasy Shonen",
                 language = language,
                 excludedNames = excludedCharacterNames,
                 voiceAccent = voiceAccent
@@ -786,6 +806,11 @@ class GeminiApiService {
             "${linkedScript.title}: भाग $linkedEpisodeNumber (Ep. $linkedEpisodeNumber)"
         } else {
             when {
+                isCosmic && isHindi -> "सौरमंडल व ब्रह्मांडीय ग्रहों की खोज: $topic"
+                isNature && isHindi -> "रहस्यमयी झरने व पवित्र वनों की गाथा: $topic"
+                isMecha && isHindi -> "सुपरसोनिक मेका विमान व साइबर मशीन्स: $topic"
+                isRomance && isHindi -> "चेरी ब्लॉसम और सूर्यास्त की अमर प्रेम कहानी: $topic"
+                isFight && isHindi -> "तूफानी बिजली व महा-युद्ध का संग्राम: $topic"
                 isManhwa && isKorean -> "각성자들의 신화: $topic"
                 isManhwa && isHindi -> "अल्टीमेट हंटर का उदय: $topic"
                 isManhwa -> "Rift Awakening: $topic"
@@ -946,19 +971,66 @@ class GeminiApiService {
                 val scTitle = if (isHindi) "दृश्य ${idx + 1}: ${if (idx == 0) "चेरी ब्लॉसम की जागृति" else if (idx == sceneCount - 1) "अंतिम विजय व नया सवेरा" else "महा-युद्ध का आगाज़"}" 
                               else "Scene ${idx + 1}: ${if (idx == 0) "The Celestial Awakening" else if (idx == sceneCount - 1) "Dawn of the New Era" else "Clash of Destinies"}"
 
-                val eff = when (idx % 4) {
-                    0 -> "CINEMATIC_ZOOM"
-                    1 -> "SPEEDLINES_ACTION"
-                    2 -> "SCREEN_SHAKE_IMPACT"
-                    else -> "AURA_GLOW_PARTICLES"
+                val eff = when {
+                    isCosmic -> if (idx % 2 == 0) "PLANETARY_COSMOS" else "CINEMATIC_ZOOM"
+                    isNature -> if (idx % 2 == 0) "WATERFALL_MIST_FLOW" else "CINEMATIC_ZOOM"
+                    isMecha -> if (idx % 2 == 0) "MECHA_VEHICLE_CRUISE" else "SPEEDLINES_ACTION"
+                    isFight -> if (idx % 2 == 0) "LIGHTNING_STRIKE" else "SCREEN_SHAKE_IMPACT"
+                    isRomance -> if (idx % 2 == 0) "ROMANCE_PETAL_SUNSET" else "CINEMATIC_ZOOM"
+                    else -> when (idx % 4) {
+                        0 -> "CINEMATIC_ZOOM"
+                        1 -> "SPEEDLINES_ACTION"
+                        2 -> "SCREEN_SHAKE_IMPACT"
+                        else -> "AURA_GLOW_PARTICLES"
+                    }
+                }
+
+                val scVisual = when {
+                    isCosmic -> "Vast celestial cosmic nebula with glowing planetary rings, solar flares and orbiting starfields"
+                    isNature -> "Lush enchanted forest canopy with crystal clear cascading waterfalls, ancient trees and water mist"
+                    isMecha -> "High-speed supersonic mecha jet fighters soaring through futuristic clouds with booster thrusters"
+                    isFight -> "Electric lightning storm arena with clashing blades, shockwaves, and dynamic speedlines"
+                    isRomance -> "Breathtaking golden hour sunset with drifting sakura petals and warm emotional lighting"
+                    else -> if (idx % 2 == 0) "Makoto Shinkai style wide angle shot of cherry blossom temple with glowing pink celestial light" else "Cyberpunk anime city night view with holographic billboards and neon rain"
+                }
+
+                val scBg = when {
+                    isCosmic -> "Planetary Cosmos & Solar System"
+                    isNature -> "Sacred Forest & Waterfall Mist"
+                    isMecha -> "Cyber Skyway & Mecha Jets"
+                    isFight -> "Thunder Lightning Arena"
+                    isRomance -> "Golden Sunset & Sakura Blossom"
+                    else -> if (idx % 2 == 0) "Cherry Blossom Sanctuary" else "Cyber Neo City"
                 }
 
                 val dList = if (isHindi) {
-                    listOf(
-                        DialogueLine(heroine.name, "रेन, आसमान की तरफ देखो! चेरी ब्लॉसम के पत्ते चमक रहे हैं!", "Excited", "Kawaii Blush & Sparkles", eff, heroine.voicePitch, heroine.voiceSpeed, heroine.voiceType, effectiveAccent),
-                        DialogueLine(heroBoy.name, "मेरी तलवार कभी नहीं झुकेगी! चलो, पूरी शक्ति से आगे बढ़ते हैं!", "Fierce", "Fierce Battle Roar", eff, heroBoy.voicePitch, heroBoy.voiceSpeed, heroBoy.voiceType, effectiveAccent),
-                        DialogueLine(mascot.name, "पोपो भी तुम्हारे साथ है! हम सब मिलकर इस दुनिया को बचाएंगे!", "Happy", "Comedic Sweatdrop", eff, mascot.voicePitch, mascot.voiceSpeed, mascot.voiceType, effectiveAccent)
-                    )
+                    when {
+                        isCosmic -> listOf(
+                            DialogueLine(heroBoy.name, "सौरमंडल के उस पार... एक नया आकाशीय ग्रह हमारा इंतज़ार कर रहा है!", "Determined", "Manhwa Glowing Eyes", eff, heroBoy.voicePitch, heroBoy.voiceSpeed, heroBoy.voiceType, effectiveAccent),
+                            DialogueLine(heroine.name, "तारों की यह चमक हमारे अंतरिक्ष यान को सही रास्ता दिखाएगी!", "Excited", "Kawaii Blush & Sparkles", eff, heroine.voicePitch, heroine.voiceSpeed, heroine.voiceType, effectiveAccent)
+                        )
+                        isNature -> listOf(
+                            DialogueLine(heroine.name, "इस झरने की गूंज और पवित्र जंगल की हवा में असीम शांति है।", "Peaceful", "Kawaii Blush & Sparkles", eff, heroine.voicePitch, heroine.voiceSpeed, heroine.voiceType, effectiveAccent),
+                            DialogueLine(heroBoy.name, "प्रकृति की इस शक्ति के साथ हमारी यात्रा फिर से शुरू होती है!", "Determined", "Fierce Battle Roar", eff, heroBoy.voicePitch, heroBoy.voiceSpeed, heroBoy.voiceType, effectiveAccent)
+                        )
+                        isMecha -> listOf(
+                            DialogueLine(heroBoy.name, "मेका थ्रस्टर्स फुल स्पीड पर एक्टिवेट करो! हम ध्वनि की गति से आगे बढ़ रहे हैं!", "Fierce", "Fierce Battle Roar", eff, heroBoy.voicePitch, heroBoy.voiceSpeed, heroBoy.voiceType, effectiveAccent),
+                            DialogueLine(heroine.name, "सभी साइबर सिस्टम्स 100% सिंक्रनाइज़्ड हैं, टेक ऑफ!", "Excited", "Villainous Smirk", eff, heroine.voicePitch, heroine.voiceSpeed, heroine.voiceType, effectiveAccent)
+                        )
+                        isRomance -> listOf(
+                            DialogueLine(heroine.name, "सूर्यास्त की यह लालिमा और चेरी के पत्ते... काश यह पल यहीं ठहर जाए।", "Loving", "Kawaii Blush & Sparkles", eff, heroine.voicePitch, heroine.voiceSpeed, heroine.voiceType, effectiveAccent),
+                            DialogueLine(heroBoy.name, "चाहे कितनी भी मुश्किलें आएं, मैं हमेशा तुम्हारी रक्षा करूंगा।", "Determined", "Confident Smirk", eff, heroBoy.voicePitch, heroBoy.voiceSpeed, heroBoy.voiceType, effectiveAccent)
+                        )
+                        isFight -> listOf(
+                            DialogueLine(heroBoy.name, "आसमानी बिजली की ताकत से... यह अंतिम प्रहार तुम्हारा अंत करेगा!", "Fierce", "Fierce Battle Roar", eff, heroBoy.voicePitch, heroBoy.voiceSpeed, heroBoy.voiceType, effectiveAccent),
+                            DialogueLine(heroine.name, "सावधान, दुश्मन का अगला वार बहुत भयानक होने वाला है!", "Determined", "Manhwa Glowing Eyes", eff, heroine.voicePitch, heroine.voiceSpeed, heroine.voiceType, effectiveAccent)
+                        )
+                        else -> listOf(
+                            DialogueLine(heroine.name, "रेन, आसमान की तरफ देखो! चेरी ब्लॉसम के पत्ते चमक रहे हैं!", "Excited", "Kawaii Blush & Sparkles", eff, heroine.voicePitch, heroine.voiceSpeed, heroine.voiceType, effectiveAccent),
+                            DialogueLine(heroBoy.name, "मेरी तलवार कभी नहीं झुकेगी! चलो, पूरी शक्ति से आगे बढ़ते हैं!", "Fierce", "Fierce Battle Roar", eff, heroBoy.voicePitch, heroBoy.voiceSpeed, heroBoy.voiceType, effectiveAccent),
+                            DialogueLine(mascot.name, "पोपो भी तुम्हारे साथ है! हम सब मिलकर इस दुनिया को बचाएंगे!", "Happy", "Comedic Sweatdrop", eff, mascot.voicePitch, mascot.voiceSpeed, mascot.voiceType, effectiveAccent)
+                        )
+                    }
                 } else {
                     listOf(
                         DialogueLine(heroine.name, "Ren, look at the sky! The sakura petals are resonating with celestial light!", "Excited", "Kawaii Blush & Sparkles", eff, heroine.voicePitch, heroine.voiceSpeed, heroine.voiceType, effectiveAccent),
@@ -971,12 +1043,12 @@ class GeminiApiService {
                     AnimeScene(
                         sceneNumber = idx + 1,
                         title = scTitle,
-                        visualPrompt = if (idx % 2 == 0) "Makoto Shinkai style wide angle shot of cherry blossom temple with glowing pink celestial light" else "Cyberpunk anime city night view with holographic billboards and neon rain",
-                        backgroundType = if (idx % 2 == 0) "Cherry Blossom Sanctuary" else "Cyber Neo City",
-                        bgMood = if (idx % 2 == 0) "Emotional Piano" else "Epic Battle",
+                        visualPrompt = scVisual,
+                        backgroundType = scBg,
+                        bgMood = if (isCosmic) "Cyber Synth" else if (isRomance) "Emotional Piano" else if (isFight) "Epic Battle" else if (idx % 2 == 0) "Emotional Piano" else "Epic Battle",
                         dialogues = dList,
                         durationSec = if (isMovie) 10 else 8,
-                        sceneDrawableName = if (idx % 2 == 0) "scene_cherry_temple" else "scene_cyber_city",
+                        sceneDrawableName = if (isMecha || isCyber || isCosmic) "scene_cyber_city" else "scene_cherry_temple",
                         motionEffect = eff,
                         productionFormat = productionFormat.title
                     )

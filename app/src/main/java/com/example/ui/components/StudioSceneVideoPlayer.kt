@@ -383,7 +383,11 @@ fun StudioSceneVideoPlayer(
                             .background(Color.Black)
                             .border(1.dp, AnimePurple.copy(alpha = 0.5f), RoundedCornerShape(14.dp))
                             .clickable {
-                                if (state.isPlayingVideo) viewModel.pauseVideo() else viewModel.playVideo()
+                                if (script != null) {
+                                    if (state.isPlayingVideo) viewModel.pauseVideo() else viewModel.playVideo()
+                                } else {
+                                    viewModel.generateAnimeVideo()
+                                }
                             }
                             .testTag("studio_realtime_video_canvas")
                     ) {
@@ -430,66 +434,132 @@ fun StudioSceneVideoPlayer(
                                 )
                         )
 
-                        // Top HUD: Scene title badge, format, mood
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(10.dp)
-                                .align(Alignment.TopCenter),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Surface(
-                                shape = RoundedCornerShape(6.dp),
-                                color = Color.Black.copy(alpha = 0.65f),
-                                border = BorderStroke(1.dp, AnimeGold.copy(alpha = 0.5f))
+                        // Top HUD: Scene title badge, format, mood (only when video is generated)
+                        if (script != null) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(10.dp)
+                                    .align(Alignment.TopCenter),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Row(
-                                    modifier = Modifier.padding(horizontal = 7.dp, vertical = 3.dp),
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Text(
-                                        text = "🎬 ${currentScene?.title ?: "Scene ${currentSceneIndex + 1}"}",
-                                        color = AnimeGold,
-                                        fontSize = 10.sp,
-                                        fontWeight = FontWeight.Bold,
-                                        maxLines = 1
-                                    )
-                                }
-                            }
-
-                            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                                 Surface(
                                     shape = RoundedCornerShape(6.dp),
                                     color = Color.Black.copy(alpha = 0.65f),
-                                    border = BorderStroke(1.dp, AnimeCyan.copy(alpha = 0.4f))
+                                    border = BorderStroke(1.dp, AnimeGold.copy(alpha = 0.5f))
                                 ) {
-                                    Text(
-                                        text = "🎵 ${currentScene?.bgMood ?: "Anime BGM"}",
-                                        color = AnimeCyanLight,
-                                        fontSize = 9.sp,
-                                        fontWeight = FontWeight.SemiBold,
-                                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 3.dp)
-                                    )
+                                    Row(
+                                        modifier = Modifier.padding(horizontal = 7.dp, vertical = 3.dp),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Text(
+                                            text = "🎬 ${currentScene?.title ?: "Scene ${currentSceneIndex + 1}"}",
+                                            color = AnimeGold,
+                                            fontSize = 10.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            maxLines = 1
+                                        )
+                                    }
                                 }
 
-                                Surface(
-                                    shape = RoundedCornerShape(6.dp),
-                                    color = AnimePurple.copy(alpha = 0.7f)
-                                ) {
-                                    Text(
-                                        text = "60 FPS AI",
-                                        color = Color.White,
-                                        fontSize = 9.sp,
-                                        fontWeight = FontWeight.ExtraBold,
-                                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 3.dp)
-                                    )
+                                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                                    Surface(
+                                        shape = RoundedCornerShape(6.dp),
+                                        color = Color.Black.copy(alpha = 0.65f),
+                                        border = BorderStroke(1.dp, AnimeCyan.copy(alpha = 0.4f))
+                                    ) {
+                                        Text(
+                                            text = "🎵 ${currentScene?.bgMood ?: "Anime BGM"}",
+                                            color = AnimeCyanLight,
+                                            fontSize = 9.sp,
+                                            fontWeight = FontWeight.SemiBold,
+                                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 3.dp)
+                                        )
+                                    }
+
+                                    Surface(
+                                        shape = RoundedCornerShape(6.dp),
+                                        color = AnimePurple.copy(alpha = 0.7f)
+                                    ) {
+                                        Text(
+                                            text = "60 FPS AI",
+                                            color = Color.White,
+                                            fontSize = 9.sp,
+                                            fontWeight = FontWeight.ExtraBold,
+                                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 3.dp)
+                                        )
+                                    }
                                 }
                             }
                         }
 
-                        // Center Play Overlay (when paused)
-                        if (!state.isPlayingVideo && !state.isGenerating) {
+                        // If no video script is generated yet
+                        if (script == null && !state.isGenerating) {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .background(Color(0xFF0C101D))
+                                    .padding(16.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                    Box(
+                                        modifier = Modifier
+                                            .size(50.dp)
+                                            .clip(CircleShape)
+                                            .background(AnimeCyan.copy(alpha = 0.15f))
+                                            .border(1.5.dp, AnimeCyan, CircleShape),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.Movie,
+                                            contentDescription = null,
+                                            tint = AnimeCyan,
+                                            modifier = Modifier.size(26.dp)
+                                        )
+                                    }
+                                    Spacer(modifier = Modifier.height(8.dp))
+                                    Text(
+                                        text = AppLocaleStrings.tr(
+                                            state.selectedLanguage,
+                                            "No Video Generated Yet",
+                                            "अभी तक कोई वीडियो जनरेट नहीं हुआ है"
+                                        ),
+                                        color = Color.White,
+                                        fontSize = 13.sp,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                    Text(
+                                        text = AppLocaleStrings.tr(
+                                            state.selectedLanguage,
+                                            "Video Generate • Voice Generate • Visual Content • Translation",
+                                            "वीडियो जनरेट • वॉयस जनरेट • विजुअल कंटेंट • ट्रांसलेशन"
+                                        ),
+                                        color = AnimeGold,
+                                        fontSize = 10.sp,
+                                        fontWeight = FontWeight.SemiBold
+                                    )
+                                    Spacer(modifier = Modifier.height(10.dp))
+                                    Button(
+                                        onClick = { viewModel.generateAnimeVideo() },
+                                        colors = ButtonDefaults.buttonColors(containerColor = AnimeCyan),
+                                        shape = RoundedCornerShape(10.dp),
+                                        contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 16.dp, vertical = 6.dp)
+                                    ) {
+                                        Icon(Icons.Default.AutoAwesome, contentDescription = null, tint = Color.Black, modifier = Modifier.size(15.dp))
+                                        Spacer(modifier = Modifier.width(6.dp))
+                                        Text(
+                                            text = AppLocaleStrings.tr(state.selectedLanguage, "Generate Video Now", "वीडियो जनरेट करें"),
+                                            color = Color.Black,
+                                            fontWeight = FontWeight.Bold,
+                                            fontSize = 12.sp
+                                        )
+                                    }
+                                }
+                            }
+                        } else if (script != null && !state.isPlayingVideo && !state.isGenerating) {
                             Box(
                                 modifier = Modifier
                                     .align(Alignment.Center)
@@ -506,6 +576,37 @@ fun StudioSceneVideoPlayer(
                                     tint = AnimeCyan,
                                     modifier = Modifier.size(30.dp)
                                 )
+                            }
+                        }
+
+                        // Synchronized Explainer Mode Header HUD
+                        if (script != null && state.videoPresentationMode == com.example.data.model.VideoPresentationMode.EXPLAINER_MODE && !state.isGenerating) {
+                            Surface(
+                                shape = RoundedCornerShape(bottomStart = 8.dp, bottomEnd = 8.dp),
+                                color = Color.Black.copy(alpha = 0.8f),
+                                border = BorderStroke(1.dp, AnimeCyan.copy(alpha = 0.8f)),
+                                modifier = Modifier
+                                    .align(Alignment.TopCenter)
+                                    .padding(horizontal = 12.dp)
+                            ) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.AutoAwesome,
+                                        contentDescription = null,
+                                        tint = AnimeCyan,
+                                        modifier = Modifier.size(12.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(4.dp))
+                                    Text(
+                                        text = "🎙️ EXPLAINER SYNC: Storyline • Motion • Sound",
+                                        color = AnimeCyan,
+                                        fontSize = 9.sp,
+                                        fontWeight = FontWeight.ExtraBold
+                                    )
+                                }
                             }
                         }
 
@@ -546,215 +647,317 @@ fun StudioSceneVideoPlayer(
                             }
                         }
 
-                        // Bottom HUD: Character Lip-Sync Avatar & Subtitles
-                        Column(
-                            modifier = Modifier
-                                .align(Alignment.BottomCenter)
-                                .fillMaxWidth()
-                                .padding(horizontal = 10.dp, vertical = 8.dp)
-                        ) {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                verticalAlignment = Alignment.CenterVertically
+                        // Bottom HUD: Character Lip-Sync Avatar & Subtitles (only when video is generated)
+                        if (script != null && !state.isGenerating) {
+                            Column(
+                                modifier = Modifier
+                                    .align(Alignment.BottomCenter)
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 10.dp, vertical = 8.dp)
                             ) {
-                                // Character Avatar with Lip-Sync Pulsing
-                                Box(
-                                    modifier = Modifier
-                                        .size(36.dp)
-                                        .scale(avatarPulseScale)
-                                        .clip(CircleShape)
-                                        .background(AnimeSurfaceVariant)
-                                        .border(
-                                            width = if (speakingState.isSpeaking) 2.dp else 1.dp,
-                                            color = if (speakingState.isSpeaking) AnimePink else AnimeCyan,
-                                            shape = CircleShape
-                                        ),
-                                    contentAlignment = Alignment.Center
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    verticalAlignment = Alignment.CenterVertically
                                 ) {
-                                    Image(
-                                        painter = painterResource(id = ResourceHelpers.getDrawableId(context, avatarDrawable)),
-                                        contentDescription = activeSpeaker,
-                                        contentScale = ContentScale.Crop,
-                                        modifier = Modifier.fillMaxSize()
-                                    )
-                                }
-
-                                Spacer(modifier = Modifier.width(8.dp))
-
-                                // Speaker Name, Emotion & Mini Voice Amplitude Visualizer
-                                Column(modifier = Modifier.weight(1f)) {
-                                    Row(verticalAlignment = Alignment.CenterVertically) {
-                                        Text(
-                                            text = activeSpeaker,
-                                            color = AnimeGold,
-                                            fontSize = 11.sp,
-                                            fontWeight = FontWeight.ExtraBold
+                                    // Character Avatar with Lip-Sync Pulsing
+                                    Box(
+                                        modifier = Modifier
+                                            .size(36.dp)
+                                            .scale(avatarPulseScale)
+                                            .clip(CircleShape)
+                                            .background(AnimeSurfaceVariant)
+                                            .border(
+                                                width = if (speakingState.isSpeaking) 2.dp else 1.dp,
+                                                color = if (speakingState.isSpeaking) AnimePink else AnimeCyan,
+                                                shape = CircleShape
+                                            ),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Image(
+                                            painter = painterResource(id = ResourceHelpers.getDrawableId(context, avatarDrawable)),
+                                            contentDescription = activeSpeaker,
+                                            contentScale = ContentScale.Crop,
+                                            modifier = Modifier.fillMaxSize()
                                         )
-                                        Spacer(modifier = Modifier.width(6.dp))
-                                        Text(
-                                            text = "• ${currentScene?.dialogues?.getOrNull(state.currentDialogueIndex)?.emotion ?: "Speaking"}",
-                                            color = AnimeCyanLight,
-                                            fontSize = 9.sp
-                                        )
-                                        if (speakingState.isSpeaking) {
-                                            Spacer(modifier = Modifier.width(8.dp))
-                                            StudioMiniAudioMeter(amplitude = speakingState.audioWaveAmplitude)
-                                        }
                                     }
 
-                                    // Dialogue Subtitle Box
-                                    Surface(
-                                        shape = RoundedCornerShape(8.dp),
-                                        color = Color.Black.copy(alpha = 0.65f),
-                                        modifier = Modifier.padding(top = 2.dp)
-                                    ) {
-                                        Text(
-                                            text = activeDialogue,
-                                            color = Color.White,
-                                            fontSize = 11.sp,
-                                            lineHeight = 14.sp,
-                                            fontWeight = FontWeight.Medium,
-                                            maxLines = 2,
-                                            overflow = TextOverflow.Ellipsis,
-                                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-                                        )
+                                    Spacer(modifier = Modifier.width(8.dp))
+
+                                    // Speaker Name, Emotion & Mini Voice Amplitude Visualizer
+                                    Column(modifier = Modifier.weight(1f)) {
+                                        Row(verticalAlignment = Alignment.CenterVertically) {
+                                            Text(
+                                                text = activeSpeaker,
+                                                color = AnimeGold,
+                                                fontSize = 11.sp,
+                                                fontWeight = FontWeight.ExtraBold
+                                            )
+                                            Spacer(modifier = Modifier.width(6.dp))
+                                            Text(
+                                                text = "• ${currentScene?.dialogues?.getOrNull(state.currentDialogueIndex)?.emotion ?: "Speaking"}",
+                                                color = AnimeCyanLight,
+                                                fontSize = 9.sp
+                                            )
+                                            if (speakingState.isSpeaking) {
+                                                Spacer(modifier = Modifier.width(8.dp))
+                                                StudioMiniAudioMeter(amplitude = speakingState.audioWaveAmplitude)
+                                            }
+                                        }
+
+                                        // Dialogue Subtitle Box
+                                        Surface(
+                                            shape = RoundedCornerShape(8.dp),
+                                            color = Color.Black.copy(alpha = 0.65f),
+                                            modifier = Modifier.padding(top = 2.dp)
+                                        ) {
+                                            Text(
+                                                text = activeDialogue,
+                                                color = Color.White,
+                                                fontSize = 11.sp,
+                                                lineHeight = 14.sp,
+                                                fontWeight = FontWeight.Medium,
+                                                maxLines = 2,
+                                                overflow = TextOverflow.Ellipsis,
+                                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                            )
+                                        }
                                     }
                                 }
                             }
                         }
                     }
 
-                    // Progress Bar for current scene & video playback
-                    Spacer(modifier = Modifier.height(6.dp))
-                    LinearProgressIndicator(
-                        progress = {
-                            if (scenes.isNotEmpty()) {
-                                ((currentSceneIndex + scenePlaybackProgress) / scenes.size.toFloat()).coerceIn(0f, 1f)
-                            } else 0f
-                        },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(3.5.dp)
-                            .clip(RoundedCornerShape(2.dp)),
-                        color = AnimeCyan,
-                        trackColor = AnimeSurfaceVariant
-                    )
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    // Transport Playback Controls: Prev, Play/Pause, Next, Replay, Time indicator
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        // Scene duration and index label
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text(
-                                text = "Scene ${currentSceneIndex + 1}/${scenes.size.coerceAtLeast(1)}",
-                                color = TextPrimary,
-                                fontSize = 11.sp,
-                                fontWeight = FontWeight.Bold
-                            )
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Text(
-                                text = "• ~${(scenes.size * (currentScene?.durationSec ?: 8))}s total",
-                                color = TextMuted,
-                                fontSize = 10.sp
-                            )
-                        }
-
-                        // Center Playback Buttons
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(6.dp)
-                        ) {
-                            // Previous Scene
-                            IconButton(
-                                onClick = { viewModel.previousScene() },
-                                modifier = Modifier
-                                    .size(34.dp)
-                                    .testTag("studio_player_prev_scene_btn")
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.SkipPrevious,
-                                    contentDescription = "Previous Scene",
-                                    tint = if (scenes.isNotEmpty()) AnimeCyan else TextMuted,
-                                    modifier = Modifier.size(20.dp)
-                                )
-                            }
-
-                            // Big Play / Pause Button
-                            Button(
-                                onClick = {
-                                    if (state.isPlayingVideo) viewModel.pauseVideo() else viewModel.playVideo()
-                                },
-                                shape = CircleShape,
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = if (state.isPlayingVideo) AnimePink else AnimeCyan
-                                ),
-                                contentPadding = androidx.compose.foundation.layout.PaddingValues(0.dp),
-                                modifier = Modifier
-                                    .size(42.dp)
-                                    .testTag("studio_video_play_pause_button")
-                            ) {
-                                Icon(
-                                    imageVector = if (state.isPlayingVideo) Icons.Default.Pause else Icons.Default.PlayArrow,
-                                    contentDescription = if (state.isPlayingVideo) "Pause Video" else "Play Video",
-                                    tint = Color.Black,
-                                    modifier = Modifier.size(24.dp)
-                                )
-                            }
-
-                            // Next Scene
-                            IconButton(
-                                onClick = { viewModel.nextScene() },
-                                modifier = Modifier
-                                    .size(34.dp)
-                                    .testTag("studio_player_next_scene_btn")
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.SkipNext,
-                                    contentDescription = "Next Scene",
-                                    tint = if (scenes.isNotEmpty()) AnimeCyan else TextMuted,
-                                    modifier = Modifier.size(20.dp)
-                                )
-                            }
-
-                            // Replay current scene
-                            IconButton(
-                                onClick = { viewModel.selectScene(currentSceneIndex) },
-                                modifier = Modifier
-                                    .size(34.dp)
-                                    .testTag("studio_player_replay_scene_btn")
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.Replay,
-                                    contentDescription = "Replay Scene",
-                                    tint = AnimeGold,
-                                    modifier = Modifier.size(18.dp)
-                                )
-                            }
-                        }
-
-                        // Launch full screen / Export quick trigger
-                        OutlinedButton(
-                            onClick = { viewModel.setTab(AppTab.PLAYER) },
-                            shape = RoundedCornerShape(8.dp),
-                            border = BorderStroke(1.dp, AnimeCyan.copy(alpha = 0.6f)),
-                            contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 8.dp, vertical = 4.dp),
+                    // Progress Bar & Transport controls (only when video is generated)
+                    if (script != null) {
+                        Spacer(modifier = Modifier.height(6.dp))
+                        LinearProgressIndicator(
+                            progress = {
+                                if (scenes.isNotEmpty()) {
+                                    ((currentSceneIndex + scenePlaybackProgress) / scenes.size.toFloat()).coerceIn(0f, 1f)
+                                } else 0f
+                            },
                             modifier = Modifier
-                                .height(30.dp)
-                                .testTag("studio_player_full_screen_btn")
+                                .fillMaxWidth()
+                                .height(3.5.dp)
+                                .clip(RoundedCornerShape(2.dp)),
+                            color = AnimeCyan,
+                            trackColor = AnimeSurfaceVariant
+                        )
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        // Transport Playback Controls: Prev, Play/Pause, Next, Replay, Time indicator
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Icon(
-                                imageVector = Icons.Default.Fullscreen,
-                                contentDescription = null,
-                                tint = AnimeCyan,
-                                modifier = Modifier.size(14.dp)
-                            )
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text("Full Player", color = AnimeCyan, fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                            // Scene duration and index label
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text(
+                                    text = "Scene ${currentSceneIndex + 1}/${scenes.size.coerceAtLeast(1)}",
+                                    color = TextPrimary,
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text(
+                                    text = "• ~${(scenes.size * (currentScene?.durationSec ?: 8))}s total",
+                                    color = TextMuted,
+                                    fontSize = 10.sp
+                                )
+                            }
+
+                            // Center Playback Buttons
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                            ) {
+                                // Previous Scene
+                                IconButton(
+                                    onClick = { viewModel.previousScene() },
+                                    modifier = Modifier
+                                        .size(34.dp)
+                                        .testTag("studio_player_prev_scene_btn")
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.SkipPrevious,
+                                        contentDescription = "Previous Scene",
+                                        tint = if (scenes.isNotEmpty()) AnimeCyan else TextMuted,
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                }
+
+                                // Big Play / Pause Button
+                                Button(
+                                    onClick = {
+                                        if (state.isPlayingVideo) viewModel.pauseVideo() else viewModel.playVideo()
+                                    },
+                                    shape = CircleShape,
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = if (state.isPlayingVideo) AnimePink else AnimeCyan
+                                    ),
+                                    contentPadding = androidx.compose.foundation.layout.PaddingValues(0.dp),
+                                    modifier = Modifier
+                                        .size(42.dp)
+                                        .testTag("studio_video_play_pause_button")
+                                ) {
+                                    Icon(
+                                        imageVector = if (state.isPlayingVideo) Icons.Default.Pause else Icons.Default.PlayArrow,
+                                        contentDescription = if (state.isPlayingVideo) "Pause Video" else "Play Video",
+                                        tint = Color.Black,
+                                        modifier = Modifier.size(24.dp)
+                                    )
+                                }
+
+                                // Next Scene
+                                IconButton(
+                                    onClick = { viewModel.nextScene() },
+                                    modifier = Modifier
+                                        .size(34.dp)
+                                        .testTag("studio_player_next_scene_btn")
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.SkipNext,
+                                        contentDescription = "Next Scene",
+                                        tint = if (scenes.isNotEmpty()) AnimeCyan else TextMuted,
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                }
+
+                                // Replay current scene
+                                IconButton(
+                                    onClick = { viewModel.selectScene(currentSceneIndex) },
+                                    modifier = Modifier
+                                        .size(34.dp)
+                                        .testTag("studio_player_replay_scene_btn")
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Replay,
+                                        contentDescription = "Replay Scene",
+                                        tint = AnimeCyan,
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                }
+                            }
+
+                            // Launch full screen / Export quick trigger
+                            OutlinedButton(
+                                onClick = { viewModel.setTab(AppTab.PLAYER) },
+                                shape = RoundedCornerShape(8.dp),
+                                border = BorderStroke(1.dp, AnimeCyan.copy(alpha = 0.6f)),
+                                contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 8.dp, vertical = 4.dp),
+                                modifier = Modifier
+                                    .height(30.dp)
+                                    .testTag("studio_player_full_screen_btn")
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Fullscreen,
+                                    contentDescription = null,
+                                    tint = AnimeCyan,
+                                    modifier = Modifier.size(14.dp)
+                                )
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text("Full Player", color = AnimeCyan, fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                            }
+                        }
+                    }
+
+                    // Post-Generation Presentation Mode Decider (Explainer Mode vs Independent Character Dialogues)
+                    if (script != null) {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Surface(
+                            shape = RoundedCornerShape(10.dp),
+                            color = AnimeSurfaceVariant.copy(alpha = 0.8f),
+                            border = BorderStroke(1.dp, AnimePurple.copy(alpha = 0.5f)),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Column(modifier = Modifier.padding(8.dp)) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    Text(
+                                        text = AppLocaleStrings.tr(
+                                            state.selectedLanguage,
+                                            "🎬 Video Presentation Mode:",
+                                            "🎬 वीडियो प्रस्तुति मोड तय करें:"
+                                        ),
+                                        color = TextPrimary,
+                                        fontSize = 11.sp,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                    Text(
+                                        text = if (state.videoPresentationMode == com.example.data.model.VideoPresentationMode.EXPLAINER_MODE) "✓ EXPLAINER SYNC" else "✓ INDEPENDENT VOICES",
+                                        color = if (state.videoPresentationMode == com.example.data.model.VideoPresentationMode.EXPLAINER_MODE) AnimeCyan else AnimeGold,
+                                        fontSize = 9.sp,
+                                        fontWeight = FontWeight.ExtraBold
+                                    )
+                                }
+                                Spacer(modifier = Modifier.height(6.dp))
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+                                    val isExplainer = state.videoPresentationMode == com.example.data.model.VideoPresentationMode.EXPLAINER_MODE
+                                    Surface(
+                                        shape = RoundedCornerShape(8.dp),
+                                        color = if (isExplainer) AnimeCyan.copy(alpha = 0.25f) else Color.Transparent,
+                                        border = BorderStroke(1.dp, if (isExplainer) AnimeCyan else TextMuted.copy(alpha = 0.4f)),
+                                        modifier = Modifier
+                                            .weight(1f)
+                                            .clickable { viewModel.setVideoPresentationMode(com.example.data.model.VideoPresentationMode.EXPLAINER_MODE) }
+                                            .testTag("mode_explainer_btn")
+                                    ) {
+                                        Column(
+                                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp),
+                                            horizontalAlignment = Alignment.CenterHorizontally
+                                        ) {
+                                            Text(
+                                                text = "🎙️ ${AppLocaleStrings.tr(state.selectedLanguage, "Explainer Mode", "एक्सप्लेनर मोड")}",
+                                                color = if (isExplainer) AnimeCyan else TextSecondary,
+                                                fontSize = 11.sp,
+                                                fontWeight = FontWeight.Bold
+                                            )
+                                            Text(
+                                                text = AppLocaleStrings.tr(state.selectedLanguage, "Story, Motion, Effects Synced", "स्टोरीलाइन, मोशन, इफेक्ट्स सिंक"),
+                                                color = TextMuted,
+                                                fontSize = 9.sp,
+                                                textAlign = TextAlign.Center
+                                            )
+                                        }
+                                    }
+
+                                    Surface(
+                                        shape = RoundedCornerShape(8.dp),
+                                        color = if (!isExplainer) AnimeGold.copy(alpha = 0.25f) else Color.Transparent,
+                                        border = BorderStroke(1.dp, if (!isExplainer) AnimeGold else TextMuted.copy(alpha = 0.4f)),
+                                        modifier = Modifier
+                                            .weight(1f)
+                                            .clickable { viewModel.setVideoPresentationMode(com.example.data.model.VideoPresentationMode.INDEPENDENT_CHARACTERS) }
+                                            .testTag("mode_independent_btn")
+                                    ) {
+                                        Column(
+                                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp),
+                                            horizontalAlignment = Alignment.CenterHorizontally
+                                        ) {
+                                            Text(
+                                                text = "👥 ${AppLocaleStrings.tr(state.selectedLanguage, "Character Dialogues", "स्वतंत्र पात्र संवाद")}",
+                                                color = if (!isExplainer) AnimeGold else TextSecondary,
+                                                fontSize = 11.sp,
+                                                fontWeight = FontWeight.Bold
+                                            )
+                                            Text(
+                                                text = AppLocaleStrings.tr(state.selectedLanguage, "Each character speaks independently", "हर पात्र अपनी आवाज़ में बोलेगा"),
+                                                color = TextMuted,
+                                                fontSize = 9.sp,
+                                                textAlign = TextAlign.Center
+                                            )
+                                        }
+                                    }
+                                }
+                            }
                         }
                     }
 
@@ -1045,7 +1248,7 @@ fun StudioSceneVideoPlayer(
                             )
                         }
                         Text(
-                            text = state.selectedLanguage,
+                            text = state.currentScript?.language ?: state.voiceoverLanguage,
                             color = AnimeGold,
                             fontSize = 10.sp,
                             fontWeight = FontWeight.Bold
@@ -1057,7 +1260,7 @@ fun StudioSceneVideoPlayer(
                     val quickLanguages = listOf("Hindi", "Japanese", "English", "Spanish", "Korean", "German")
                     LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                         itemsIndexed(quickLanguages) { _, lang ->
-                            val isSel = state.selectedLanguage.equals(lang, ignoreCase = true)
+                            val isSel = (state.currentScript?.language ?: state.voiceoverLanguage).equals(lang, ignoreCase = true)
                             FilterChip(
                                 selected = isSel,
                                 onClick = { viewModel.translateAndDub(lang) },

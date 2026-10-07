@@ -322,27 +322,27 @@ class CommandLearningEngine private constructor(context: Context) {
         val isHi = lang.contains("hindi", ignoreCase = true)
         return if (isHi) {
             mutableListOf(
-                "⚔️ [हाई-स्टेक्स एक्शन]: $raw के बीच अचानक एक नया रहस्यमयी प्रतिद्वंद्वी अपनी बिजली की तलवार से हमला करता है।",
-                "🌌 [नियॉन साइबरपंक ट्विस्ट]: $raw दृश्य अचानक अंधेरे में खो जाता है और होलोग्राफिक ड्रैगन आसमान में उभरता है।",
-                "🌸 [भावुक संवाद मोड़]: दोनों पात्र एक दूसरे की आंखों में देखते हैं और वादा करते हैं कि वे कभी हार नहीं मानेंगे।",
-                "🔥 [अंतिम महायुद्ध क्लाइमेक्स]: 60fps स्लो-मोशन में चरम शक्ति का विस्फोट और पृष्ठभूमि में उड़ते हुए अंगारे।"
+                "🎬 [वीडियो जनरेट]: $raw के लिए उच्च-गुणवत्ता पूर्ण एनिमे सीन निर्माण।",
+                "🎙️ [वॉयस जनरेट]: $raw के लिए स्पष्ट भावनात्मक वॉयसओवर व संवाद।",
+                "🖼️ [विजुअल कंटेंट]: $raw के लिए प्रभावशाली पृष्ठभूमि व मोशन इफेक्ट्स।",
+                "🌐 [ट्रांसलेशन]: $raw के लिए बहुभाषी डबिंग व सटीक सबटाइटल्स।"
             )
         } else {
             mutableListOf(
-                "⚔️ [Action Climax]: In the midst of $raw, a formidable cyber-warrior awakens an ancient blade technique.",
-                "🌌 [Cyberpunk Noir Twist]: The neon lights flicker off as $raw reveals a hidden AI hologram guarding the temple.",
-                "🌸 [Emotional Bond Variant]: Focus on subtle character expressions and heartfelt dialogue before the battle begins.",
-                "🔥 [Legendary Power Burst]: An explosion of blue lightning aura transforms the battlefield in dynamic 60fps sakuga."
+                "🎬 [Video Generate]: High-quality anime production for $raw",
+                "🎙️ [Voice Generate]: Expressive character voice acting and dialogues for $raw",
+                "🖼️ [Visual Content]: Dynamic visual background and motion effects for $raw",
+                "🌐 [Translation]: Synchronized multilingual dubbing and subtitles for $raw"
             )
         }
     }
 
     private fun loadDefaultSuggestions(): List<String> {
         return listOf(
-            "⚔️ Two cyber samurai duel beneath raining cherry blossom petals at twilight",
-            "🌌 Neo-Tokyo underground hacker discovers a mythical spirit within the quantum core",
-            "🌸 Lady mentor transmits ancient dragon power to the young warrior in a glowing temple",
-            "⚡ High-speed mecha chase sequence through vertical neon skyscraper canyons"
+            "🎬 Video Generate: High-quality anime production sequence",
+            "🎙️ Voice Generate: Expressive character acting and dialogues",
+            "🖼️ Visual Content: Dynamic anime background and scene keyframes",
+            "🌐 Translation: Multilingual dubbing and synchronized subtitles"
         )
     }
 

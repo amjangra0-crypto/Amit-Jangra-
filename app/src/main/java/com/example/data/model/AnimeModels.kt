@@ -134,7 +134,32 @@ enum class MotionEffect(
     AURA_GLOW_PARTICLES("aura_glow", "Manhwa Shadow Aura", "🔥", "Electric blue & purple glowing aura with rising embers"),
     MANGA_PANEL_SLIDE("panel_slide", "Manga / Webtoon Panel Shift", "📜", "Webtoon vertical panel shift & ink screentone borders"),
     CINEMATIC_ZOOM("cinematic_zoom", "Dramatic Ken Burns Zoom", "🎥", "Smooth camera zoom-in focusing into character expressions"),
-    SLOW_MO_FREEZE("slow_mo", "Slow-Mo Freeze Frame", "⏱️", "Bullet-time slow motion with sudden motion burst")
+    SLOW_MO_FREEZE("slow_mo", "Slow-Mo Freeze Frame", "⏱️", "Bullet-time slow motion with sudden motion burst"),
+    LIGHTNING_STRIKE("lightning_strike", "Lightning Strike & Thunder", "⚡", "Dynamic lightning bolt flashes, thunder clouds and shockwaves"),
+    WATERFALL_MIST_FLOW("waterfall_flow", "Waterfall & Forest Mist", "🌊", "Cascading waterfall currents, mist particles, forest breezes and flowing water"),
+    PLANETARY_COSMOS("planetary_cosmos", "Solar System & Planets Orbit", "🪐", "Cosmic celestial planetary orbits, nebulas, star clusters and solar flares"),
+    ROMANCE_PETAL_SUNSET("romance_sunset", "Romantic Sunset & Petals", "💖", "Warm golden sunset glow, drifting sakura petals and tender emotional radiance"),
+    MECHA_VEHICLE_CRUISE("mecha_cruise", "Machinery, Vehicles & Jets", "🚀", "High-speed supersonic fighter planes, mecha thrusters and sci-fi vehicles")
+}
+
+/**
+ * Presentation mode for generated videos:
+ * - EXPLAINER_MODE: Narrator explains storyline with synced motion, emotions, characters, effects & sound
+ * - INDEPENDENT_CHARACTERS: Each character speaks independently with distinct voice persona & dialogues
+ */
+enum class VideoPresentationMode(val id: String, val title: String, val hindiTitle: String, val description: String) {
+    EXPLAINER_MODE(
+        "explainer_mode",
+        "Explainer Mode",
+        "एक्सप्लेनर मोड (स्टोरीलाइन व्याख्यान)",
+        "Narrator explains storyline with synced motion, emotions, characters, effects & sound"
+    ),
+    INDEPENDENT_CHARACTERS(
+        "independent_characters",
+        "Independent Characters",
+        "स्वतंत्र पात्र मोड (कैरेक्टर संवाद)",
+        "Each character speaks independently with distinct voice persona and dialogue lip-sync"
+    )
 }
 
 enum class CharacterExpressionType(

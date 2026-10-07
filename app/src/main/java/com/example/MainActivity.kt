@@ -120,24 +120,12 @@ class MainActivity : ComponentActivity() {
             var isShowingAdvancedSettings by remember { mutableStateOf(false) }
             var showCountryPickerSheet by remember { mutableStateOf(false) }
 
-            // Strictly one-time permission request upon installation/first launch only
+            // Mark permission onboarding handled on install so the app NEVER repeatedly prompts on start.
+            // Users can manually enable/disable in Settings or when tapping the mic button.
             val permissionManager = remember { com.example.util.PermissionManager.getInstance(this@MainActivity) }
-            val installPermissionLauncher = rememberLauncherForActivityResult(
-                contract = ActivityResultContracts.RequestPermission()
-            ) { _: Boolean ->
-                com.example.util.PermissionPreferenceManager.markPermissionRequestedOnInstall(this@MainActivity)
-                lifecycleScope.launch {
-                    permissionManager.markAlreadyRequestedOnInstall()
-                }
-            }
-
             LaunchedEffect(Unit) {
-                if (permissionManager.shouldRequestPermissionOnInstall() &&
-                    com.example.util.PermissionPreferenceManager.shouldTriggerInitialPermissionRequest(this@MainActivity)) {
-                    com.example.util.PermissionPreferenceManager.markPermissionRequestedOnInstall(this@MainActivity)
-                    permissionManager.markAlreadyRequestedOnInstall()
-                    installPermissionLauncher.launch(android.Manifest.permission.RECORD_AUDIO)
-                }
+                com.example.util.PermissionPreferenceManager.markPermissionRequestedOnInstall(this@MainActivity)
+                permissionManager.markAlreadyRequestedOnInstall()
             }
 
             val isFollowSystem = com.example.ui.theme.AppThemeController.isFollowSystemTheme

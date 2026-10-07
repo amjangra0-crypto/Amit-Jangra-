@@ -150,6 +150,7 @@ fun RecentVideoProjectsScreen(viewModel: AnimeViewModel) {
     // Dialog States
     var selectedEntityForQuickPreview by remember { mutableStateOf<SavedScriptEntity?>(null) }
     var selectedEntityForExport by remember { mutableStateOf<SavedScriptEntity?>(null) }
+    var selectedEntityForEdit by remember { mutableStateOf<SavedScriptEntity?>(null) }
     var itemToDelete by remember { mutableStateOf<SavedScriptEntity?>(null) }
 
     // Parse all scripts once for stats calculation
@@ -270,9 +271,17 @@ fun RecentVideoProjectsScreen(viewModel: AnimeViewModel) {
                     Icon(Icons.Default.Search, contentDescription = "Search", tint = AnimeCyan)
                 },
                 trailingIcon = {
-                    if (searchQuery.isNotBlank()) {
-                        IconButton(onClick = { searchQuery = "" }) {
-                            Icon(Icons.Default.Clear, contentDescription = "Clear", tint = TextMuted)
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        if (searchQuery.isNotBlank()) {
+                            IconButton(onClick = { searchQuery = "" }) {
+                                Icon(Icons.Default.Clear, contentDescription = "Clear", tint = TextMuted)
+                            }
+                        }
+                        IconButton(
+                            onClick = { /* Search is automatically filtered live */ },
+                            modifier = Modifier.testTag("recent_projects_search_btn")
+                        ) {
+                            Icon(Icons.Default.Search, contentDescription = "Search Projects", tint = AnimeCyan)
                         }
                     }
                 },
@@ -382,6 +391,7 @@ fun RecentVideoProjectsScreen(viewModel: AnimeViewModel) {
                         viewModel.loadSavedScript(entity)
                         viewModel.setTab(AppTab.PLAYER)
                     },
+                    onEditDetails = { selectedEntityForEdit = entity },
                     onEditInStudio = {
                         viewModel.loadSavedScript(entity)
                         viewModel.setTab(AppTab.STUDIO)
@@ -417,6 +427,20 @@ fun RecentVideoProjectsScreen(viewModel: AnimeViewModel) {
                 viewModel.loadSavedScript(entity)
                 viewModel.setTab(AppTab.PLAYER)
                 selectedEntityForQuickPreview = null
+            }
+        )
+    }
+
+    // Modal: Edit Project Details Dialog (Room Database In-Place Edit)
+    selectedEntityForEdit?.let { entity ->
+        EditProjectDetailsDialog(
+            entity = entity,
+            lang = state.selectedLanguage,
+            onDismiss = { selectedEntityForEdit = null },
+            onSave = { newTitle, newSynopsis, newGenre ->
+                viewModel.updateSavedScriptDetails(entity.id, newTitle, newSynopsis, newGenre)
+                selectedEntityForEdit = null
+                Toast.makeText(context, "✓ Project details updated in Room DB", Toast.LENGTH_SHORT).show()
             }
         )
     }
@@ -648,6 +672,7 @@ private fun RecentVideoProjectCard(
     statusInfo: ProjectStatusInfo,
     viewModel: AnimeViewModel,
     onPlayVideo: () -> Unit,
+    onEditDetails: () -> Unit = {},
     onEditInStudio: () -> Unit,
     onQuickPreview: () -> Unit,
     onExport: () -> Unit,
@@ -937,6 +962,19 @@ private fun RecentVideoProjectCard(
                         }
 
                         OutlinedButton(
+                            onClick = onEditDetails,
+                            shape = RoundedCornerShape(10.dp),
+                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
+                            colors = ButtonDefaults.outlinedButtonColors(contentColor = AnimePurple),
+                            border = BorderStroke(1.dp, AnimePurple.copy(alpha = 0.6f)),
+                            modifier = Modifier.testTag("edit_details_btn_${entity.id}")
+                        ) {
+                            Icon(Icons.Default.Edit, contentDescription = null, modifier = Modifier.size(14.dp))
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(text = "Edit", fontSize = 12.sp)
+                        }
+
+                        OutlinedButton(
                             onClick = onEditInStudio,
                             shape = RoundedCornerShape(10.dp),
                             contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
@@ -944,7 +982,7 @@ private fun RecentVideoProjectCard(
                             border = BorderStroke(1.dp, AnimeCyan.copy(alpha = 0.6f)),
                             modifier = Modifier.testTag("edit_project_btn_${entity.id}")
                         ) {
-                            Icon(Icons.Default.Edit, contentDescription = null, modifier = Modifier.size(14.dp))
+                            Icon(Icons.Default.Movie, contentDescription = null, modifier = Modifier.size(14.dp))
                             Spacer(modifier = Modifier.width(4.dp))
                             Text(text = "Studio", fontSize = 12.sp)
                         }
@@ -1235,6 +1273,89 @@ private fun ExportProjectDialog(
         confirmButton = {
             TextButton(onClick = onDismiss) {
                 Text("Close", color = AnimeCyan)
+            }
+        },
+        containerColor = AnimeSurface
+    )
+}
+
+/**
+ * Dialog to edit Room database project details (Title, Synopsis, Genre)
+ */
+@Composable
+private fun EditProjectDetailsDialog(
+    entity: SavedScriptEntity,
+    lang: String,
+    onDismiss: () -> Unit,
+    onSave: (title: String, synopsis: String, genre: String) -> Unit
+) {
+    var title by remember { mutableStateOf(entity.title) }
+    var synopsis by remember { mutableStateOf(entity.synopsis) }
+    var genre by remember { mutableStateOf(entity.genre) }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(Icons.Default.Edit, contentDescription = null, tint = AnimePurple)
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = AppLocaleStrings.tr(lang, "Edit Project Details", "प्रोजेक्ट विवरण संपादित करें"),
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White,
+                    fontSize = 16.sp
+                )
+            }
+        },
+        text = {
+            Column(modifier = Modifier.fillMaxWidth()) {
+                Text(text = "Title:", color = TextSecondary, fontSize = 12.sp)
+                Spacer(modifier = Modifier.height(4.dp))
+                OutlinedTextField(
+                    value = title,
+                    onValueChange = { title = it },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth().testTag("edit_project_title_input"),
+                    shape = RoundedCornerShape(10.dp)
+                )
+
+                Spacer(modifier = Modifier.height(10.dp))
+                Text(text = "Genre:", color = TextSecondary, fontSize = 12.sp)
+                Spacer(modifier = Modifier.height(4.dp))
+                OutlinedTextField(
+                    value = genre,
+                    onValueChange = { genre = it },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth().testTag("edit_project_genre_input"),
+                    shape = RoundedCornerShape(10.dp)
+                )
+
+                Spacer(modifier = Modifier.height(10.dp))
+                Text(text = "Synopsis / Storyline:", color = TextSecondary, fontSize = 12.sp)
+                Spacer(modifier = Modifier.height(4.dp))
+                OutlinedTextField(
+                    value = synopsis,
+                    onValueChange = { synopsis = it },
+                    minLines = 3,
+                    maxLines = 5,
+                    modifier = Modifier.fillMaxWidth().testTag("edit_project_synopsis_input"),
+                    shape = RoundedCornerShape(10.dp)
+                )
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = { onSave(title, synopsis, genre) },
+                colors = ButtonDefaults.buttonColors(containerColor = AnimePurple),
+                shape = RoundedCornerShape(8.dp),
+                modifier = Modifier.testTag("save_project_edit_btn")
+            ) {
+                Text("Save Changes", color = Color.White, fontWeight = FontWeight.Bold)
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancel", color = TextPrimary)
             }
         },
         containerColor = AnimeSurface

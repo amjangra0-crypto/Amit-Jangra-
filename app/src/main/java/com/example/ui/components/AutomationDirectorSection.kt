@@ -23,6 +23,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import com.example.ui.theme.AnimeGreen
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
@@ -211,8 +212,8 @@ fun AutomationDirectorSection(viewModel: AnimeViewModel) {
                     Text(
                         text = AppLocaleStrings.tr(
                             state.selectedLanguage,
-                            "Eg: 30s action anime in English with Tokyo accent or web link...",
-                            "उदा: 30s एक्शन एनिमे जापानी में टोक्यो एक्सेंट के साथ या कोई भी वेब लिंक..."
+                            "Video Generate • Voice Generate • Visual Content • Translation\nEnter command, duration, or paste link...",
+                            "वीडियो जनरेट • वॉयस जनरेट • विजुअल कंटेंट • ट्रांसलेशन\nकमांड, अवधि दर्ज करें या लिंक पेस्ट करें..."
                         ),
                         color = TextMuted,
                         fontSize = 12.sp
@@ -220,6 +221,12 @@ fun AutomationDirectorSection(viewModel: AnimeViewModel) {
                 },
                 trailingIcon = {
                     Row(verticalAlignment = Alignment.CenterVertically) {
+                        IconButton(
+                            onClick = { viewModel.runAutonomousDirector() },
+                            modifier = Modifier.testTag("inline_automation_execute_btn")
+                        ) {
+                            Icon(Icons.Default.PlayArrow, contentDescription = "Execute", tint = AnimeGreen)
+                        }
                         MicVoiceInputButton(
                             language = state.selectedLanguage,
                             onSpeechResult = { spoken ->
@@ -245,6 +252,29 @@ fun AutomationDirectorSection(viewModel: AnimeViewModel) {
                 )
             )
 
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 4.dp),
+                horizontalArrangement = Arrangement.End
+            ) {
+                Button(
+                    onClick = { viewModel.runAutonomousDirector() },
+                    colors = ButtonDefaults.buttonColors(containerColor = AnimeCyan),
+                    shape = RoundedCornerShape(10.dp),
+                    modifier = Modifier.testTag("automation_inline_run_btn")
+                ) {
+                    Icon(Icons.Default.PlayArrow, contentDescription = null, tint = Color.Black, modifier = Modifier.size(16.dp))
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        text = AppLocaleStrings.tr(state.selectedLanguage, "⚡ Run Command / Generate", "⚡ कमांड चलाएं / ऑटोमेशन शुरू करें"),
+                        color = Color.Black,
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
+
             Spacer(modifier = Modifier.height(6.dp))
 
             CommandLearningSuggestionBar(
@@ -254,12 +284,12 @@ fun AutomationDirectorSection(viewModel: AnimeViewModel) {
 
             Spacer(modifier = Modifier.height(10.dp))
 
-            // Quick Command Preset Chips
+            // Quick Capabilities Chips
             Text(
                 text = AppLocaleStrings.tr(
                     state.selectedLanguage,
-                    "⚡ Quick Commands (Tap to Try):",
-                    "⚡ त्वरित कमांड्स (Tap to Try):"
+                    "⚡ Quick Capabilities:",
+                    "⚡ त्वरित निर्माण क्षमताएं (Capabilities):"
                 ),
                 color = TextSecondary,
                 fontSize = 11.sp,
@@ -269,23 +299,17 @@ fun AutomationDirectorSection(viewModel: AnimeViewModel) {
 
             val presets = if (AppLocaleStrings.isHindi(state.selectedLanguage)) {
                 listOf(
-                    "⚡ 15s रील (Hindi Dub)" to "15 second viral anime reel in Hindi with heroic Bollywood dubbing about magical dragon awakening",
-                    "🎬 30s एक्शन (Tokyo Accent)" to "30s high-voltage samurai anime in Japanese with Tokyo accent and UFOTABLE speedlines",
-                    "⏱️ 1m मन्हवा (Korean Dub)" to "60s dark manhwa episode in Korean with solo leveling shadow monarch and glowing eyes",
-                    "🎥 5m मिनी मूवी (Action)" to "300s cyberpunk anime movie in English with neon rain, robo-katana duel and screen shake",
-                    "🌟 1 Hour फीचर फिल्म" to "1 hour action anime in Hindi with hero dubbing, multi-act story, and epic boss battle",
-                    "👑 2 Hours सिनेमैटिक महागाथा" to "2 hours cinematic anime movie in Japanese with Tokyo accent, full storyline from 1 hour to 2 hour tk depend on command",
-                    "🌐 वेब लिंक अनुकूलन" to "https://animenews.org/legends/sakura-blade"
+                    "🎬 वीडियो जनरेट (Video Generate)" to "Video Generate: High-quality anime production",
+                    "🎙️ वॉयस जनरेट (Voice Generate)" to "Voice Generate: Character voice acting and dialogue",
+                    "🖼️ विजुअल कंटेंट (Visual Content)" to "Visual Content: Dynamic anime background and scenes",
+                    "🌐 ट्रांसलेशन (Translation)" to "Translation: Multilingual dubbing and subtitles"
                 )
             } else {
                 listOf(
-                    "⚡ 15s Reel (English Dub)" to "15 second viral anime reel in English with heroic dubbing about magical dragon awakening",
-                    "🎬 30s Action (Tokyo Accent)" to "30s high-voltage samurai anime in Japanese with Tokyo accent and UFOTABLE speedlines",
-                    "⏱️ 1m Manhwa (Korean Dub)" to "60s dark manhwa episode in Korean with solo leveling shadow monarch and glowing eyes",
-                    "🎥 5m Mini Movie (Action)" to "300s cyberpunk anime movie in English with neon rain, robo-katana duel and screen shake",
-                    "🌟 1 Hour Feature Film" to "1 hour action anime in English with hero dubbing, multi-act story, and epic boss battle",
-                    "👑 2 Hours Epic Movie" to "2 hours cinematic anime movie in English with Tokyo accent, full storyline from 1 hour to 2 hour",
-                    "🌐 Web Link Adaptation" to "https://animenews.org/legends/sakura-blade"
+                    "🎬 Video Generate" to "Video Generate: High-quality anime production",
+                    "🎙️ Voice Generate" to "Voice Generate: Character voice acting and dialogue",
+                    "🖼️ Visual Content" to "Visual Content: Dynamic anime background and scenes",
+                    "🌐 Translation" to "Translation: Multilingual dubbing and subtitles"
                 )
             }
 

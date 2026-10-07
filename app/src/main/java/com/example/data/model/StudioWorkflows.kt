@@ -18,14 +18,14 @@ enum class StudioWorkflow(
     val subtitle: String,
     val description: String,
     val iconEmoji: String,
-    val defaultPrompt: String,
+    val defaultPrompt: String = "",
     val badge: String = "",
     val cardColorHex: String = "#FF5722",
     val secondaryColorHex: String = "#FF9800",
     val actionText: String = "Try it now →"
 ) {
     // ----------------------------------------------------
-    // DESIGN WORKFLOWS (Screenshot 1)
+    // DESIGN WORKFLOWS
     // ----------------------------------------------------
     THUMBNAIL(
         id = "thumbnail",
@@ -34,7 +34,7 @@ enum class StudioWorkflow(
         subtitle = "YouTube & Video Cover",
         description = "Create bold, high-CTR anime thumbnails with glowing headline text, shocked expressions & dynamic lighting.",
         iconEmoji = "🎯",
-        defaultPrompt = "A bold YouTube thumbnail for an epic anime battle: dark cosmic background, glowing neon yellow headline reading 'THE DRAGON AWAKENS', and an intense shocked samurai face on the left",
+        defaultPrompt = "",
         cardColorHex = "#FF6F00",
         secondaryColorHex = "#FF8F00"
     ),
@@ -45,7 +45,7 @@ enum class StudioWorkflow(
         subtitle = "Reels, Posts & Stories",
         description = "Design aesthetic anime graphics, quote posters, and vertical 9:16 or square posts for Instagram, Snapchat and TikTok.",
         iconEmoji = "📱",
-        defaultPrompt = "Aesthetic pastel anime poster of an evening ramen stall in Tokyo during light rain, warm neon glow reflections, and an inspiring Japanese quote in kanji & Hindi",
+        defaultPrompt = "",
         cardColorHex = "#0288D1",
         secondaryColorHex = "#29B6F6"
     ),
@@ -56,7 +56,7 @@ enum class StudioWorkflow(
         subtitle = "Slide Decks & Storyboards",
         description = "Generate cinematic anime pitch decks, visual lore presentations, and character overview cards with infographics.",
         iconEmoji = "📊",
-        defaultPrompt = "3-slide anime project presentation deck: Slide 1 'World of Neo-Kyoto', Slide 2 'The Cyber Samurai Guild', Slide 3 'Generative Production Roadmap'",
+        defaultPrompt = "",
         cardColorHex = "#2E7D32",
         secondaryColorHex = "#66BB6A"
     ),
@@ -67,14 +67,14 @@ enum class StudioWorkflow(
         subtitle = "Blank Design Canvas",
         description = "Start from scratch with a clean visual canvas to customize your own anime dimensions, layers, and text overlays.",
         iconEmoji = "➕",
-        defaultPrompt = "Custom blank anime graphic layout with clean minimal background and customizable typography",
+        defaultPrompt = "",
         cardColorHex = "#616161",
         secondaryColorHex = "#9E9E9E",
         actionText = "Start now →"
     ),
 
     // ----------------------------------------------------
-    // VOICEOVER WORKFLOWS (Screenshot 2)
+    // VOICEOVER WORKFLOWS
     // ----------------------------------------------------
     SCRIPT_TO_AUDIO(
         id = "script_to_audio",
@@ -83,7 +83,7 @@ enum class StudioWorkflow(
         subtitle = "Voice Acting & Narration",
         description = "Transform scripted dialogues into rich character voice acting with custom emotional cadences, speed, and accents.",
         iconEmoji = "🎙️",
-        defaultPrompt = "Shonen Hero: 'हम कभी हार नहीं मानेंगे! हमारी किस्मत हम खुद लिखेंगे!' (Fierce Determination)\nMaster Sensei: 'धैर्य रखो, युवा योद्धा। असली परीक्षा अब शुरू हुई है।' (Calm Wisdom)",
+        defaultPrompt = "",
         cardColorHex = "#C2185B",
         secondaryColorHex = "#EC407A"
     ),
@@ -94,7 +94,7 @@ enum class StudioWorkflow(
         subtitle = "Articles to Audio & Podcasts",
         description = "Turn web articles, manga recaps, or blog posts into narrated anime podcasts and audiobooks with background ambiance.",
         iconEmoji = "🎧",
-        defaultPrompt = "https://animenews.org/top-10-cyberpunk-anime - 2-minute energetic audio podcast breakdown with catchy intro speech and anime commentary",
+        defaultPrompt = "",
         cardColorHex = "#558B2F",
         secondaryColorHex = "#8BC34A"
     ),
@@ -105,7 +105,7 @@ enum class StudioWorkflow(
         subtitle = "Dynamic Soundtrack & BGM",
         description = "Synthesize custom anime OST, epic orchestral battle themes, lo-fi study beats, and emotional piano soundscapes.",
         iconEmoji = "🎵",
-        defaultPrompt = "High-energy cyberpunk battle music with driving synthwave bass, heavy anime rock drum rhythm, and soaring melodic synth hook",
+        defaultPrompt = "",
         cardColorHex = "#E65100",
         secondaryColorHex = "#FFA726"
     ),
@@ -116,14 +116,14 @@ enum class StudioWorkflow(
         subtitle = "Blank Audio Suite",
         description = "Start a blank audio project with real-time multi-track TTS speech synthesis, sound effects, and music mixer.",
         iconEmoji = "🎛️",
-        defaultPrompt = "Blank audio project for multi-voice anime dubbing and sound effect layering",
+        defaultPrompt = "",
         cardColorHex = "#455A64",
         secondaryColorHex = "#78909C",
         actionText = "Start now →"
     ),
 
     // ----------------------------------------------------
-    // VIDEO WORKFLOWS (Screenshot 3)
+    // VIDEO WORKFLOWS
     // ----------------------------------------------------
     SCRIPT_TO_VIDEO(
         id = "script_to_video",
@@ -132,7 +132,7 @@ enum class StudioWorkflow(
         subtitle = "Script to Full Animated Video",
         description = "Turn detailed text scripts into full anime scenes with synchronized lip-sync, animated speedlines, and voiceovers.",
         iconEmoji = "🎬",
-        defaultPrompt = "Neo Tokyo 2099: Cyber Shinobi infiltrates the Arasaka tower during neon rain to recover the lost Sakura Core",
+        defaultPrompt = "",
         cardColorHex = "#B71C1C",
         secondaryColorHex = "#E53935"
     ),
@@ -143,7 +143,7 @@ enum class StudioWorkflow(
         subtitle = "URL / Article to Anime Video",
         description = "Convert blog posts, web links, or news summaries into 4-scene anime explainer videos with narration and subtitles.",
         iconEmoji = "📰",
-        defaultPrompt = "https://manganews.org/history-of-shonen-jump - Convert into an exciting animated video timeline with hero narration",
+        defaultPrompt = "",
         cardColorHex = "#33691E",
         secondaryColorHex = "#689F38"
     ),
@@ -154,7 +154,7 @@ enum class StudioWorkflow(
         subtitle = "Presentation to Video",
         description = "Transform presentation slides and bullet points into an engaging animated video with AI character presenter.",
         iconEmoji = "📑",
-        defaultPrompt = "Slide 1: AI Anime Evolution. Slide 2: Generative Video Storyboards. Slide 3: Voice Acting & Music Sync in 100+ Languages",
+        defaultPrompt = "",
         cardColorHex = "#004D40",
         secondaryColorHex = "#00897B"
     ),
@@ -165,7 +165,7 @@ enum class StudioWorkflow(
         subtitle = "Host & Concept Explainer",
         description = "Create engaging tutorial and explainer videos hosted by animated 2D/3D anime characters with whiteboard annotations.",
         iconEmoji = "👩‍🏫",
-        defaultPrompt = "Chibi Sensei explains quantum physics and time dilation using simple anime battle power-scaling analogies",
+        defaultPrompt = "",
         cardColorHex = "#EF6C00",
         secondaryColorHex = "#FB8C00"
     ),
@@ -176,7 +176,7 @@ enum class StudioWorkflow(
         subtitle = "Kinetic Typography & FX",
         description = "Produce high-impact kinetic motion graphics with speedlines, impact shockwaves, screen shake, and infographic transitions.",
         iconEmoji = "⚡",
-        defaultPrompt = "High-octane motion graphics explaining 'The 5 Rules of Nen Combat' with rapid speedlines, glowing text bursts, and screen shakes",
+        defaultPrompt = "",
         cardColorHex = "#1565C0",
         secondaryColorHex = "#1E88E5"
     ),
@@ -187,7 +187,7 @@ enum class StudioWorkflow(
         subtitle = "Anime Music Video (AMV)",
         description = "Craft rhythm-synced anime music videos (AMV) with beat drops, dramatic camera cuts, and stylized lyric subtitles.",
         iconEmoji = "🎤",
-        defaultPrompt = "Cinematic AMV featuring rooftop sword fight at dusk, beat-synced lightning strikes, slow-mo sakura petals, and lyrical dub",
+        defaultPrompt = "",
         badge = "NEW",
         cardColorHex = "#880E4F",
         secondaryColorHex = "#D81B60"
@@ -199,7 +199,7 @@ enum class StudioWorkflow(
         subtitle = "Timeline & Scene Editor",
         description = "Cut, trim, re-order scenes, restyle subtitles, adjust audio volumes, and tweak camera motion effects on existing videos.",
         iconEmoji = "✂️",
-        defaultPrompt = "Edit current anime scenes: Trim scene 1 duration to 4 seconds, add dramatic screen shake on sword clash, and amplify battle BGM",
+        defaultPrompt = "",
         cardColorHex = "#006064",
         secondaryColorHex = "#00ACC1"
     ),
@@ -210,7 +210,7 @@ enum class StudioWorkflow(
         subtitle = "Demo & Avatar Narration",
         description = "Create app walkthroughs and gaming tutorials with picture-in-picture anime avatar reactions and voice commentary.",
         iconEmoji = "📹",
-        defaultPrompt = "Walkthrough demo of the Anime Studio editor with cute chibi mascot reacting in the bottom-right corner",
+        defaultPrompt = "",
         cardColorHex = "#7B1FA2",
         secondaryColorHex = "#BA68C8"
     ),
@@ -221,7 +221,7 @@ enum class StudioWorkflow(
         subtitle = "Multilingual Dubbing & Subtitles",
         description = "Dub and translate any anime video into Hindi, English, Japanese, French, Spanish, German, or Chinese with synchronized subs.",
         iconEmoji = "🌐",
-        defaultPrompt = "Translate current project script and voiceovers to Hindi and Japanese with dual bilingual subtitles",
+        defaultPrompt = "",
         cardColorHex = "#311B92",
         secondaryColorHex = "#5E35B1"
     ),
@@ -232,7 +232,7 @@ enum class StudioWorkflow(
         subtitle = "Blank Video Project",
         description = "Start an empty multi-scene storyboard with custom aspect ratio, blank scene slots, and custom director controls.",
         iconEmoji = "🎬",
-        defaultPrompt = "Empty anime video timeline with customizable scenes and director tools",
+        defaultPrompt = "",
         cardColorHex = "#37474F",
         secondaryColorHex = "#607D8B",
         actionText = "Start now →"

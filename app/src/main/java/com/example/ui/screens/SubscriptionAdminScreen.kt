@@ -74,6 +74,7 @@ import com.example.data.model.SubscriptionPlan
 import com.example.localization.AppLocaleStrings
 import com.example.ui.AnimeViewModel
 import com.example.ui.components.OwnerPricingEditorDialog
+import com.example.ui.components.OwnerWalletBarcodeCard
 import com.example.ui.components.OwnerWalletBottomSheet
 import com.example.ui.theme.AnimeCyan
 import com.example.ui.theme.AnimeCyanLight
@@ -724,16 +725,29 @@ fun SubscriptionCheckoutDialog(
     onPaymentComplete: (PaymentGateway, Double) -> Unit,
     onDismiss: () -> Unit
 ) {
-    var selectedGateway by remember { mutableStateOf(PaymentGateway.UPI_GPAY) }
+    var selectedGateway by remember { mutableStateOf(PaymentGateway.OWNER_WALLET_BARCODE) }
     var isProcessing by remember { mutableStateOf(false) }
+    var checkoutTab by remember { mutableIntStateOf(0) } // 0: Barcode & Wallet ID, 1: All Payment Methods
     val amount = viewModel.getPlanPrice(plan, currency)
 
     val supportedGateways = when (currency) {
-        CurrencyType.INR -> listOf(PaymentGateway.UPI_GPAY, PaymentGateway.UPI_PHONEPE, PaymentGateway.UPI_GENERIC, PaymentGateway.CARD, PaymentGateway.BANK_TRANSFER)
-        CurrencyType.USD -> listOf(PaymentGateway.PAYPAL, PaymentGateway.CARD, PaymentGateway.BANK_TRANSFER)
-        CurrencyType.EUR -> listOf(PaymentGateway.PAYPAL, PaymentGateway.CARD, PaymentGateway.BANK_TRANSFER)
-        CurrencyType.GBP -> listOf(PaymentGateway.PAYPAL, PaymentGateway.CARD, PaymentGateway.BANK_TRANSFER)
-        CurrencyType.JPY -> listOf(PaymentGateway.PAYPAL, PaymentGateway.CARD, PaymentGateway.BANK_TRANSFER)
+        CurrencyType.INR -> listOf(
+            PaymentGateway.OWNER_WALLET_BARCODE,
+            PaymentGateway.OWNER_WALLET_ID,
+            PaymentGateway.UPI_GPAY,
+            PaymentGateway.UPI_PHONEPE,
+            PaymentGateway.PAYTM,
+            PaymentGateway.UPI_GENERIC,
+            PaymentGateway.CARD,
+            PaymentGateway.BANK_TRANSFER
+        )
+        CurrencyType.USD, CurrencyType.EUR, CurrencyType.GBP, CurrencyType.JPY -> listOf(
+            PaymentGateway.OWNER_WALLET_BARCODE,
+            PaymentGateway.OWNER_WALLET_ID,
+            PaymentGateway.PAYPAL,
+            PaymentGateway.CARD,
+            PaymentGateway.BANK_TRANSFER
+        )
     }
 
     AlertDialog(
@@ -742,66 +756,170 @@ fun SubscriptionCheckoutDialog(
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(Icons.Default.Payment, contentDescription = null, tint = AnimeCyan)
                 Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    text = AppLocaleStrings.tr(language, "Subscription Checkout", "सब्सक्रिप्शन पेमेंट गेटवे"),
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold
-                )
+                Column {
+                    Text(
+                        text = AppLocaleStrings.tr(language, "Subscription Checkout", "सब्सक्रिप्शन भुगतान (Owner Wallet)"),
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Text(
+                        text = "Amount deposits directly into Owner's in-app Wallet",
+                        color = AnimeGold,
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
             }
         },
         text = {
-            Column {
-                Text(
-                    text = "${AppLocaleStrings.tr(language, "Plan", "प्लान")}: ${plan.title}",
-                    color = MaterialTheme.colorScheme.onSurface,
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Bold
-                )
-                Text(
-                    text = "${AppLocaleStrings.tr(language, "Total Amount", "कुल राशि")}: ${currency.symbol}$amount (${currency.code})",
-                    color = AnimeGreen,
-                    fontSize = 15.sp,
-                    fontWeight = FontWeight.ExtraBold
-                )
-
-                Spacer(modifier = Modifier.height(12.dp))
-
-                Text(
-                    text = AppLocaleStrings.tr(language, "Select Payment Method:", "भुगतान का माध्यम चुनें (Payment Method):"),
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    fontSize = 12.sp
-                )
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                supportedGateways.forEach { gateway ->
-                    val isSelected = selectedGateway == gateway
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .verticalScroll(rememberScrollState())
+            ) {
+                // Plan Summary Badge
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
+                    shape = RoundedCornerShape(10.dp)
+                ) {
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(vertical = 3.dp)
-                            .clip(RoundedCornerShape(8.dp))
-                            .background(if (isSelected) AnimeCyan.copy(alpha = 0.2f) else MaterialTheme.colorScheme.surfaceVariant)
-                            .clickable { selectedGateway = gateway }
-                            .padding(horizontal = 10.dp, vertical = 8.dp),
+                            .padding(10.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(gateway.iconEmoji, fontSize = 16.sp)
-                        Spacer(modifier = Modifier.width(8.dp))
+                        Column {
+                            Text(
+                                text = plan.title,
+                                color = MaterialTheme.colorScheme.onSurface,
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Text(
+                                text = "Access: Full Pro AI Generation",
+                                color = TextMuted,
+                                fontSize = 10.sp
+                            )
+                        }
                         Text(
-                            text = gateway.displayName,
-                            color = if (isSelected) AnimeCyan else MaterialTheme.colorScheme.onSurface,
-                            fontSize = 12.sp,
-                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                            modifier = Modifier.weight(1f)
+                            text = "${currency.symbol}$amount (${currency.code})",
+                            color = AnimeGreen,
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Black
                         )
-                        if (isSelected) {
-                            Icon(Icons.Default.Check, contentDescription = null, tint = AnimeCyan, modifier = Modifier.size(16.dp))
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(10.dp))
+
+                // Selector Tabs: 0: Owner Wallet Barcode & ID, 1: Payment Gateways
+                TabRow(
+                    selectedTabIndex = checkoutTab,
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                    contentColor = AnimeCyan,
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(8.dp))
+                        .height(38.dp)
+                ) {
+                    Tab(
+                        selected = checkoutTab == 0,
+                        onClick = {
+                            checkoutTab = 0
+                            selectedGateway = PaymentGateway.OWNER_WALLET_BARCODE
+                        },
+                        text = {
+                            Text(
+                                AppLocaleStrings.tr(language, "📱 Barcode & ID", "📱 बारकोड व ID"),
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    )
+                    Tab(
+                        selected = checkoutTab == 1,
+                        onClick = { checkoutTab = 1 },
+                        text = {
+                            Text(
+                                AppLocaleStrings.tr(language, "⚡ Payment Apps", "⚡ भुगतान माध्यम"),
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(10.dp))
+
+                if (checkoutTab == 0) {
+                    // Visual Owner Wallet Barcode, 1D Barcode, and Owner Wallet ID Card
+                    OwnerWalletBarcodeCard(
+                        amount = amount,
+                        currency = currency,
+                        language = language,
+                        isOwnerSelfView = false
+                    )
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Text(
+                        text = AppLocaleStrings.tr(
+                            language,
+                            "User Instruction: You can scan this Barcode or use the Owner Wallet ID above. Once you confirm, the subscription amount will be deposited directly into this app's Owner Wallet.",
+                            "यूजर निर्देश: आप ऊपर दिए गए बारकोड को स्कैन कर सकते हैं या ओनर वॉलेट ID कॉपी करके भुगतान कर सकते हैं। पुष्टि होते ही राशि सीधे इसी ऐप के ओनर वॉलेट में जमा हो जाएगी।"
+                        ),
+                        color = TextSecondary,
+                        fontSize = 10.sp,
+                        lineHeight = 14.sp
+                    )
+                } else {
+                    // Gateway List
+                    Text(
+                        text = AppLocaleStrings.tr(language, "Choose Payment Channel:", "भुगतान का माध्यम चुनें:"),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                    Spacer(modifier = Modifier.height(6.dp))
+
+                    supportedGateways.forEach { gateway ->
+                        val isSelected = selectedGateway == gateway
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 3.dp)
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(if (isSelected) AnimeCyan.copy(alpha = 0.2f) else MaterialTheme.colorScheme.surfaceVariant)
+                                .border(1.dp, if (isSelected) AnimeCyan else Color.Transparent, RoundedCornerShape(8.dp))
+                                .clickable { selectedGateway = gateway }
+                                .padding(horizontal = 10.dp, vertical = 7.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(gateway.iconEmoji, fontSize = 16.sp)
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = gateway.displayName,
+                                    color = if (isSelected) AnimeCyan else MaterialTheme.colorScheme.onSurface,
+                                    fontSize = 12.sp,
+                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
+                                )
+                                Text(
+                                    text = gateway.description,
+                                    color = TextMuted,
+                                    fontSize = 9.sp
+                                )
+                            }
+                            if (isSelected) {
+                                Icon(Icons.Default.Check, contentDescription = null, tint = AnimeCyan, modifier = Modifier.size(16.dp))
+                            }
                         }
                     }
                 }
 
-                Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(10.dp))
 
                 Box(
                     modifier = Modifier
@@ -813,11 +931,11 @@ fun SubscriptionCheckoutDialog(
                     Text(
                         text = AppLocaleStrings.tr(
                             language,
-                            "🔒 256-Bit SSL Encrypted • Direct deposit into verified Owner Wallet",
-                            "🔒 256-बिट सुरक्षित भुगतान • सीधे ओनर के वॉलेट में जमा होगा"
+                            "🛡️ Guaranteed Deposit: This payment will be deposited into the Owner's in-app Wallet. The Owner can withdraw anytime via RTGS, NEFT, SWIFT, UPI, Paytm, or PayPal.",
+                            "🛡️ गारंटीड डिपॉजिट: यह भुगतान इसी ऐप के ओनर वॉलेट में जमा होगा, जिसे ओनर कभी भी RTGS, NEFT, SWIFT, UPI, Paytm या PayPal से निकाल सकते हैं।"
                         ),
                         color = AnimeGold,
-                        fontSize = 10.sp,
+                        fontSize = 9.sp,
                         fontWeight = FontWeight.SemiBold
                     )
                 }
@@ -840,11 +958,12 @@ fun SubscriptionCheckoutDialog(
                     Text(
                         text = AppLocaleStrings.tr(
                             language,
-                            "Pay ${currency.symbol}$amount",
-                            "भुगतान करें ${currency.symbol}$amount"
+                            "Confirm & Deposit ${currency.symbol}$amount",
+                            "भुगतान कर वॉलेट में जमा करें (${currency.symbol}$amount)"
                         ),
                         color = Color.Black,
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 11.sp
                     )
                 }
             }

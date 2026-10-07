@@ -223,6 +223,17 @@ class AuthAndWalletRepository(private val context: Context) {
         val updatedTxns = listOf(txn) + _transactions.value
         _transactions.value = updatedTxns
         saveTransactions(updatedTxns)
+
+        // Upgrade subscriber's active user profile
+        if (!_currentUser.value.isOwner) {
+            val updatedUser = _currentUser.value.copy(
+                subscriptionPlan = planName,
+                subscriptionExpiry = "Active (Auto-Renewed)"
+            )
+            _currentUser.value = updatedUser
+            saveUserProfile(updatedUser)
+        }
+
         return true
     }
 
@@ -374,6 +385,228 @@ class AuthAndWalletRepository(private val context: Context) {
         _transactions.value = updatedTxns
         saveTransactions(updatedTxns)
         return Pair(true, "Successfully transferred ${currency.symbol}$amount to PayPal ($paypalEmail)")
+    }
+
+    fun withdrawViaRtgs(
+        amount: Double,
+        currency: CurrencyType,
+        accountNumber: String,
+        ifsc: String,
+        holderName: String,
+        bankName: String
+    ): Pair<Boolean, String> {
+        val currentWallets = _wallets.value.toMutableMap()
+        val wallet = currentWallets[currency] ?: return Pair(false, "Wallet not found")
+        if (wallet.balance < amount) {
+            return Pair(false, "Insufficient balance! Available: ${currency.symbol}${wallet.balance}")
+        }
+        val updatedWallet = wallet.copy(
+            balance = wallet.balance - amount,
+            totalWithdrawn = wallet.totalWithdrawn + amount
+        )
+        currentWallets[currency] = updatedWallet
+        _wallets.value = currentWallets
+        saveWallets(currentWallets)
+
+        val txn = WalletTransaction(
+            id = "WTH_RTGS_${System.currentTimeMillis()}",
+            timestamp = System.currentTimeMillis(),
+            type = TransactionType.WITHDRAWAL_RTGS,
+            currency = currency,
+            amount = amount,
+            targetAccountOrUser = "$bankName A/C ••••${accountNumber.takeLast(4)} (IFSC: $ifsc)",
+            description = "RTGS Real-Time Gross Settlement to $holderName",
+            status = "सफल (RTGS Settled)",
+            referenceId = "RTGS-${UUID.randomUUID().toString().uppercase().take(8)}"
+        )
+        val updatedTxns = listOf(txn) + _transactions.value
+        _transactions.value = updatedTxns
+        saveTransactions(updatedTxns)
+        return Pair(true, "✓ RTGS instant settlement successful! ${currency.symbol}$amount transferred to $bankName (••••${accountNumber.takeLast(4)}).")
+    }
+
+    fun withdrawViaNeft(
+        amount: Double,
+        currency: CurrencyType,
+        accountNumber: String,
+        ifsc: String,
+        holderName: String,
+        bankName: String
+    ): Pair<Boolean, String> {
+        val currentWallets = _wallets.value.toMutableMap()
+        val wallet = currentWallets[currency] ?: return Pair(false, "Wallet not found")
+        if (wallet.balance < amount) {
+            return Pair(false, "Insufficient balance! Available: ${currency.symbol}${wallet.balance}")
+        }
+        val updatedWallet = wallet.copy(
+            balance = wallet.balance - amount,
+            totalWithdrawn = wallet.totalWithdrawn + amount
+        )
+        currentWallets[currency] = updatedWallet
+        _wallets.value = currentWallets
+        saveWallets(currentWallets)
+
+        val txn = WalletTransaction(
+            id = "WTH_NEFT_${System.currentTimeMillis()}",
+            timestamp = System.currentTimeMillis(),
+            type = TransactionType.WITHDRAWAL_NEFT,
+            currency = currency,
+            amount = amount,
+            targetAccountOrUser = "$bankName A/C ••••${accountNumber.takeLast(4)} (IFSC: $ifsc)",
+            description = "NEFT Electronic Funds Transfer to $holderName",
+            status = "सफल (NEFT Processed)",
+            referenceId = "NEFT-${UUID.randomUUID().toString().uppercase().take(8)}"
+        )
+        val updatedTxns = listOf(txn) + _transactions.value
+        _transactions.value = updatedTxns
+        saveTransactions(updatedTxns)
+        return Pair(true, "✓ NEFT transfer processed successfully! ${currency.symbol}$amount dispatched to $bankName (••••${accountNumber.takeLast(4)}).")
+    }
+
+    fun withdrawViaSwift(
+        amount: Double,
+        currency: CurrencyType,
+        accountNumber: String,
+        swiftBic: String,
+        holderName: String,
+        bankName: String,
+        targetCountry: String = "Global"
+    ): Pair<Boolean, String> {
+        val currentWallets = _wallets.value.toMutableMap()
+        val wallet = currentWallets[currency] ?: return Pair(false, "Wallet not found")
+        if (wallet.balance < amount) {
+            return Pair(false, "Insufficient balance! Available: ${currency.symbol}${wallet.balance}")
+        }
+        val updatedWallet = wallet.copy(
+            balance = wallet.balance - amount,
+            totalWithdrawn = wallet.totalWithdrawn + amount
+        )
+        currentWallets[currency] = updatedWallet
+        _wallets.value = currentWallets
+        saveWallets(currentWallets)
+
+        val txn = WalletTransaction(
+            id = "WTH_SWIFT_${System.currentTimeMillis()}",
+            timestamp = System.currentTimeMillis(),
+            type = TransactionType.WITHDRAWAL_SWIFT,
+            currency = currency,
+            amount = amount,
+            targetAccountOrUser = "$bankName ($targetCountry) SWIFT: $swiftBic A/C ••••${accountNumber.takeLast(4)}",
+            description = "SWIFT International Wire to $holderName ($targetCountry)",
+            status = "सफल (SWIFT Dispatched)",
+            referenceId = "SWIFT-${UUID.randomUUID().toString().uppercase().take(10)}"
+        )
+        val updatedTxns = listOf(txn) + _transactions.value
+        _transactions.value = updatedTxns
+        saveTransactions(updatedTxns)
+        return Pair(true, "✓ SWIFT International wire dispatched! ${currency.symbol}$amount sent to $bankName via SWIFT $swiftBic.")
+    }
+
+    fun withdrawToPaytm(
+        amount: Double,
+        currency: CurrencyType,
+        paytmNumberOrUpi: String
+    ): Pair<Boolean, String> {
+        val currentWallets = _wallets.value.toMutableMap()
+        val wallet = currentWallets[currency] ?: return Pair(false, "Wallet not found")
+        if (wallet.balance < amount) {
+            return Pair(false, "Insufficient balance! Available: ${currency.symbol}${wallet.balance}")
+        }
+        val updatedWallet = wallet.copy(
+            balance = wallet.balance - amount,
+            totalWithdrawn = wallet.totalWithdrawn + amount
+        )
+        currentWallets[currency] = updatedWallet
+        _wallets.value = currentWallets
+        saveWallets(currentWallets)
+
+        val txn = WalletTransaction(
+            id = "WTH_PAYTM_${System.currentTimeMillis()}",
+            timestamp = System.currentTimeMillis(),
+            type = TransactionType.WITHDRAWAL_PAYTM,
+            currency = currency,
+            amount = amount,
+            targetAccountOrUser = "Paytm Wallet / UPI: $paytmNumberOrUpi",
+            description = "Instant Paytm Payout",
+            status = "सफल (Instant Paytm)",
+            referenceId = "PTM-${UUID.randomUUID().toString().uppercase().take(8)}"
+        )
+        val updatedTxns = listOf(txn) + _transactions.value
+        _transactions.value = updatedTxns
+        saveTransactions(updatedTxns)
+        return Pair(true, "✓ Paytm transfer successful! ${currency.symbol}$amount credited to Paytm ($paytmNumberOrUpi).")
+    }
+
+    fun withdrawToUpiGeneric(
+        amount: Double,
+        currency: CurrencyType,
+        upiId: String,
+        platformName: String = "UPI"
+    ): Pair<Boolean, String> {
+        val currentWallets = _wallets.value.toMutableMap()
+        val wallet = currentWallets[currency] ?: return Pair(false, "Wallet not found")
+        if (wallet.balance < amount) {
+            return Pair(false, "Insufficient balance! Available: ${currency.symbol}${wallet.balance}")
+        }
+        val updatedWallet = wallet.copy(
+            balance = wallet.balance - amount,
+            totalWithdrawn = wallet.totalWithdrawn + amount
+        )
+        currentWallets[currency] = updatedWallet
+        _wallets.value = currentWallets
+        saveWallets(currentWallets)
+
+        val txn = WalletTransaction(
+            id = "WTH_UPI_${System.currentTimeMillis()}",
+            timestamp = System.currentTimeMillis(),
+            type = TransactionType.WITHDRAWAL_UPI,
+            currency = currency,
+            amount = amount,
+            targetAccountOrUser = "$platformName: $upiId",
+            description = "Instant $platformName Transfer to $upiId",
+            status = "सफल (Instant UPI)",
+            referenceId = "UPI-${UUID.randomUUID().toString().uppercase().take(8)}"
+        )
+        val updatedTxns = listOf(txn) + _transactions.value
+        _transactions.value = updatedTxns
+        saveTransactions(updatedTxns)
+        return Pair(true, "✓ Instant $platformName transfer successful! ${currency.symbol}$amount transferred to $upiId.")
+    }
+
+    fun withdrawViaScannedBarcode(
+        amount: Double,
+        currency: CurrencyType,
+        barcodeData: String,
+        targetType: String = "Scanned QR/Barcode"
+    ): Pair<Boolean, String> {
+        val currentWallets = _wallets.value.toMutableMap()
+        val wallet = currentWallets[currency] ?: return Pair(false, "Wallet not found")
+        if (wallet.balance < amount) {
+            return Pair(false, "Insufficient balance! Available: ${currency.symbol}${wallet.balance}")
+        }
+        val updatedWallet = wallet.copy(
+            balance = wallet.balance - amount,
+            totalWithdrawn = wallet.totalWithdrawn + amount
+        )
+        currentWallets[currency] = updatedWallet
+        _wallets.value = currentWallets
+        saveWallets(currentWallets)
+
+        val txn = WalletTransaction(
+            id = "WTH_SCAN_${System.currentTimeMillis()}",
+            timestamp = System.currentTimeMillis(),
+            type = TransactionType.WITHDRAWAL_BARCODE_SCAN,
+            currency = currency,
+            amount = amount,
+            targetAccountOrUser = "$targetType: ${barcodeData.take(30)}",
+            description = "Withdrawal via Scanned Barcode/QR: $barcodeData",
+            status = "सफल (Scanned Settlement)",
+            referenceId = "SCAN-${UUID.randomUUID().toString().uppercase().take(8)}"
+        )
+        val updatedTxns = listOf(txn) + _transactions.value
+        _transactions.value = updatedTxns
+        saveTransactions(updatedTxns)
+        return Pair(true, "✓ Barcode/QR withdrawal successful! ${currency.symbol}$amount transferred to scanned destination (${barcodeData.take(25)}...).")
     }
 
     fun interWalletTransfer(

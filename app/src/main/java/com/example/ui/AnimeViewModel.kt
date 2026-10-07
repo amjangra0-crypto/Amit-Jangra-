@@ -80,13 +80,15 @@ data class AnimeStudioUiState(
     val iconStyle: String = "NEON_GLOW", // "NEON_GLOW", "METALLIC_GOLD", "SAKURA_VIBRANT", "CYBER_AZURE", "EMERALD_MINT", "MINIMAL_CLEAN"
     val appIconTheme: String = "SHONEN_HERO", // "SHONEN_HERO", "ANIME_HEROINE", "CYBER_MASCOT", "STUDIO_GOLD"
     val iconShape: String = "ROUNDED_SQUIRCLE", // "ROUNDED_SQUIRCLE", "CAPSULE_PILL", "SMOOTH_CARD", "CIRCLE_ROUND"
-    val promptInput: String = "Magical cherry blossom temple and cyber samurai legend",
-    val linkInput: String = "https://animenews.org/legends/sakura-blade",
-    val imageInputDescription: String = "Anime warrior under neon cherry blossoms",
+    val promptInput: String = "",
+    val linkInput: String = "",
+    val imageInputDescription: String = "",
     val selectedInputMode: Int = 0, // 0: Text Prompt, 1: Web Link, 2: Image Scanner
     val selectedArtStyle: AnimeArtStyle = AnimeArtStyle.JAPANESE_ANIME,
-    val selectedLanguage: String = "English",
-    val voiceoverLanguage: String = "English",
+    val appInterfaceLanguage: String = "Hindi", // UI interface language (app menus, buttons, strings)
+    val videoGenerationLanguage: String = "Hindi", // Video / script / dubbing generation language (dialogue & TTS speech)
+    val selectedLanguage: String = "Hindi",
+    val voiceoverLanguage: String = "Hindi",
     val subtitleMode: SubtitleMode = SubtitleMode.TRANSLATED_ONLY,
     val selectedProductionFormat: com.example.data.model.ProductionFormat = com.example.data.model.ProductionFormat.ANIME_EPISODE,
     val selectedMotionEffect: com.example.data.model.MotionEffect = com.example.data.model.MotionEffect.SPEEDLINES_ACTION,
@@ -102,6 +104,8 @@ data class AnimeStudioUiState(
     val activeDialogueText: String = "",
     val activeDialogueEmotion: String = "",
     val currentDialogueIndex: Int = 0,
+    val videoPresentationMode: com.example.data.model.VideoPresentationMode = com.example.data.model.VideoPresentationMode.INDEPENDENT_CHARACTERS,
+    val explainerStoryBeatText: String = "",
     val isMusicMuted: Boolean = false,
     val isOwnerAdmin: Boolean = true,
     val promoCodeInput: String = "",
@@ -109,7 +113,7 @@ data class AnimeStudioUiState(
     val statusMessage: String = "",
     val customCharacters: List<CharacterProfile> = emptyList(),
     // Character Studio & AI Designer
-    val characterPromptInput: String = "Cyber samurai warrior with blue flame katana and silver hair",
+    val characterPromptInput: String = "",
     val isAiDesigningCharacter: Boolean = false,
     val characterDraft: CharacterProfile = CharacterProfile(
         id = "draft_initial",
@@ -135,7 +139,7 @@ data class AnimeStudioUiState(
         sampleDialogue = "My spirit burns with resolve! I will surpass every limit!"
     ),
     // AI Visual Content Generator
-    val visualPromptInput: String = "Neo Tokyo floating temple with holographic sakura blossoms and neon rain",
+    val visualPromptInput: String = "",
     val visualSourceMode: String = "TEXT_PROMPT", // "TEXT_PROMPT", "UPLOADED_IMAGE", "WEB_LINK"
     val isGeneratingVisual: Boolean = false,
     val latestGeneratedVisual: AnimeVisualElement? = null,
@@ -163,31 +167,17 @@ data class AnimeStudioUiState(
     val presentationSlides: List<PresentationSlideData> = listOf(
         PresentationSlideData(
             slideNumber = 1,
-            title = "Introduction to Neo-Kyoto 2099",
-            bulletPoints = listOf("Floating cyber temples in neon mist", "Rise of the Shinobi cyber-corporation", "The legendary Sakura Core awakens"),
-            narratorNote = "Introduce the world with dramatic atmosphere and deep cadence.",
+            title = "Introduction",
+            bulletPoints = listOf("Topic overview", "Core concepts", "Key takeaways"),
+            narratorNote = "Introduce the presentation with clear cadence.",
             visualTheme = "Cyberpunk Neo"
-        ),
-        PresentationSlideData(
-            slideNumber = 2,
-            title = "The Protagonist Order",
-            bulletPoints = listOf("Ren: Master of lightning blade", "Aoi: Shrine maiden with tactical hacking", "Zero: Ancient ronin cyborg mentor"),
-            narratorNote = "Present each character's unique combat ability and motivations.",
-            visualTheme = "Shonen Action"
-        ),
-        PresentationSlideData(
-            slideNumber = 3,
-            title = "Generative Production & Video Sync",
-            bulletPoints = listOf("Multilingual Japanese & English dubbing", "Automated beat-synced AMV cuts", "4K HDR frame generation & export"),
-            narratorNote = "Call to action for audiences to subscribe to upcoming episodes.",
-            visualTheme = "Japanese Anime"
         )
     ),
     val musicGeneratorData: MusicGeneratorData = MusicGeneratorData(),
     val translationStudioData: TranslationStudioData = TranslationStudioData(),
-    val audioNarrationScript: String = "Shonen Hero: 'We will never give up! We will write our own destiny!'\nMaster Sensei: 'Patience, young warrior. The real test has just begun.'",
+    val audioNarrationScript: String = "",
     // Autonomous AI Director Pipeline State
-    val automationCommandInput: String = "30s action anime with cyber samurai in English",
+    val automationCommandInput: String = "",
     val automationDurationSeconds: Int = 30,
     val automationSelectedLanguage: String = "Auto-Detect",
     val automationSelectedAccent: String = "Auto-Detect",
@@ -500,14 +490,18 @@ class AnimeViewModel(application: Application) : AndroidViewModel(application) {
     private var playbackJob: Job? = null
 
     init {
-        // Check for user-selected language first; fallback to detected country
-        val savedLang = application.getSharedPreferences("app_settings_prefs", Context.MODE_PRIVATE)
-            .getString("app_selected_language", null)
+        val prefs = application.getSharedPreferences("app_settings_prefs", Context.MODE_PRIVATE)
+        val savedUiLang = prefs.getString("app_interface_language", null)
+            ?: prefs.getString("app_selected_language", null)
+        val savedVideoLang = prefs.getString("video_generation_language", null) ?: "Hindi"
+
         val detectedCountry = CountryCodeProvider.detectDeviceCountry(application)
-        val initialLang = savedLang ?: detectedCountry.primaryLanguage
-        val matchedCountry = CountryCodeProvider.findByLanguage(initialLang) ?: detectedCountry
+        val initialUiLang = savedUiLang ?: detectedCountry.primaryLanguage
+        val matchedCountry = CountryCodeProvider.findByLanguage(initialUiLang) ?: detectedCountry
         _selectedCountry.value = matchedCountry
-        setAppLanguage(initialLang)
+
+        setAppInterfaceLanguage(initialUiLang)
+        setVideoGenerationLanguage(savedVideoLang)
 
         // Initialize daily WorkManager scheduler if configured
         val creds = ytCredManager.credentials.value
@@ -560,16 +554,6 @@ class AnimeViewModel(application: Application) : AndroidViewModel(application) {
                     _uiState.value = _uiState.value.copy(customCharacters = combined)
                 }
             }
-        }
-        viewModelScope.launch {
-            // Auto-create initial featured anime script for instant preview & testing!
-            val initialScript = repository.createAnimeScript(
-                input = _uiState.value.promptInput,
-                sourceType = "TEXT",
-                artStyle = AnimeArtStyle.JAPANESE_ANIME,
-                language = "Hindi"
-            )
-            _uiState.value = _uiState.value.copy(currentScript = initialScript)
         }
     }
 
@@ -850,8 +834,8 @@ class AnimeViewModel(application: Application) : AndroidViewModel(application) {
         val state = _uiState.value
         val input = when (state.selectedInputMode) {
             1 -> state.linkInput.ifBlank { "https://animestudio.ai/story" }
-            2 -> state.imageInputDescription.ifBlank { "Scanned anime visual scene" }
-            else -> state.promptInput.ifBlank { "Epic anime adventure" }
+            2 -> state.imageInputDescription.ifBlank { "Visual Content: Scanned anime visual scene" }
+            else -> state.promptInput.ifBlank { "Video Generate: High-quality anime production" }
         }
         val sourceType = when (state.selectedInputMode) {
             1 -> "WEB_LINK"
@@ -880,7 +864,7 @@ class AnimeViewModel(application: Application) : AndroidViewModel(application) {
                 input = input,
                 sourceType = sourceType,
                 artStyle = state.selectedArtStyle,
-                language = state.selectedLanguage,
+                language = state.videoGenerationLanguage,
                 productionFormat = state.selectedProductionFormat,
                 motionEffect = state.selectedMotionEffect,
                 voiceAccent = state.selectedVoiceAccent
@@ -968,59 +952,64 @@ class AnimeViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     /**
-     * Instantly transforms entire application UI, prompts, voiceover, and subtitles to the chosen language
+     * Sets only the App UI Interface Language (menus, buttons, strings, settings).
+     * Strictly does NOT override or change video/dubbing generation language.
      */
-    fun setAppLanguage(language: String) {
+    fun setAppInterfaceLanguage(language: String) {
         val normalized = com.example.localization.AppLocaleStrings.normalizeLanguage(language)
         val matchedCountry = CountryCodeProvider.findByLanguage(normalized)
             ?: CountryCodeProvider.countries.firstOrNull { it.primaryLanguage.equals(normalized, ignoreCase = true) }
             ?: _selectedCountry.value.copy(primaryLanguage = normalized)
         _selectedCountry.value = matchedCountry
-        voiceSyncEngine.setLanguage(normalized)
-
-        val defaultPrompt = when (normalized) {
-            "Hindi" -> "जादुई चेरी ब्लॉसम मंदिर और जापानी सामुराई की दास्तान"
-            "Japanese" -> "桜舞う夜の神社で刀を抜くサイバー侍の伝説"
-            "Korean" -> "벚꽃 흩날리는 사원과 사이버 무사의 전설"
-            "Spanish" -> "Templo mágico de cerezos y leyenda del samurái cibernético"
-            "German" -> "Magischer Kirschblütentempel und Cyber-Samurai-Legende"
-            "French" -> "Temple mystique sous les cerisiers et samouraï cybernétique"
-            "Chinese" -> "落樱神庙与赛博武士的传奇决战"
-            "Arabic" -> "معبد أزهار الكرز السحري وأسطورة الساموراي بالسيف النيون"
-            "Russian" -> "Храм цветущей сакуры и легенда о кибер-самурае"
-            "Portuguese" -> "Templo mágico das cerejeiras e lenda do samurai cibernético"
-            "Indonesian" -> "Kuil bunga sakura ajaib dan legenda samurai siber"
-            else -> "Magical cherry blossom temple and cyber samurai legend"
-        }
-
-        val defaultCommand = when (normalized) {
-            "Hindi" -> "30s एक्शन एनिमे जापानी में टोक्यो एक्सेंट के साथ साइबर समुराई पर"
-            "Japanese" -> "30秒 アクションアニメ サイバー侍 東京アクセント"
-            "Korean" -> "30초 액션 애니메이션 사이버 무사 한국어 더빙"
-            "Spanish" -> "30s anime de acción con samurái en español"
-            "German" -> "30s Action-Anime mit Cyber-Samurai auf Deutsch"
-            "French" -> "30s anime d'action avec samouraï en français"
-            "Chinese" -> "30秒 动作动画 赛博武士 中文配音"
-            "Arabic" -> "30 ثانية أنمي أكشن مع ساموراي باللغة العربية"
-            "Russian" -> "30с экшен-аниме с кибер-самураем на русском"
-            "Portuguese" -> "30s anime de ação com samurai em português"
-            "Indonesian" -> "30s anime aksi dengan samurai siber dalam Bahasa Indonesia"
-            else -> "30s action anime with cyber samurai in English"
-        }
 
         try {
             getApplication<Application>().getSharedPreferences("app_settings_prefs", Context.MODE_PRIVATE)
-                .edit().putString("app_selected_language", normalized).commit()
+                .edit()
+                .putString("app_interface_language", normalized)
+                .putString("app_selected_language", normalized)
+                .commit()
         } catch (_: Exception) {}
 
         _uiState.value = _uiState.value.copy(
+            appInterfaceLanguage = normalized,
             selectedLanguage = normalized,
-            voiceoverLanguage = normalized,
-            selectedVoiceAccent = matchedCountry.defaultVoiceAccent,
-            promptInput = defaultPrompt,
-            automationCommandInput = defaultCommand,
-            statusMessage = "🌍 Language switched: $normalized"
+            statusMessage = "📱 App UI Language set: $normalized"
         )
+    }
+
+    /**
+     * Sets only the Video & Dubbing Generation Language (script generation, dialogue text, TTS speech synthesis).
+     * Strictly does NOT override or change the app UI interface language.
+     */
+    fun setVideoGenerationLanguage(language: String) {
+        val normalized = com.example.localization.AppLocaleStrings.normalizeLanguage(language)
+        try {
+            getApplication<Application>().getSharedPreferences("app_settings_prefs", Context.MODE_PRIVATE)
+                .edit().putString("video_generation_language", normalized).commit()
+        } catch (_: Exception) {}
+
+        _uiState.value = _uiState.value.copy(
+            videoGenerationLanguage = normalized,
+            voiceoverLanguage = normalized,
+            statusMessage = "🎬 Video Generation Language set: $normalized"
+        )
+        voiceSyncEngine.setLanguage(normalized)
+    }
+
+    fun setAppLanguage(language: String) {
+        setAppInterfaceLanguage(language)
+    }
+
+    /**
+     * Updates an existing saved video project's details directly in the local Room database.
+     */
+    fun updateSavedScriptDetails(scriptId: String, newTitle: String, newSynopsis: String, newGenre: String) {
+        viewModelScope.launch {
+            repository.updateScriptDetails(scriptId, newTitle, newSynopsis, newGenre)
+            _uiState.value = _uiState.value.copy(
+                statusMessage = "✓ Project details updated in Room database!"
+            )
+        }
     }
 
     // YouTube Channel ID, OAuth 2.0 Credentials & WorkManager Methods
@@ -1266,7 +1255,7 @@ class AnimeViewModel(application: Application) : AndroidViewModel(application) {
         overrideLanguage: String? = if (_uiState.value.automationSelectedLanguage == "Auto-Detect") null else _uiState.value.automationSelectedLanguage,
         overrideAccent: String? = if (_uiState.value.automationSelectedAccent == "Auto-Detect") null else _uiState.value.automationSelectedAccent
     ) {
-        val input = commandOrLink.ifBlank { "30s action anime in Japanese with Tokyo accent" }
+        val input = commandOrLink.ifBlank { "Video Generate: High-quality anime production sequence" }
         viewModelScope.launch {
             pauseVideo()
             _uiState.value = _uiState.value.copy(
@@ -1315,7 +1304,7 @@ class AnimeViewModel(application: Application) : AndroidViewModel(application) {
                     currentScript = script,
                     activeSceneIndex = 0,
                     currentDialogueIndex = 0,
-                    selectedLanguage = script.language,
+                    voiceoverLanguage = script.language,
                     selectedVoiceAccent = parsedCommand.targetAccent,
                     selectedArtStyle = parsedCommand.targetArtStyle,
                     selectedMotionEffect = parsedCommand.targetMotionEffect,
@@ -1340,7 +1329,12 @@ class AnimeViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun translateAndDub(targetLang: String) {
-        val script = _uiState.value.currentScript ?: return
+        val script = _uiState.value.currentScript
+        if (script == null) {
+            // When no video has been generated yet, set the video audio/dubbing language only
+            setVoiceoverLanguage(targetLang)
+            return
+        }
         viewModelScope.launch {
             pauseVideo()
             _uiState.value = _uiState.value.copy(
@@ -1355,7 +1349,7 @@ class AnimeViewModel(application: Application) : AndroidViewModel(application) {
                 isGenerating = false,
                 generationStep = "",
                 currentScript = translated,
-                selectedLanguage = targetLang,
+                voiceoverLanguage = targetLang,
                 statusMessage = "🎌 Successfully dubbed into $targetLang!"
             )
             playVideo()
@@ -1419,6 +1413,23 @@ class AnimeViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    fun setVideoPresentationMode(mode: com.example.data.model.VideoPresentationMode) {
+        _uiState.value = _uiState.value.copy(videoPresentationMode = mode)
+        if (_uiState.value.isPlayingVideo) {
+            val currentIdx = _uiState.value.activeSceneIndex
+            startScenePlayback(currentIdx, 0)
+        }
+    }
+
+    fun toggleVideoPresentationMode() {
+        val next = if (_uiState.value.videoPresentationMode == com.example.data.model.VideoPresentationMode.EXPLAINER_MODE) {
+            com.example.data.model.VideoPresentationMode.INDEPENDENT_CHARACTERS
+        } else {
+            com.example.data.model.VideoPresentationMode.EXPLAINER_MODE
+        }
+        setVideoPresentationMode(next)
+    }
+
     private fun startScenePlayback(sceneIdx: Int, startingDialogueIdx: Int) {
         playbackJob?.cancel()
         playbackJob = viewModelScope.launch {
@@ -1433,6 +1444,56 @@ class AnimeViewModel(application: Application) : AndroidViewModel(application) {
             val scene = script.scenes[sceneIdx]
             musicSynthesizer.currentMood = scene.bgMood
 
+            val isExplainer = _uiState.value.videoPresentationMode == com.example.data.model.VideoPresentationMode.EXPLAINER_MODE
+
+            // In Explainer Mode, the Narrator opens the scene with storyline explanation
+            if (isExplainer && startingDialogueIdx == 0) {
+                val isHi = com.example.localization.AppLocaleStrings.isHindi(_uiState.value.selectedLanguage)
+                val narratorSpeaker = if (isHi) "🎙️ सूत्रधार (Narrator)" else "🎙️ Explainer Narrator"
+                val introStoryline = if (isHi) {
+                    "दृश्य ${sceneIdx + 1}: ${scene.title}। ${scene.visualPrompt.take(120)}"
+                } else {
+                    "${scene.title}: ${scene.visualPrompt.take(120)}"
+                }
+
+                _uiState.value = _uiState.value.copy(
+                    activeSpeakerName = narratorSpeaker,
+                    activeDialogueText = introStoryline,
+                    activeDialogueEmotion = "Explaining Storyline",
+                    activeCharacterExpression = "Cinematic Storyteller",
+                    activeMotionEffect = scene.motionEffect,
+                    explainerStoryBeatText = introStoryline
+                )
+
+                if (!scene.isMuted) {
+                    musicSynthesizer.setDucking(true)
+                    var narratorDone = false
+                    voiceSyncEngine.speakDialogue(
+                        characterName = "Narrator",
+                        dialogueText = introStoryline,
+                        emotion = "Narrative",
+                        voiceType = "Lady",
+                        pitch = 1.0f,
+                        speed = 1.0f,
+                        voiceGender = "Female",
+                        voicePersona = "Sensei / Mentor",
+                        voiceAccent = _uiState.value.selectedVoiceAccent,
+                        onStart = { musicSynthesizer.setDucking(true) },
+                        onDone = {
+                            musicSynthesizer.setDucking(false)
+                            narratorDone = true
+                        }
+                    )
+                    var nWaited = 0L
+                    while (!narratorDone && nWaited < 9000L && _uiState.value.isPlayingVideo) {
+                        delay(100)
+                        nWaited += 100
+                    }
+                    musicSynthesizer.setDucking(false)
+                    delay(350)
+                }
+            }
+
             for (dIdx in startingDialogueIdx until scene.dialogues.size) {
                 if (!_uiState.value.isPlayingVideo) return@launch
 
@@ -1443,7 +1504,7 @@ class AnimeViewModel(application: Application) : AndroidViewModel(application) {
                 _uiState.value = _uiState.value.copy(
                     activeSceneIndex = sceneIdx,
                     currentDialogueIndex = dIdx,
-                    activeSpeakerName = dialogue.characterName,
+                    activeSpeakerName = if (isExplainer) "🎙️ ${dialogue.characterName}" else dialogue.characterName,
                     activeDialogueText = dialogue.text,
                     activeDialogueEmotion = dialogue.emotion,
                     activeCharacterExpression = dialogue.expression.ifBlank { matchingChar?.expression ?: "Confident Smirk" },
@@ -1645,7 +1706,6 @@ class AnimeViewModel(application: Application) : AndroidViewModel(application) {
                     currentScript = script,
                     activeSceneIndex = 0,
                     currentDialogueIndex = 0,
-                    selectedLanguage = script.language,
                     voiceoverLanguage = script.voiceoverLanguage,
                     showLocalStorageVault = false,
                     statusMessage = "📂 Loaded '${script.title}' from Local Storage!"
@@ -1856,7 +1916,6 @@ class AnimeViewModel(application: Application) : AndroidViewModel(application) {
                 currentScript = script,
                 promptInput = if (script.originalPrompt.isNotBlank()) script.originalPrompt else script.synopsis,
                 selectedArtStyle = artStyle,
-                selectedLanguage = script.language,
                 voiceoverLanguage = script.voiceoverLanguage,
                 selectedProductionFormat = format,
                 selectedMotionEffect = motion,
@@ -2039,8 +2098,7 @@ class AnimeViewModel(application: Application) : AndroidViewModel(application) {
     fun selectAndLaunchWorkflow(workflow: StudioWorkflow) {
         _uiState.value = _uiState.value.copy(
             activeStudioWorkflow = workflow,
-            showWorkflowInteractiveModal = true,
-            promptInput = workflow.defaultPrompt
+            showWorkflowInteractiveModal = true
         )
     }
 
@@ -2118,13 +2176,11 @@ class AnimeViewModel(application: Application) : AndroidViewModel(application) {
         when (workflow) {
             StudioWorkflow.THUMBNAIL, StudioWorkflow.SOCIAL, StudioWorkflow.PRESENTATION, StudioWorkflow.EMPTY_DESIGN -> {
                 _uiState.value = _uiState.value.copy(
-                    promptInput = workflow.defaultPrompt,
                     statusMessage = msg("🎨 ${workflow.title} mode activated!", "🎨 ${workflow.title} मोड सक्रिय किया गया!")
                 )
             }
             StudioWorkflow.SCRIPT_TO_AUDIO, StudioWorkflow.BLOG_TO_AUDIO, StudioWorkflow.GENERATE_MUSIC, StudioWorkflow.EMPTY_AUDIO -> {
                 _uiState.value = _uiState.value.copy(
-                    promptInput = workflow.defaultPrompt,
                     statusMessage = msg("🎙️ ${workflow.title} audio mode activated!", "🎙️ ${workflow.title} ऑडियो मोड सक्रिय किया गया!")
                 )
             }
@@ -2138,7 +2194,6 @@ class AnimeViewModel(application: Application) : AndroidViewModel(application) {
                     else -> _uiState.value.selectedMotionEffect
                 }
                 _uiState.value = _uiState.value.copy(
-                    promptInput = workflow.defaultPrompt,
                     selectedMotionEffect = motion,
                     statusMessage = msg("🎬 ${workflow.title} video mode activated!", "🎬 ${workflow.title} वीडियो मोड सक्रिय किया गया!")
                 )
@@ -2260,6 +2315,90 @@ class AnimeViewModel(application: Application) : AndroidViewModel(application) {
         paypalEmail: String
     ): Pair<Boolean, String> {
         val res = authAndWalletRepo.withdrawToPayPal(amount, currency, paypalEmail)
+        if (res.first) {
+            _uiState.value = _uiState.value.copy(statusMessage = res.second)
+        }
+        return res
+    }
+
+    fun withdrawViaRtgs(
+        amount: Double,
+        currency: CurrencyType,
+        accountNumber: String,
+        ifsc: String,
+        holderName: String,
+        bankName: String
+    ): Pair<Boolean, String> {
+        val res = authAndWalletRepo.withdrawViaRtgs(amount, currency, accountNumber, ifsc, holderName, bankName)
+        if (res.first) {
+            _uiState.value = _uiState.value.copy(statusMessage = res.second)
+        }
+        return res
+    }
+
+    fun withdrawViaNeft(
+        amount: Double,
+        currency: CurrencyType,
+        accountNumber: String,
+        ifsc: String,
+        holderName: String,
+        bankName: String
+    ): Pair<Boolean, String> {
+        val res = authAndWalletRepo.withdrawViaNeft(amount, currency, accountNumber, ifsc, holderName, bankName)
+        if (res.first) {
+            _uiState.value = _uiState.value.copy(statusMessage = res.second)
+        }
+        return res
+    }
+
+    fun withdrawViaSwift(
+        amount: Double,
+        currency: CurrencyType,
+        accountNumber: String,
+        swiftBic: String,
+        holderName: String,
+        bankName: String,
+        targetCountry: String = "Global"
+    ): Pair<Boolean, String> {
+        val res = authAndWalletRepo.withdrawViaSwift(amount, currency, accountNumber, swiftBic, holderName, bankName, targetCountry)
+        if (res.first) {
+            _uiState.value = _uiState.value.copy(statusMessage = res.second)
+        }
+        return res
+    }
+
+    fun withdrawToPaytm(
+        amount: Double,
+        currency: CurrencyType,
+        paytmNumberOrUpi: String
+    ): Pair<Boolean, String> {
+        val res = authAndWalletRepo.withdrawToPaytm(amount, currency, paytmNumberOrUpi)
+        if (res.first) {
+            _uiState.value = _uiState.value.copy(statusMessage = res.second)
+        }
+        return res
+    }
+
+    fun withdrawToUpiGeneric(
+        amount: Double,
+        currency: CurrencyType,
+        upiId: String,
+        platformName: String = "UPI"
+    ): Pair<Boolean, String> {
+        val res = authAndWalletRepo.withdrawToUpiGeneric(amount, currency, upiId, platformName)
+        if (res.first) {
+            _uiState.value = _uiState.value.copy(statusMessage = res.second)
+        }
+        return res
+    }
+
+    fun withdrawViaScannedBarcode(
+        amount: Double,
+        currency: CurrencyType,
+        barcodeData: String,
+        targetType: String = "Scanned QR/Barcode"
+    ): Pair<Boolean, String> {
+        val res = authAndWalletRepo.withdrawViaScannedBarcode(amount, currency, barcodeData, targetType)
         if (res.first) {
             _uiState.value = _uiState.value.copy(statusMessage = res.second)
         }

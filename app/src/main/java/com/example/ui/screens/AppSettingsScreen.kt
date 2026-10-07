@@ -254,7 +254,7 @@ fun AppSettingsScreen(
 
         Spacer(modifier = Modifier.height(18.dp))
 
-        // 1. GLOBAL MULTI-LANGUAGE SYSTEM CARD (Changes EVERYTHING in the chosen language)
+        // 1. DECOUPLED DUAL LANGUAGE SYSTEM: APP INTERFACE vs VIDEO GENERATION
         Card(
             modifier = Modifier.fillMaxWidth(),
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
@@ -262,6 +262,7 @@ fun AppSettingsScreen(
             border = BorderStroke(1.dp, AnimeCyan.copy(alpha = 0.6f))
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
+                // Header
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -271,7 +272,7 @@ fun AppSettingsScreen(
                         Icon(Icons.Default.Public, contentDescription = null, tint = AnimeCyan)
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            text = AppLocaleStrings.get("global_language_country", lang),
+                            text = AppLocaleStrings.tr(lang, "Dual Language Engine", "दोहरी भाषा प्रणाली"),
                             color = TextPrimary,
                             fontSize = 14.sp,
                             fontWeight = FontWeight.Bold
@@ -283,117 +284,192 @@ fun AppSettingsScreen(
                             .background(AnimeCyan.copy(alpha = 0.2f))
                             .padding(horizontal = 6.dp, vertical = 2.dp)
                     ) {
-                        Text("12 LANGUAGES", color = AnimeCyan, fontSize = 9.sp, fontWeight = FontWeight.ExtraBold)
+                        Text("INDEPENDENT", color = AnimeCyan, fontSize = 9.sp, fontWeight = FontWeight.ExtraBold)
                     }
                 }
 
-                Spacer(modifier = Modifier.height(8.dp))
-
+                Spacer(modifier = Modifier.height(6.dp))
                 Text(
-                    text = AppLocaleStrings.get("global_language_desc", lang),
+                    text = AppLocaleStrings.tr(
+                        lang,
+                        "App Interface Language and Video/Dubbing Language are stored separately. Changing one does not override the other.",
+                        "ऐप इंटरफ़ेस भाषा और वीडियो निर्माण भाषा अलग-अलग नियंत्रित होती हैं। एक बदलने से दूसरी नहीं बदलेगी।"
+                    ),
                     color = TextSecondary,
                     fontSize = 11.sp,
                     lineHeight = 16.sp
                 )
 
-                Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(14.dp))
 
-                // Current Active Language Display & Change Button
-                Row(
+                // SUBSECTION A: APP INTERFACE LANGUAGE
+                Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clip(RoundedCornerShape(10.dp))
-                        .background(AnimeSurfaceVariant)
-                        .padding(12.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(AnimeSurfaceVariant.copy(alpha = 0.6f))
+                        .border(1.dp, AnimeCyan.copy(alpha = 0.3f), RoundedCornerShape(12.dp))
+                        .padding(12.dp)
                 ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(text = selectedCountry.flagEmoji, fontSize = 24.sp)
-                        Spacer(modifier = Modifier.width(10.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
                         Column {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Text(
-                                    text = selectedCountry.name,
-                                    color = TextPrimary,
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 13.sp
-                                )
-                                Spacer(modifier = Modifier.width(6.dp))
-                                Text(
-                                    text = "(${selectedCountry.dialCode})",
-                                    color = AnimeCyan,
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 11.sp
-                                )
-                            }
                             Text(
-                                text = "${AppLocaleStrings.tr(lang, "Active Language", "सक्रिय भाषा")}: ${selectedCountry.nativeLanguageName} ($lang)",
-                                color = AnimeGold,
-                                fontSize = 11.sp
+                                text = "📱 " + AppLocaleStrings.tr(lang, "App Interface Language", "ऐप इंटरफ़ेस भाषा"),
+                                color = AnimeCyan,
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Text(
+                                text = "${AppLocaleStrings.tr(lang, "Active UI", "सक्रिय इंटरफ़ेस")}: ${state.appInterfaceLanguage}",
+                                color = TextPrimary,
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                        }
+                        Button(
+                            onClick = { showCountryPicker = true },
+                            colors = ButtonDefaults.buttonColors(containerColor = AnimeCyan),
+                            shape = RoundedCornerShape(8.dp),
+                            contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 8.dp, vertical = 3.dp),
+                            modifier = Modifier.testTag("settings_change_country_btn")
+                        ) {
+                            Text(
+                                text = selectedCountry.flagEmoji + " " + selectedCountry.name.take(8),
+                                color = Color.Black,
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.Bold
                             )
                         }
                     }
 
-                    Button(
-                        onClick = { showCountryPicker = true },
-                        colors = ButtonDefaults.buttonColors(containerColor = AnimeCyan),
-                        shape = RoundedCornerShape(8.dp),
-                        contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 10.dp, vertical = 4.dp),
-                        modifier = Modifier.testTag("settings_change_country_btn")
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = AppLocaleStrings.tr(lang, "Select UI Language (Controls menus & buttons):", "इंटरफ़ेस भाषा चुनें (मेनू व बटन):"),
+                        color = TextMuted,
+                        fontSize = 10.sp
+                    )
+                    Spacer(modifier = Modifier.height(6.dp))
+
+                    FlowRow(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                        verticalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
-                        Icon(Icons.Default.Translate, contentDescription = null, tint = Color.Black, modifier = Modifier.size(14.dp))
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text(
-                            text = AppLocaleStrings.get("change_country_btn", lang),
-                            color = Color.Black,
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.Bold
-                        )
+                        quickLanguages.forEach { (langKey, label) ->
+                            val isSelected = state.appInterfaceLanguage.equals(langKey, ignoreCase = true)
+                            Box(
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .background(if (isSelected) AnimeCyan else AnimeSurfaceVariant)
+                                    .border(1.dp, if (isSelected) AnimeCyan else AnimePurple.copy(alpha = 0.3f), RoundedCornerShape(8.dp))
+                                    .clickable {
+                                        viewModel.setAppInterfaceLanguage(langKey)
+                                        Toast.makeText(context, "UI: $langKey", Toast.LENGTH_SHORT).show()
+                                    }
+                                    .padding(horizontal = 8.dp, vertical = 4.dp)
+                                    .testTag("ui_lang_$langKey")
+                            ) {
+                                Text(
+                                    text = label,
+                                    color = if (isSelected) Color.Black else TextPrimary,
+                                    fontSize = 10.sp,
+                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
+                                )
+                            }
+                        }
                     }
                 }
 
-                Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(14.dp))
 
-                // Quick 1-Tap Language Switching Chips
-                Text(
-                    text = AppLocaleStrings.tr(lang, "1-Tap Instant Language Switch:", "त्वरित भाषा चयन:"),
-                    color = TextMuted,
-                    fontSize = 11.sp,
-                    fontWeight = FontWeight.SemiBold
-                )
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                FlowRow(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(6.dp),
-                    verticalArrangement = Arrangement.spacedBy(6.dp)
+                // SUBSECTION B: VIDEO & DUBBING GENERATION LANGUAGE
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(AnimeSurfaceVariant.copy(alpha = 0.6f))
+                        .border(1.dp, AnimePink.copy(alpha = 0.3f), RoundedCornerShape(12.dp))
+                        .padding(12.dp)
                 ) {
-                    quickLanguages.forEach { (langKey, label) ->
-                        val isSelected = lang.equals(langKey, ignoreCase = true)
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column {
+                            Text(
+                                text = "🎬 " + AppLocaleStrings.tr(lang, "Video & Dubbing Language", "वीडियो निर्माण व डबिंग भाषा"),
+                                color = AnimePink,
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Text(
+                                text = "${AppLocaleStrings.tr(lang, "Target Script & Audio", "स्क्रिप्ट व संवाद भाषा")}: ${state.videoGenerationLanguage}",
+                                color = AnimeGold,
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
                         Box(
                             modifier = Modifier
-                                .clip(RoundedCornerShape(8.dp))
-                                .background(if (isSelected) AnimeCyan else AnimeSurfaceVariant)
-                                .border(
-                                    1.dp,
-                                    if (isSelected) AnimeCyan else AnimePurple.copy(alpha = 0.3f),
-                                    RoundedCornerShape(8.dp)
-                                )
-                                .clickable {
-                                    viewModel.setAppLanguage(langKey)
-                                    Toast.makeText(context, "Language switched to $langKey", Toast.LENGTH_SHORT).show()
-                                }
-                                .padding(horizontal = 8.dp, vertical = 5.dp)
-                                .testTag("quick_lang_$langKey")
+                                .clip(RoundedCornerShape(6.dp))
+                                .background(AnimePink.copy(alpha = 0.2f))
+                                .padding(horizontal = 6.dp, vertical = 2.dp)
                         ) {
-                            Text(
-                                text = label,
-                                color = if (isSelected) Color.Black else TextPrimary,
-                                fontSize = 11.sp,
-                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
-                            )
+                            Text("TTS AUDIO", color = AnimePink, fontSize = 9.sp, fontWeight = FontWeight.Bold)
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = AppLocaleStrings.tr(lang, "Select Storyline & Voice Language (Does NOT change UI):", "वीडियो कहानी व आवाज़ की भाषा चुनें (UI नहीं बदलेगी):"),
+                        color = TextMuted,
+                        fontSize = 10.sp
+                    )
+                    Spacer(modifier = Modifier.height(6.dp))
+
+                    val videoLanguages = listOf(
+                        "Hindi" to "🇮🇳 हिन्दी",
+                        "English" to "🇺🇸 English",
+                        "Japanese" to "🇯🇵 日本語",
+                        "Korean" to "🇰🇷 한국어",
+                        "Spanish" to "🇪🇸 Español",
+                        "French" to "🇫🇷 Français",
+                        "German" to "🇩🇪 Deutsch",
+                        "Tamil" to "🇮🇳 தமிழ்",
+                        "Telugu" to "🇮🇳 తెలుగు"
+                    )
+
+                    FlowRow(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                        verticalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        videoLanguages.forEach { (vLang, label) ->
+                            val isSelected = state.videoGenerationLanguage.equals(vLang, ignoreCase = true)
+                            Box(
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .background(if (isSelected) AnimePink else AnimeSurfaceVariant)
+                                    .border(1.dp, if (isSelected) AnimePink else AnimePurple.copy(alpha = 0.3f), RoundedCornerShape(8.dp))
+                                    .clickable {
+                                        viewModel.setVideoGenerationLanguage(vLang)
+                                        Toast.makeText(context, "Video Script: $vLang", Toast.LENGTH_SHORT).show()
+                                    }
+                                    .padding(horizontal = 8.dp, vertical = 4.dp)
+                                    .testTag("video_lang_$vLang")
+                            ) {
+                                Text(
+                                    text = label,
+                                    color = if (isSelected) Color.White else TextPrimary,
+                                    fontSize = 10.sp,
+                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
+                                )
+                            }
                         }
                     }
                 }

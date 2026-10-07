@@ -69,6 +69,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
@@ -250,7 +251,7 @@ fun AnimePlayerScreen(viewModel: AnimeViewModel) {
                     }
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
-                        text = "• ${script?.artStyle ?: "Anime"} • ${state.selectedLanguage}",
+                        text = "• ${script?.artStyle ?: "Anime"} • ${script?.language ?: state.voiceoverLanguage}",
                         color = AnimeCyanLight,
                         fontSize = 11.sp
                     )
@@ -349,7 +350,82 @@ fun AnimePlayerScreen(viewModel: AnimeViewModel) {
 
         Spacer(modifier = Modifier.height(4.dp))
 
-        if (isNativeMp4Mode && activeMp4 != null && File(activeMp4).exists()) {
+        if (script == null) {
+            // Clean Empty Viewport when no video has been generated yet
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp)
+                    .aspectRatio(16f / 9f)
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(Color(0xFF0F1424))
+                    .border(1.dp, AnimeCyan.copy(alpha = 0.5f), RoundedCornerShape(16.dp)),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier.padding(20.dp)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(54.dp)
+                            .clip(CircleShape)
+                            .background(AnimeCyan.copy(alpha = 0.15f))
+                            .border(1.5.dp, AnimeCyan, CircleShape),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Movie,
+                            contentDescription = null,
+                            tint = AnimeCyan,
+                            modifier = Modifier.size(28.dp)
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(10.dp))
+                    Text(
+                        text = AppLocaleStrings.tr(
+                            state.selectedLanguage,
+                            "No Anime Video Generated Yet",
+                            "अभी तक कोई वीडियो जनरेट नहीं किया गया"
+                        ),
+                        color = Color.White,
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = AppLocaleStrings.tr(
+                            state.selectedLanguage,
+                            "Video Generate • Voice Generate • Visual Content • Translation",
+                            "वीडियो जनरेट • वॉयस जनरेट • विजुअल कंटेंट • ट्रांसलेशन"
+                        ),
+                        color = AnimeGold,
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Button(
+                        onClick = { viewModel.setTab(com.example.ui.AppTab.STUDIO) },
+                        colors = ButtonDefaults.buttonColors(containerColor = AnimeCyan),
+                        shape = RoundedCornerShape(10.dp),
+                        contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 16.dp, vertical = 8.dp)
+                    ) {
+                        Icon(Icons.Default.PlayArrow, contentDescription = null, tint = Color.Black, modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = AppLocaleStrings.tr(
+                                state.selectedLanguage,
+                                "Go to Studio to Generate Video",
+                                "स्टूडियो जाएं और वीडियो बनाएं"
+                            ),
+                            color = Color.Black,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 12.sp
+                        )
+                    }
+                }
+            }
+        } else if (isNativeMp4Mode && activeMp4 != null && File(activeMp4).exists()) {
             // Native Android VideoView Playback of exported .mp4 video file
             Box(
                 modifier = Modifier
@@ -707,9 +783,10 @@ fun AnimePlayerScreen(viewModel: AnimeViewModel) {
         }
         }
 
-        Spacer(modifier = Modifier.height(14.dp))
+        if (script != null) {
+            Spacer(modifier = Modifier.height(14.dp))
 
-        // Playback Transport Controls
+            // Playback Transport Controls
         Card(
             modifier = Modifier
                 .fillMaxWidth()
@@ -781,6 +858,92 @@ fun AnimePlayerScreen(viewModel: AnimeViewModel) {
                     overflow = TextOverflow.Ellipsis,
                     modifier = Modifier.fillMaxWidth()
                 )
+
+                Spacer(modifier = Modifier.height(10.dp))
+                HorizontalDivider(color = TextMuted.copy(alpha = 0.2f))
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // Post-Generation Presentation Mode Decider
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        text = AppLocaleStrings.tr(state.selectedLanguage, "🎬 Mode:", "🎬 प्रस्तुति मोड:"),
+                        color = TextSecondary,
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Text(
+                        text = if (state.videoPresentationMode == com.example.data.model.VideoPresentationMode.EXPLAINER_MODE) "✓ EXPLAINER SYNC" else "✓ INDEPENDENT VOICES",
+                        color = if (state.videoPresentationMode == com.example.data.model.VideoPresentationMode.EXPLAINER_MODE) AnimeCyan else AnimeGold,
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.ExtraBold
+                    )
+                }
+                Spacer(modifier = Modifier.height(6.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    val isExplainer = state.videoPresentationMode == com.example.data.model.VideoPresentationMode.EXPLAINER_MODE
+                    Surface(
+                        shape = RoundedCornerShape(8.dp),
+                        color = if (isExplainer) AnimeCyan.copy(alpha = 0.2f) else AnimeSurfaceVariant,
+                        border = BorderStroke(1.dp, if (isExplainer) AnimeCyan else Color.Transparent),
+                        modifier = Modifier
+                            .weight(1f)
+                            .clickable { viewModel.setVideoPresentationMode(com.example.data.model.VideoPresentationMode.EXPLAINER_MODE) }
+                            .testTag("player_mode_explainer_btn")
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Text(
+                                text = "🎙️ ${AppLocaleStrings.tr(state.selectedLanguage, "Explainer Mode", "एक्सप्लेनर मोड")}",
+                                color = if (isExplainer) AnimeCyan else TextPrimary,
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Text(
+                                text = AppLocaleStrings.tr(state.selectedLanguage, "Story, Motion, Effects Synced", "स्टोरीलाइन, मोशन, इफेक्ट्स सिंक"),
+                                color = TextMuted,
+                                fontSize = 9.sp,
+                                textAlign = TextAlign.Center
+                            )
+                        }
+                    }
+
+                    Surface(
+                        shape = RoundedCornerShape(8.dp),
+                        color = if (!isExplainer) AnimeGold.copy(alpha = 0.2f) else AnimeSurfaceVariant,
+                        border = BorderStroke(1.dp, if (!isExplainer) AnimeGold else Color.Transparent),
+                        modifier = Modifier
+                            .weight(1f)
+                            .clickable { viewModel.setVideoPresentationMode(com.example.data.model.VideoPresentationMode.INDEPENDENT_CHARACTERS) }
+                            .testTag("player_mode_independent_btn")
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Text(
+                                text = "👥 ${AppLocaleStrings.tr(state.selectedLanguage, "Character Dialogues", "स्वतंत्र पात्र संवाद")}",
+                                color = if (!isExplainer) AnimeGold else TextPrimary,
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Text(
+                                text = AppLocaleStrings.tr(state.selectedLanguage, "Each character speaks independently", "हर पात्र अपनी आवाज़ में बोलेगा"),
+                                color = TextMuted,
+                                fontSize = 9.sp,
+                                textAlign = TextAlign.Center
+                            )
+                        }
+                    }
+                }
             }
         }
 
@@ -988,7 +1151,7 @@ fun AnimePlayerScreen(viewModel: AnimeViewModel) {
                     )
                     items(quickLangs.size) { idx ->
                         val (langKey, label) = quickLangs[idx]
-                        val isSelected = state.selectedLanguage.equals(langKey, ignoreCase = true)
+                        val isSelected = (state.currentScript?.language ?: state.voiceoverLanguage).equals(langKey, ignoreCase = true)
                         Box(
                             modifier = Modifier
                                 .clip(RoundedCornerShape(8.dp))
@@ -1638,6 +1801,7 @@ fun AnimePlayerScreen(viewModel: AnimeViewModel) {
                 }
             }
         }
+        }
     }
 
     // Multilingual Dubbing Dialog
@@ -1668,12 +1832,13 @@ fun AnimePlayerScreen(viewModel: AnimeViewModel) {
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
+                            val isVideoLang = (state.currentScript?.language ?: state.voiceoverLanguage).equals(lang.displayName, ignoreCase = true)
                             Text(
                                 text = "${lang.nativeName} (${lang.displayName})",
-                                color = if (state.selectedLanguage == lang.displayName) AnimeCyan else TextPrimary,
+                                color = if (isVideoLang) AnimeCyan else TextPrimary,
                                 fontWeight = FontWeight.Medium
                             )
-                            if (state.selectedLanguage == lang.displayName) {
+                            if (isVideoLang) {
                                 Text("Active", color = AnimeCyan, fontSize = 11.sp, fontWeight = FontWeight.Bold)
                             }
                         }

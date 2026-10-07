@@ -177,9 +177,9 @@ fun WorkflowInputBox(
     var showPromptIdeas by remember { mutableStateOf(false) }
 
     val placeholderText = when (state.currentWorkflowCategory) {
-        WorkflowCategory.VIDEO -> "Enter your video idea, script, or blog link...\nEg: A cyberpunk ninja battle in Neo-Tokyo with glowing katana speedlines and Hindi dubbing"
-        WorkflowCategory.VOICEOVER -> "Enter your voiceover idea, script, or blog link...\nEg: Heroic Hindi monologue with emotional background violin score, or full dialogue script"
-        WorkflowCategory.DESIGN -> "Describe the design you want to create...\nEg: A bold YouTube thumbnail for an anime battle with dark cosmic background, glowing yellow headline 'THE DRAGON AWAKENS', and surprised facial expression"
+        WorkflowCategory.VIDEO -> "Video Generate • Visual Content • Translation\nEnter your video topic, script idea, or web link..."
+        WorkflowCategory.VOICEOVER -> "Voice Generate • Narration • Audio Dubbing\nEnter your dialogue script or voiceover requirements..."
+        WorkflowCategory.DESIGN -> "Visual Content • Thumbnails • Posters\nDescribe the visual content or layout you want to create..."
     }
 
     Card(
@@ -316,7 +316,7 @@ fun WorkflowInputBox(
                         .padding(10.dp)
                 ) {
                     Text(
-                        text = "💡 ट्रेंडिंग आइडियाज (टैप करें और तुरंत भरें):",
+                        text = "⚡ क्रिएटिव क्षमताएं (Creative Capabilities):",
                         color = AnimeGold,
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Bold
@@ -324,19 +324,19 @@ fun WorkflowInputBox(
                     Spacer(modifier = Modifier.height(6.dp))
                     val suggestions = when (state.currentWorkflowCategory) {
                         WorkflowCategory.VIDEO -> listOf(
-                            "साइबर समुराई और नियॉन ड्रैगन की लड़ाई टोक्यो टॉवर पर",
-                            "मंगेशकर स्टाइल में जादूई स्कूल का पहला दिन और रहस्य",
-                            "टाइम ट्रेवलर जो अतीत में जाकर अपनी प्रेमिका को बचाता है"
+                            "Video Generate: High-quality anime production",
+                            "Visual Content: Multi-scene animation sequence",
+                            "Translation: Synchronized multilingual dubbing"
                         )
                         WorkflowCategory.VOICEOVER -> listOf(
-                            "वीरतापूर्ण हिंदी डायलॉग: 'हमारी शक्ति हमारे संकल्प में है!'",
-                            "शांत मास्टर सेंसई का उपदेश: 'बहते पानी की तरह बनो'",
-                            "हाई-एनर्जी बैटल बीजीएम विथ 808 डिस्टॉर्शन बास"
+                            "Voice Generate: Character dialogue and emotional dubbing",
+                            "Voiceover: Professional anime storytelling narration",
+                            "Soundtrack: Dynamic anime background score synthesis"
                         )
                         WorkflowCategory.DESIGN -> listOf(
-                            "YouTube थंबनेल: 'THE FINAL FORM UNLOCKED' विथ ग्लोइंग आइज",
-                            "इंस्टाग्राम रील पोस्टर: नियॉन बारिश में भीगता अकेला समुराई",
-                            "3-स्लाइड प्रेजेंटेशन: एनिमे वर्ल्डबिल्डिंग और कैरेक्टर आर्क्स"
+                            "Visual Content: Bold anime video thumbnail",
+                            "Visual Design: High-CTR character poster",
+                            "Presentation: Anime storyboard and concept deck"
                         )
                     }
                     suggestions.forEach { suggestion ->

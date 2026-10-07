@@ -29,10 +29,14 @@ import androidx.compose.material.icons.filled.GraphicEq
 import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.Link
 import androidx.compose.material.icons.filled.Movie
+import androidx.compose.material.icons.filled.Palette
+import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.TextFields
 import androidx.compose.material.icons.filled.Translate
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.IconButton
 import com.example.localization.AppLocaleStrings
 import com.example.ui.components.MicVoiceInputButton
 import androidx.compose.material3.Card
@@ -353,12 +357,20 @@ fun StudioCreateScreen(viewModel: AnimeViewModel) {
                                 Text(
                                     text = AppLocaleStrings.tr(
                                         state.selectedLanguage,
-                                        "Eg: Two legendary cyber samurai encounter a mythical dragon at the floating shrine...",
-                                        "उदा: दो समुराई योद्धा जो एक रहस्यमयी चेरी ब्लॉसम मंदिर में मिलते हैं..."
+                                        "Video Generate • Voice Generate • Visual Content • Translation\nDescribe what you want to create...",
+                                        "वीडियो जनरेट • वॉयस जनरेट • विजुअल कंटेंट • ट्रांसलेशन\nआप जो बनाना चाहते हैं उसका विवरण दर्ज करें..."
                                     ),
                                     color = TextMuted,
                                     fontSize = 13.sp
                                 )
+                            },
+                            trailingIcon = {
+                                IconButton(
+                                    onClick = { viewModel.generateAnimeVideo() },
+                                    modifier = Modifier.testTag("inline_generate_prompt_icon_btn")
+                                ) {
+                                    Icon(Icons.Default.AutoAwesome, contentDescription = "Generate", tint = AnimePurple)
+                                }
                             },
                             colors = OutlinedTextFieldDefaults.colors(
                                 focusedBorderColor = AnimePurple,
@@ -368,6 +380,29 @@ fun StudioCreateScreen(viewModel: AnimeViewModel) {
                             ),
                             shape = RoundedCornerShape(12.dp)
                         )
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(top = 6.dp),
+                            horizontalArrangement = Arrangement.End,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Button(
+                                onClick = { viewModel.generateAnimeVideo() },
+                                colors = ButtonDefaults.buttonColors(containerColor = AnimePurple),
+                                shape = RoundedCornerShape(10.dp),
+                                modifier = Modifier.testTag("inline_generate_prompt_btn")
+                            ) {
+                                Icon(Icons.Default.AutoAwesome, contentDescription = null, tint = Color.White, modifier = Modifier.size(16.dp))
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text(
+                                    text = AppLocaleStrings.tr(state.selectedLanguage, "⚡ Generate Video / Execute", "⚡ वीडियो बनाएं / कमांड चलाएं"),
+                                    color = Color.White,
+                                    fontSize = 12.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                        }
                         Spacer(modifier = Modifier.height(8.dp))
                         com.example.ui.components.CommandLearningSuggestionBar(
                             viewModel = viewModel,
@@ -394,6 +429,14 @@ fun StudioCreateScreen(viewModel: AnimeViewModel) {
                                 .testTag("link_input_field"),
                             placeholder = { Text("https://example.com/article-or-anime-story", color = TextMuted, fontSize = 13.sp) },
                             singleLine = true,
+                            trailingIcon = {
+                                IconButton(
+                                    onClick = { viewModel.generateAnimeVideo() },
+                                    modifier = Modifier.testTag("inline_scan_link_btn")
+                                ) {
+                                    Icon(Icons.Default.PlayArrow, contentDescription = "Scan & Generate", tint = AnimeCyan)
+                                }
+                            },
                             colors = OutlinedTextFieldDefaults.colors(
                                 focusedBorderColor = AnimeCyan,
                                 unfocusedBorderColor = AnimeSurfaceVariant,
@@ -402,6 +445,28 @@ fun StudioCreateScreen(viewModel: AnimeViewModel) {
                             ),
                             shape = RoundedCornerShape(12.dp)
                         )
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(top = 6.dp),
+                            horizontalArrangement = Arrangement.End
+                        ) {
+                            Button(
+                                onClick = { viewModel.generateAnimeVideo() },
+                                colors = ButtonDefaults.buttonColors(containerColor = AnimeCyan),
+                                shape = RoundedCornerShape(10.dp),
+                                modifier = Modifier.testTag("inline_generate_link_btn")
+                            ) {
+                                Icon(Icons.Default.Search, contentDescription = null, tint = Color.Black, modifier = Modifier.size(16.dp))
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text(
+                                    text = AppLocaleStrings.tr(state.selectedLanguage, "🔍 Scan Link & Generate Video", "🔍 लिंक स्कैन करें व वीडियो बनाएं"),
+                                    color = Color.Black,
+                                    fontSize = 12.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                        }
                         Spacer(modifier = Modifier.height(6.dp))
                         Text(
                             text = AppLocaleStrings.tr(
@@ -568,6 +633,11 @@ fun StudioCreateScreen(viewModel: AnimeViewModel) {
                                     fontSize = 12.sp
                                 )
                             },
+                            trailingIcon = {
+                                IconButton(onClick = { viewModel.generateAnimeVideo() }) {
+                                    Icon(Icons.Default.Palette, contentDescription = "Generate", tint = AnimePink)
+                                }
+                            },
                             colors = OutlinedTextFieldDefaults.colors(
                                 focusedBorderColor = AnimePink,
                                 unfocusedBorderColor = AnimeSurfaceVariant,
@@ -576,6 +646,28 @@ fun StudioCreateScreen(viewModel: AnimeViewModel) {
                             ),
                             shape = RoundedCornerShape(10.dp)
                         )
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(top = 4.dp),
+                            horizontalArrangement = Arrangement.End
+                        ) {
+                            Button(
+                                onClick = { viewModel.generateAnimeVideo() },
+                                colors = ButtonDefaults.buttonColors(containerColor = AnimePink),
+                                shape = RoundedCornerShape(8.dp),
+                                modifier = Modifier.testTag("inline_generate_image_btn")
+                            ) {
+                                Icon(Icons.Default.AutoAwesome, contentDescription = null, tint = Color.White, modifier = Modifier.size(14.dp))
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text(
+                                    text = AppLocaleStrings.tr(state.selectedLanguage, "🎨 Generate Keyframe Video", "🎨 कीफ़्रेम से वीडियो बनाएं"),
+                                    color = Color.White,
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                        }
                     }
                 }
             }
@@ -583,41 +675,49 @@ fun StudioCreateScreen(viewModel: AnimeViewModel) {
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Quick Inspiration Suggestions
+        // Creative Capabilities
         Column(modifier = Modifier.padding(horizontal = 16.dp)) {
             Text(
-                text = AppLocaleStrings.tr(state.selectedLanguage, "⚡ Quick Inspiration (Tap to Try):", "⚡ त्वरित प्रेरणा (Quick Prompts):"),
+                text = AppLocaleStrings.tr(state.selectedLanguage, "⚡ Creative Capabilities:", "⚡ निर्माण क्षमताएं (Capabilities):"),
                 color = TextSecondary,
                 fontSize = 13.sp,
                 fontWeight = FontWeight.SemiBold
             )
             Spacer(modifier = Modifier.height(8.dp))
             LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                val suggestions = if (AppLocaleStrings.isHindi(state.selectedLanguage)) {
+                val capabilities = if (AppLocaleStrings.isHindi(state.selectedLanguage)) {
                     listOf(
-                        "🌸 चेरी ब्लॉसम जादुई मंदिर की दास्तान",
-                        "🏙️ नियो टोक्यो साइबरपंक समुराई",
-                        "🐾 पोपो और प्यारे कार्टून स्कूल का रहस्य",
-                        "🔥 ड्रैगन योद्धा का महासंग्राम"
+                        "🎬 वीडियो जनरेट (Video Generate)",
+                        "🎙️ वॉयस जनरेट (Voice Generate)",
+                        "🖼️ विजुअल कंटेंट (Visual Content)",
+                        "🌐 ट्रांसलेशन (Translation)",
+                        "⚡ एक्शन एनिमेशन (Action Animation)",
+                        "🎼 बीजीएम व साउंडट्रैक (Soundtrack)"
                     )
                 } else {
                     listOf(
-                        "🌸 Legend of the Magical Cherry Blossom Temple",
-                        "🏙️ Neo Tokyo Cyberpunk Shinobi Duel",
-                        "🐾 Popo and the Mystical Cartoon School Adventure",
-                        "🔥 Awakening of the Legendary Dragon Warrior"
+                        "🎬 Video Generate",
+                        "🎙️ Voice Generate",
+                        "🖼️ Visual Content",
+                        "🌐 Translation",
+                        "⚡ Action Animation",
+                        "🎼 BGM & Soundtrack"
                     )
                 }
-                items(suggestions) { item ->
+                items(capabilities) { item ->
                     Box(
                         modifier = Modifier
                             .clip(RoundedCornerShape(20.dp))
                             .background(AnimeSurfaceVariant)
-                            .border(1.dp, AnimePurple.copy(alpha = 0.3f), RoundedCornerShape(20.dp))
-                            .clickable { viewModel.setPromptInput(item) }
+                            .border(1.dp, AnimeCyan.copy(alpha = 0.4f), RoundedCornerShape(20.dp))
+                            .clickable {
+                                val cleanTag = item.replace(Regex("[^a-zA-Z0-9 ]"), "").trim()
+                                val current = state.promptInput
+                                viewModel.setPromptInput(if (current.isBlank()) cleanTag else "$current • $cleanTag")
+                            }
                             .padding(horizontal = 12.dp, vertical = 6.dp)
                     ) {
-                        Text(text = item, color = TextPrimary, fontSize = 12.sp)
+                        Text(text = item, color = AnimeCyan, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
                     }
                 }
             }
@@ -812,11 +912,11 @@ fun StudioCreateScreen(viewModel: AnimeViewModel) {
             Spacer(modifier = Modifier.height(8.dp))
             LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 items(SupportedLanguage.values()) { lang ->
-                    val isSelected = state.selectedLanguage.equals(lang.displayName, ignoreCase = true)
+                    val isSelected = state.voiceoverLanguage.equals(lang.displayName, ignoreCase = true)
                     val langLabel = if (AppLocaleStrings.isHindi(state.selectedLanguage)) "${lang.nativeName} (${lang.displayName})" else lang.displayName
                     FilterChip(
                         selected = isSelected,
-                        onClick = { viewModel.setLanguage(lang.displayName) },
+                        onClick = { viewModel.setVoiceoverLanguage(lang.displayName) },
                         label = {
                             Text(langLabel, fontSize = 12.sp)
                         },

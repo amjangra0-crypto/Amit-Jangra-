@@ -44,6 +44,7 @@ import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Public
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Schedule
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Security
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Tv
@@ -718,11 +719,19 @@ private fun ChannelConnectionCard(
                     Icon(Icons.Default.Link, contentDescription = null, tint = Color(0xFFFF0000), modifier = Modifier.size(18.dp))
                 },
                 trailingIcon = {
-                    IconButton(onClick = {
-                        // Example paste fallback
-                        onUrlChange("https://youtube.com/@AmanAnimeStudioOfficial")
-                    }) {
-                        Icon(Icons.Default.ContentPaste, contentDescription = "Paste", tint = AnimeCyan, modifier = Modifier.size(18.dp))
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        IconButton(onClick = {
+                            if (channelUrlInput.isNotBlank()) {
+                                onSaveChannel()
+                            }
+                        }) {
+                            Icon(Icons.Default.Search, contentDescription = "Search & Connect", tint = Color(0xFFFF0000), modifier = Modifier.size(18.dp))
+                        }
+                        IconButton(onClick = {
+                            onUrlChange("https://youtube.com/@AmanAnimeStudioOfficial")
+                        }) {
+                            Icon(Icons.Default.ContentPaste, contentDescription = "Paste", tint = AnimeCyan, modifier = Modifier.size(18.dp))
+                        }
                     }
                 },
                 singleLine = true,
@@ -734,6 +743,24 @@ private fun ChannelConnectionCard(
                 ),
                 shape = RoundedCornerShape(10.dp)
             )
+
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 4.dp),
+                horizontalArrangement = Arrangement.End
+            ) {
+                Button(
+                    onClick = { onSaveChannel() },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF0000)),
+                    shape = RoundedCornerShape(8.dp),
+                    contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 10.dp, vertical = 4.dp)
+                ) {
+                    Icon(Icons.Default.Search, contentDescription = null, tint = Color.White, modifier = Modifier.size(14.dp))
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text("Search & Link Channel", color = Color.White, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                }
+            }
 
             Spacer(modifier = Modifier.height(10.dp))
 
@@ -846,6 +873,11 @@ private fun WebSeriesAutomationCard(
                 onValueChange = onTitleChange,
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth(),
+                trailingIcon = {
+                    IconButton(onClick = onTriggerDailyGeneration) {
+                        Icon(Icons.Default.AutoAwesome, contentDescription = "Generate Series", tint = AnimePurple)
+                    }
+                },
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedBorderColor = AnimePurple,
                     focusedTextColor = TextPrimary,

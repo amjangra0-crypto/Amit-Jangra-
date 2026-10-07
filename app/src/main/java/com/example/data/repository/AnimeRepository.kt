@@ -200,6 +200,16 @@ class AnimeRepository(
         dao.deleteScriptById(id)
     }
 
+    suspend fun updateScriptDetails(id: String, newTitle: String, newSynopsis: String, newGenre: String) {
+        val existing = dao.getScriptById(id) ?: return
+        val updated = existing.copy(
+            title = newTitle,
+            synopsis = newSynopsis,
+            genre = newGenre
+        )
+        dao.insertScript(updated)
+    }
+
     suspend fun saveCustomCharacter(character: CharacterProfile) {
         val entity = CustomCharacterEntity(
             id = character.id,

@@ -2105,6 +2105,14 @@ fun IdentityVoicePanel(
                 value = draft.name,
                 onValueChange = onNameChanged,
                 modifier = Modifier.weight(1f).testTag("builder_name_input"),
+                trailingIcon = {
+                    IconButton(
+                        onClick = { onNameChanged(randomNames.random()) },
+                        modifier = Modifier.testTag("inline_generate_name_btn")
+                    ) {
+                        Icon(Icons.Default.AutoAwesome, contentDescription = "Generate Name", tint = AnimeGold)
+                    }
+                },
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedBorderColor = AnimeCyan,
                     focusedTextColor = TextPrimary,
@@ -2190,6 +2198,14 @@ fun IdentityVoicePanel(
             value = draft.sampleDialogue,
             onValueChange = onDialogueChanged,
             modifier = Modifier.fillMaxWidth().testTag("builder_dialogue_input"),
+            trailingIcon = {
+                IconButton(
+                    onClick = onAudition,
+                    modifier = Modifier.testTag("inline_audition_dialogue_btn")
+                ) {
+                    Icon(Icons.Default.PlayArrow, contentDescription = "Execute Audition", tint = AnimeCyan)
+                }
+            },
             colors = OutlinedTextFieldDefaults.colors(
                 focusedBorderColor = AnimeCyan,
                 focusedTextColor = TextPrimary,

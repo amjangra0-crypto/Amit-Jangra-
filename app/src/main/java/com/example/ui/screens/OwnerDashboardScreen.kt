@@ -49,6 +49,7 @@ import androidx.compose.material.icons.filled.Security
 import androidx.compose.material.icons.filled.Shield
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.material.icons.filled.QrCode2
 import androidx.compose.material.icons.filled.Wallet
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -88,6 +89,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -98,10 +100,15 @@ import com.example.data.model.CurrencyType
 import com.example.data.model.CurrencyWallet
 import com.example.data.model.ManagedUserAccess
 import com.example.data.model.OwnerBankAccount
+import com.example.data.model.OwnerWalletConstants
+import com.example.data.model.BankTransferProtocol
 import com.example.data.model.TransactionType
 import com.example.data.model.WalletTransaction
 import com.example.localization.AppLocaleStrings
 import com.example.ui.AnimeViewModel
+import com.example.ui.components.OwnerBarcodeScannerDialog
+import com.example.ui.components.OwnerWalletBarcodeCard
+import com.example.ui.components.ScannedBarcodeResult
 import com.example.ui.theme.AnimeCyan
 import com.example.ui.theme.AnimeCyanLight
 import com.example.ui.theme.AnimeGold
@@ -182,6 +189,9 @@ fun OwnerDashboardScreen(
     var showWithdrawDialog by remember { mutableStateOf(false) }
     var showEditBankDialog by remember { mutableStateOf(false) }
     var showYtUserAccessDialog by remember { mutableStateOf(false) }
+    var showBarcodeScannerDialog by remember { mutableStateOf(false) }
+    var showOwnerBarcodeCardDialog by remember { mutableStateOf(false) }
+    var scannedWithdrawalDestination by remember { mutableStateOf<ScannedBarcodeResult?>(null) }
     var selectedWalletCurrency by remember { mutableStateOf(CurrencyType.INR) }
 
     // If not authenticated, show Security Quarantine barrier
@@ -475,16 +485,73 @@ fun OwnerDashboardScreen(
                                 )
                             }
 
-                            Button(
-                                onClick = { showWithdrawDialog = true },
-                                colors = ButtonDefaults.buttonColors(containerColor = AnimeGold),
-                                shape = RoundedCornerShape(8.dp),
-                                modifier = Modifier.height(34.dp).testTag("owner_withdraw_funds_btn")
-                            ) {
-                                Icon(Icons.Default.Payment, contentDescription = null, tint = Color.Black, modifier = Modifier.size(14.dp))
-                                Spacer(modifier = Modifier.width(4.dp))
-                                Text(AppLocaleStrings.tr(lang, "Withdraw", "पैसे निकालें"), color = Color.Black, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                OutlinedButton(
+                                    onClick = { showBarcodeScannerDialog = true },
+                                    shape = RoundedCornerShape(8.dp),
+                                    border = BorderStroke(1.dp, AnimeCyan),
+                                    modifier = Modifier.height(34.dp).testTag("owner_scan_barcode_btn"),
+                                    contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 8.dp, vertical = 2.dp)
+                                ) {
+                                    Icon(Icons.Default.QrCode2, contentDescription = null, tint = AnimeCyan, modifier = Modifier.size(14.dp))
+                                    Spacer(modifier = Modifier.width(4.dp))
+                                    Text(AppLocaleStrings.tr(lang, "Scan QR", "QR स्कैन"), color = AnimeCyan, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                                }
+
+                                Spacer(modifier = Modifier.width(6.dp))
+
+                                Button(
+                                    onClick = { showWithdrawDialog = true },
+                                    colors = ButtonDefaults.buttonColors(containerColor = AnimeGold),
+                                    shape = RoundedCornerShape(8.dp),
+                                    modifier = Modifier.height(34.dp).testTag("owner_withdraw_funds_btn"),
+                                    contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 8.dp, vertical = 2.dp)
+                                ) {
+                                    Icon(Icons.Default.Payment, contentDescription = null, tint = Color.Black, modifier = Modifier.size(14.dp))
+                                    Spacer(modifier = Modifier.width(4.dp))
+                                    Text(AppLocaleStrings.tr(lang, "Withdraw", "पैसे निकालें"), color = Color.Black, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                                }
                             }
+                        }
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        // Expandable Owner Receiving Barcode & ID View
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(AnimeGold.copy(alpha = 0.12f))
+                                .clickable { showOwnerBarcodeCardDialog = !showOwnerBarcodeCardDialog }
+                                .padding(horizontal = 10.dp, vertical = 6.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(Icons.Default.QrCode2, contentDescription = null, tint = AnimeGold, modifier = Modifier.size(15.dp))
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text(
+                                    text = AppLocaleStrings.tr(lang, "My In-App Wallet Barcode & ID", "मेरा इन-ऐप वॉलेट बारकोड व ID"),
+                                    color = AnimeGold,
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                            Text(
+                                text = if (showOwnerBarcodeCardDialog) "▲ Hide" else "▼ Show Barcode",
+                                color = AnimeGold,
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+
+                        if (showOwnerBarcodeCardDialog) {
+                            Spacer(modifier = Modifier.height(8.dp))
+                            OwnerWalletBarcodeCard(
+                                currency = selectedWalletCurrency,
+                                language = lang,
+                                isOwnerSelfView = true
+                            )
                         }
 
                         Spacer(modifier = Modifier.height(8.dp))
@@ -805,34 +872,90 @@ fun OwnerDashboardScreen(
         )
     }
 
-    // DIALOG 2: WITHDRAW FUNDS
+    // DIALOG: BARCODE / QR SCANNER FOR OWNER WITHDRAWAL
+    if (showBarcodeScannerDialog) {
+        OwnerBarcodeScannerDialog(
+            language = lang,
+            onDismiss = { showBarcodeScannerDialog = false },
+            onBarcodeScanned = { result ->
+                scannedWithdrawalDestination = result
+                showBarcodeScannerDialog = false
+                showWithdrawDialog = true
+            }
+        )
+    }
+
+    // DIALOG 2: WITHDRAW FUNDS (RTGS, NEFT, SWIFT, UPI, PAYTM, PAYPAL, BARCODE SCAN)
     if (showWithdrawDialog) {
         OwnerWithdrawFundsDialog(
             currency = selectedWalletCurrency,
             currentBalance = wallets[selectedWalletCurrency]?.balance ?: 0.0,
             bankAccount = bankAccount,
             lang = lang,
-            onDismiss = { showWithdrawDialog = false },
-            onWithdrawToBank = { amount ->
-                val (ok, msg) = viewModel.withdrawToBank(
-                    amount = amount,
-                    currency = selectedWalletCurrency,
-                    accountNumber = bankAccount.accountNumber,
-                    ifscOrSwift = bankAccount.ifscCode,
-                    holderName = bankAccount.holderName
-                )
+            scannedResult = scannedWithdrawalDestination,
+            onDismiss = {
+                showWithdrawDialog = false
+                scannedWithdrawalDestination = null
+            },
+            onOpenScanner = {
+                showWithdrawDialog = false
+                showBarcodeScannerDialog = true
+            },
+            onWithdrawRtgs = { amount, acc, ifsc, holder, bank ->
+                val (ok, msg) = viewModel.withdrawViaRtgs(amount, selectedWalletCurrency, acc, ifsc, holder, bank)
                 Toast.makeText(context, msg, Toast.LENGTH_LONG).show()
-                if (ok) showWithdrawDialog = false
+                if (ok) {
+                    showWithdrawDialog = false
+                    scannedWithdrawalDestination = null
+                }
+            },
+            onWithdrawNeft = { amount, acc, ifsc, holder, bank ->
+                val (ok, msg) = viewModel.withdrawViaNeft(amount, selectedWalletCurrency, acc, ifsc, holder, bank)
+                Toast.makeText(context, msg, Toast.LENGTH_LONG).show()
+                if (ok) {
+                    showWithdrawDialog = false
+                    scannedWithdrawalDestination = null
+                }
+            },
+            onWithdrawSwift = { amount, acc, swift, holder, bank, country ->
+                val (ok, msg) = viewModel.withdrawViaSwift(amount, selectedWalletCurrency, acc, swift, holder, bank, country)
+                Toast.makeText(context, msg, Toast.LENGTH_LONG).show()
+                if (ok) {
+                    showWithdrawDialog = false
+                    scannedWithdrawalDestination = null
+                }
             },
             onWithdrawToUpi = { amount, upiId ->
-                val (ok, msg) = viewModel.withdrawToPhonePe(amount, selectedWalletCurrency, upiId)
+                val (ok, msg) = viewModel.withdrawToUpiGeneric(amount, selectedWalletCurrency, upiId, "UPI")
                 Toast.makeText(context, msg, Toast.LENGTH_LONG).show()
-                if (ok) showWithdrawDialog = false
+                if (ok) {
+                    showWithdrawDialog = false
+                    scannedWithdrawalDestination = null
+                }
+            },
+            onWithdrawToPaytm = { amount, paytmTarget ->
+                val (ok, msg) = viewModel.withdrawToPaytm(amount, selectedWalletCurrency, paytmTarget)
+                Toast.makeText(context, msg, Toast.LENGTH_LONG).show()
+                if (ok) {
+                    showWithdrawDialog = false
+                    scannedWithdrawalDestination = null
+                }
             },
             onWithdrawToPayPal = { amount, email ->
                 val (ok, msg) = viewModel.withdrawToPayPal(amount, selectedWalletCurrency, email)
                 Toast.makeText(context, msg, Toast.LENGTH_LONG).show()
-                if (ok) showWithdrawDialog = false
+                if (ok) {
+                    showWithdrawDialog = false
+                    scannedWithdrawalDestination = null
+                }
+            },
+            onWithdrawScanned = { amount, rawCode, platform ->
+                val (ok, msg) = viewModel.withdrawViaScannedBarcode(amount, selectedWalletCurrency, rawCode, platform)
+                Toast.makeText(context, msg, Toast.LENGTH_LONG).show()
+                if (ok) {
+                    showWithdrawDialog = false
+                    scannedWithdrawalDestination = null
+                }
             }
         )
     }
@@ -1264,7 +1387,7 @@ private fun AdjustWalletBalanceDialog(
 }
 
 /**
- * Dialog to withdraw funds to Bank, UPI, or PayPal
+ * Dialog to withdraw funds to Bank (RTGS/NEFT/SWIFT), UPI, Paytm, PayPal, or via Scanned Barcode/QR
  */
 @Composable
 private fun OwnerWithdrawFundsDialog(
@@ -1272,53 +1395,222 @@ private fun OwnerWithdrawFundsDialog(
     currentBalance: Double,
     bankAccount: OwnerBankAccount,
     lang: String,
+    scannedResult: ScannedBarcodeResult? = null,
     onDismiss: () -> Unit,
-    onWithdrawToBank: (amount: Double) -> Unit,
+    onOpenScanner: () -> Unit,
+    onWithdrawRtgs: (amount: Double, accountNumber: String, ifsc: String, holderName: String, bankName: String) -> Unit,
+    onWithdrawNeft: (amount: Double, accountNumber: String, ifsc: String, holderName: String, bankName: String) -> Unit,
+    onWithdrawSwift: (amount: Double, accountNumber: String, swiftBic: String, holderName: String, bankName: String, country: String) -> Unit,
     onWithdrawToUpi: (amount: Double, upiId: String) -> Unit,
-    onWithdrawToPayPal: (amount: Double, email: String) -> Unit
+    onWithdrawToPaytm: (amount: Double, paytmNumberOrUpi: String) -> Unit,
+    onWithdrawToPayPal: (amount: Double, email: String) -> Unit,
+    onWithdrawScanned: (amount: Double, rawCode: String, platform: String) -> Unit
 ) {
+    val context = LocalContext.current
     var amountText by remember { mutableStateOf(if (currentBalance >= 5000) "5000" else currentBalance.toString()) }
-    var selectedMethod by remember { mutableIntStateOf(0) } // 0: Bank, 1: UPI, 2: PayPal
-    var customUpi by remember { mutableStateOf(bankAccount.upiId) }
-    var customPayPal by remember { mutableStateOf("amjangra0@gmail.com") }
+
+    // 0: Bank Transfer (RTGS/NEFT/SWIFT), 1: UPI, 2: Paytm, 3: PayPal / International, 4: Scanned QR
+    var selectedMethod by remember {
+        mutableIntStateOf(
+            when (scannedResult?.type) {
+                "BANK_NEFT", "BANK_RTGS", "BANK_SWIFT" -> 0
+                "UPI" -> 1
+                "PAYTM" -> 2
+                "PAYPAL" -> 3
+                "GENERIC" -> 4
+                else -> 0
+            }
+        )
+    }
+
+    // Bank Protocol: 0 = RTGS, 1 = NEFT, 2 = SWIFT
+    var selectedBankProtocol by remember {
+        mutableIntStateOf(
+            when (scannedResult?.type) {
+                "BANK_RTGS" -> 0
+                "BANK_NEFT" -> 1
+                "BANK_SWIFT" -> 2
+                else -> if (currency == CurrencyType.INR) 0 else 2
+            }
+        )
+    }
+
+    // Bank Account details
+    var holderName by remember { mutableStateOf(bankAccount.holderName) }
+    var bankName by remember { mutableStateOf(bankAccount.bankName) }
+    var accountNumber by remember { mutableStateOf(scannedResult?.accountOrId ?: bankAccount.accountNumber) }
+    var ifscCode by remember { mutableStateOf(if (scannedResult?.type in listOf("BANK_NEFT", "BANK_RTGS")) scannedResult!!.extraCode else bankAccount.ifscCode) }
+    var swiftBic by remember { mutableStateOf(if (scannedResult?.type == "BANK_SWIFT") scannedResult!!.extraCode else bankAccount.swiftBic) }
+    var targetCountry by remember { mutableStateOf("India") }
+
+    // UPI, Paytm, PayPal targets
+    var customUpi by remember { mutableStateOf(if (scannedResult?.type == "UPI") scannedResult.accountOrId else bankAccount.upiId) }
+    var customPaytm by remember { mutableStateOf(if (scannedResult?.type == "PAYTM") scannedResult.accountOrId else "9876543210") }
+    var customPayPal by remember { mutableStateOf(if (scannedResult?.type == "PAYPAL") scannedResult.accountOrId else "amjangra0@gmail.com") }
+
     var errorText by remember { mutableStateOf("") }
+
+    // Launch supportive third party apps (UPI, Paytm, PayPal) if owner wants to verify on device
+    fun launchPlatformApp(scheme: String, appName: String) {
+        try {
+            val intent = android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse(scheme)).apply {
+                addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+            context.startActivity(intent)
+        } catch (_: Exception) {
+            Toast.makeText(context, "📱 $appName app not installed on device. Direct withdrawal will be processed via in-app engine.", Toast.LENGTH_SHORT).show()
+        }
+    }
 
     AlertDialog(
         onDismissRequest = onDismiss,
         title = {
-            Text("💸 " + AppLocaleStrings.tr(lang, "Withdraw Wallet Funds", "वॉलेट से फंड्स निकालें"), fontWeight = FontWeight.Bold, color = AnimeGold)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Box(
+                        modifier = Modifier
+                            .size(30.dp)
+                            .clip(CircleShape)
+                            .background(AnimeGold),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text("💸", fontSize = 16.sp)
+                    }
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Column {
+                        Text(
+                            text = AppLocaleStrings.tr(lang, "Withdraw Wallet Funds", "वॉलेट से फंड्स निकालें"),
+                            fontWeight = FontWeight.Bold,
+                            color = AnimeGold,
+                            fontSize = 15.sp
+                        )
+                        Text(
+                            text = "Owner Multi-Platform Settlement Engine",
+                            color = TextMuted,
+                            fontSize = 9.sp
+                        )
+                    }
+                }
+
+                // Quick Barcode Scan Button
+                OutlinedButton(
+                    onClick = onOpenScanner,
+                    shape = RoundedCornerShape(8.dp),
+                    border = BorderStroke(1.dp, AnimeCyan),
+                    contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 6.dp, vertical = 2.dp),
+                    modifier = Modifier.height(28.dp).testTag("dialog_open_scanner_btn")
+                ) {
+                    Icon(Icons.Default.QrCode2, contentDescription = null, tint = AnimeCyan, modifier = Modifier.size(12.dp))
+                    Spacer(modifier = Modifier.width(3.dp))
+                    Text("Scan QR", color = AnimeCyan, fontSize = 9.sp, fontWeight = FontWeight.Bold)
+                }
+            }
         },
         text = {
-            Column(modifier = Modifier.fillMaxWidth()) {
-                Text(
-                    text = "Available Balance: ${currency.symbol}${String.format("%,.2f", currentBalance)}",
-                    color = AnimeGreen,
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Bold
-                )
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .verticalScroll(rememberScrollState())
+            ) {
+                // Balance and Scanned Banner
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Balance: ${currency.symbol}${String.format("%,.2f", currentBalance)} (${currency.code})",
+                        color = AnimeGreen,
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.ExtraBold
+                    )
+                    Text(
+                        text = "Rate: 1 ${currency.code} = ₹${currency.exchangeToInr}",
+                        color = AnimeCyan,
+                        fontSize = 10.sp
+                    )
+                }
 
-                Spacer(modifier = Modifier.height(10.dp))
-
-                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                    FilterChip(
-                        selected = selectedMethod == 0,
-                        onClick = { selectedMethod = 0 },
-                        label = { Text("Bank A/C") }
-                    )
-                    FilterChip(
-                        selected = selectedMethod == 1,
-                        onClick = { selectedMethod = 1 },
-                        label = { Text("Instant UPI") }
-                    )
-                    FilterChip(
-                        selected = selectedMethod == 2,
-                        onClick = { selectedMethod = 2 },
-                        label = { Text("PayPal") }
-                    )
+                if (scannedResult != null) {
+                    Spacer(modifier = Modifier.height(6.dp))
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(AnimeCyan.copy(alpha = 0.15f))
+                            .border(1.dp, AnimeCyan.copy(alpha = 0.5f), RoundedCornerShape(8.dp))
+                            .padding(8.dp)
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(Icons.Default.Check, contentDescription = null, tint = AnimeCyan, modifier = Modifier.size(14.dp))
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(
+                                text = "📷 Scanned: ${scannedResult.type} • ${scannedResult.accountOrId}",
+                                color = AnimeCyan,
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
                 }
 
                 Spacer(modifier = Modifier.height(10.dp))
 
+                // Primary Platform Tabs
+                Text(
+                    text = AppLocaleStrings.tr(lang, "Choose Withdrawal Platform / Channel:", "निकासी का माध्यम चुनें:"),
+                    color = TextSecondary,
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.SemiBold
+                )
+                Spacer(modifier = Modifier.height(6.dp))
+                LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    item {
+                        FilterChip(
+                            selected = selectedMethod == 0,
+                            onClick = { selectedMethod = 0 },
+                            label = { Text("🏦 Bank A/C", fontSize = 11.sp) }
+                        )
+                    }
+                    item {
+                        FilterChip(
+                            selected = selectedMethod == 1,
+                            onClick = { selectedMethod = 1 },
+                            label = { Text("🟢 UPI (GPay/PhonePe)", fontSize = 11.sp) }
+                        )
+                    }
+                    item {
+                        FilterChip(
+                            selected = selectedMethod == 2,
+                            onClick = { selectedMethod = 2 },
+                            label = { Text("🔵 Paytm Wallet", fontSize = 11.sp) }
+                        )
+                    }
+                    item {
+                        FilterChip(
+                            selected = selectedMethod == 3,
+                            onClick = { selectedMethod = 3 },
+                            label = { Text("🅿️ PayPal / Global", fontSize = 11.sp) }
+                        )
+                    }
+                    if (scannedResult != null) {
+                        item {
+                            FilterChip(
+                                selected = selectedMethod == 4,
+                                onClick = { selectedMethod = 4 },
+                                label = { Text("📷 Scanned QR", fontSize = 11.sp) }
+                            )
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(10.dp))
+
+                // Amount Field
                 OutlinedTextField(
                     value = amountText,
                     onValueChange = {
@@ -1328,42 +1620,190 @@ private fun OwnerWithdrawFundsDialog(
                     label = { Text("Withdraw Amount (${currency.symbol})") },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     singleLine = true,
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth().testTag("withdraw_amount_input"),
+                    colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = AnimeGold)
                 )
 
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(10.dp))
 
+                // Method Specific Fields
                 when (selectedMethod) {
                     0 -> {
+                        // BANK ACCOUNT (RTGS / NEFT / SWIFT)
                         Text(
-                            text = "Destination: ${bankAccount.bankName} (••••${bankAccount.accountNumber.takeLast(4)})\nIFSC: ${bankAccount.ifscCode} • ${bankAccount.holderName}",
-                            color = TextSecondary,
-                            fontSize = 11.sp
+                            text = "Select Bank Transfer Protocol:",
+                            color = TextMuted,
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            FilterChip(
+                                selected = selectedBankProtocol == 0,
+                                onClick = { selectedBankProtocol = 0 },
+                                label = { Text("⚡ RTGS (Instant)", fontSize = 10.sp) },
+                                modifier = Modifier.weight(1f)
+                            )
+                            FilterChip(
+                                selected = selectedBankProtocol == 1,
+                                onClick = { selectedBankProtocol = 1 },
+                                label = { Text("🏦 NEFT", fontSize = 10.sp) },
+                                modifier = Modifier.weight(1f)
+                            )
+                            FilterChip(
+                                selected = selectedBankProtocol == 2,
+                                onClick = { selectedBankProtocol = 2 },
+                                label = { Text("🌐 SWIFT Wire", fontSize = 10.sp) },
+                                modifier = Modifier.weight(1f)
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        OutlinedTextField(
+                            value = bankName,
+                            onValueChange = { bankName = it },
+                            label = { Text("Bank Name") },
+                            singleLine = true,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                        Spacer(modifier = Modifier.height(6.dp))
+                        OutlinedTextField(
+                            value = accountNumber,
+                            onValueChange = { accountNumber = it },
+                            label = { Text("Bank Account Number") },
+                            singleLine = true,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                        Spacer(modifier = Modifier.height(6.dp))
+
+                        if (selectedBankProtocol == 2) {
+                            // SWIFT Wire BIC code
+                            OutlinedTextField(
+                                value = swiftBic,
+                                onValueChange = { swiftBic = it },
+                                label = { Text("SWIFT / BIC Code (e.g. HDFCINBB)") },
+                                singleLine = true,
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                            Spacer(modifier = Modifier.height(6.dp))
+                            OutlinedTextField(
+                                value = targetCountry,
+                                onValueChange = { targetCountry = it },
+                                label = { Text("Beneficiary Country") },
+                                singleLine = true,
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                        } else {
+                            // IFSC code for RTGS/NEFT
+                            OutlinedTextField(
+                                value = ifscCode,
+                                onValueChange = { ifscCode = it },
+                                label = { Text("IFSC Code (e.g. HDFC0001234)") },
+                                singleLine = true,
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.height(6.dp))
+                        OutlinedTextField(
+                            value = holderName,
+                            onValueChange = { holderName = it },
+                            label = { Text("Account Beneficiary Name") },
+                            singleLine = true,
+                            modifier = Modifier.fillMaxWidth()
                         )
                     }
+
                     1 -> {
+                        // UPI (GPay / PhonePe / BHIM)
                         OutlinedTextField(
                             value = customUpi,
                             onValueChange = { customUpi = it },
-                            label = { Text("UPI ID") },
+                            label = { Text("UPI ID (e.g. name@okhdfcbank)") },
                             singleLine = true,
                             modifier = Modifier.fillMaxWidth()
                         )
+                        Spacer(modifier = Modifier.height(6.dp))
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            OutlinedButton(
+                                onClick = { launchPlatformApp("upi://pay?pa=$customUpi", "UPI / GPay") },
+                                modifier = Modifier.weight(1f).height(32.dp)
+                            ) {
+                                Text("Open UPI App", fontSize = 10.sp, color = AnimeCyan)
+                            }
+                        }
                     }
+
                     2 -> {
+                        // PAYTM WALLET
+                        OutlinedTextField(
+                            value = customPaytm,
+                            onValueChange = { customPaytm = it },
+                            label = { Text("Paytm Mobile Number or UPI (e.g. 9876543210@paytm)") },
+                            singleLine = true,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                        Spacer(modifier = Modifier.height(6.dp))
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            OutlinedButton(
+                                onClick = { launchPlatformApp("paytmmp://pay?mobile=$customPaytm", "Paytm") },
+                                modifier = Modifier.weight(1f).height(32.dp)
+                            ) {
+                                Text("Open Paytm App", fontSize = 10.sp, color = AnimeCyan)
+                            }
+                        }
+                    }
+
+                    3 -> {
+                        // PAYPAL & MULTI-CURRENCY SUPPORTIVE PLATFORMS
                         OutlinedTextField(
                             value = customPayPal,
                             onValueChange = { customPayPal = it },
-                            label = { Text("PayPal Email") },
+                            label = { Text("PayPal Account Email") },
                             singleLine = true,
                             modifier = Modifier.fillMaxWidth()
+                        )
+                        Spacer(modifier = Modifier.height(6.dp))
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(AnimeSurfaceVariant)
+                                .padding(8.dp)
+                        ) {
+                            Text(
+                                text = "Supported Currencies: USD ($), EUR (€), GBP (£), JPY (¥). Automatic conversion and multi-currency payout dispatch.",
+                                color = TextMuted,
+                                fontSize = 10.sp
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(6.dp))
+                        OutlinedButton(
+                            onClick = { launchPlatformApp("https://www.paypal.com", "PayPal") },
+                            modifier = Modifier.fillMaxWidth().height(32.dp)
+                        ) {
+                            Text("Open PayPal Portal", fontSize = 10.sp, color = AnimeCyan)
+                        }
+                    }
+
+                    4 -> {
+                        // SCANNED DESTINATION
+                        Text(
+                            text = "Destination: ${scannedResult?.type ?: "Scanned Barcode"}\nPayload: ${scannedResult?.rawText}",
+                            color = TextSecondary,
+                            fontSize = 11.sp,
+                            fontFamily = FontFamily.Monospace
                         )
                     }
                 }
 
                 if (errorText.isNotBlank()) {
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(text = errorText, color = AnimePink, fontSize = 10.sp)
+                    Spacer(modifier = Modifier.height(6.dp))
+                    Text(text = errorText, color = AnimePink, fontSize = 11.sp, fontWeight = FontWeight.Bold)
                 }
             }
         },
@@ -1372,22 +1812,34 @@ private fun OwnerWithdrawFundsDialog(
                 onClick = {
                     val amt = amountText.toDoubleOrNull()
                     if (amt == null || amt <= 0) {
-                        errorText = "Enter valid amount"
+                        errorText = "Enter a valid positive amount"
                         return@Button
                     }
                     if (amt > currentBalance) {
-                        errorText = "Amount exceeds balance!"
+                        errorText = "Insufficient funds! Current balance: ${currency.symbol}$currentBalance"
                         return@Button
                     }
+
                     when (selectedMethod) {
-                        0 -> onWithdrawToBank(amt)
+                        0 -> {
+                            when (selectedBankProtocol) {
+                                0 -> onWithdrawRtgs(amt, accountNumber, ifscCode, holderName, bankName)
+                                1 -> onWithdrawNeft(amt, accountNumber, ifscCode, holderName, bankName)
+                                2 -> onWithdrawSwift(amt, accountNumber, swiftBic, holderName, bankName, targetCountry)
+                            }
+                        }
                         1 -> onWithdrawToUpi(amt, customUpi)
-                        2 -> onWithdrawToPayPal(amt, customPayPal)
+                        2 -> onWithdrawToPaytm(amt, customPaytm)
+                        3 -> onWithdrawToPayPal(amt, customPayPal)
+                        4 -> onWithdrawScanned(amt, scannedResult?.rawText ?: accountNumber, scannedResult?.type ?: "Barcode")
                     }
                 },
-                colors = ButtonDefaults.buttonColors(containerColor = AnimeGold)
+                colors = ButtonDefaults.buttonColors(containerColor = AnimeGold),
+                shape = RoundedCornerShape(8.dp)
             ) {
-                Text("Process Payout", color = Color.Black, fontWeight = FontWeight.Bold)
+                Icon(Icons.Default.Check, contentDescription = null, tint = Color.Black, modifier = Modifier.size(14.dp))
+                Spacer(modifier = Modifier.width(4.dp))
+                Text("Process Payout", color = Color.Black, fontWeight = FontWeight.Bold, fontSize = 11.sp)
             }
         },
         dismissButton = {
