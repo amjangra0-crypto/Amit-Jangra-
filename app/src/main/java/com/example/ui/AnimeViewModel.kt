@@ -67,6 +67,7 @@ enum class AppTab(val title: String, val iconName: String) {
     BUILDER("Character Builder", "brush"),
     CHARACTERS("Characters", "face"),
     SUBSCRIPTION("VIP & Admin", "workspace_premium"),
+    WALLET("Wallet", "account_balance_wallet"),
     UPDATES("Updates", "system_update"),
     PROFILE("Profile", "account_circle"),
     SETTINGS("Settings", "settings"),
@@ -184,7 +185,13 @@ data class AnimeStudioUiState(
     val isAutonomousExecuting: Boolean = false,
     val automationProgress: Float = 0f,
     val automationStatusStep: String = "",
-    val lastAutonomousSummary: String = ""
+    val lastAutonomousSummary: String = "",
+    // New Feature Dialog States
+    val showStudioHistoryDialog: Boolean = false,
+    val showWalletHistoryDialog: Boolean = false,
+    val showSubscriptionHistoryDialog: Boolean = false,
+    val showOwnerCurrencyExchangeDialog: Boolean = false,
+    val showModifyOwnerCredentialsDialog: Boolean = false
 )
 
 class AnimeViewModel(application: Application) : AndroidViewModel(application) {
@@ -231,6 +238,21 @@ class AnimeViewModel(application: Application) : AndroidViewModel(application) {
     val isOwnerAccessUnlocked: StateFlow<Boolean> = ytCredManager.isOwnerAccessUnlocked
     val youtubeAuthorizedUsers: StateFlow<Set<String>> = ytCredManager.authorizedUserIds
     val youtubeManagedUsers: StateFlow<List<com.example.data.model.ManagedUserAccess>> = ytCredManager.managedUsers
+
+    private val automationChannelMgr = com.example.data.engine.AutomationChannelManager.getInstance(application)
+    val connectedChannels: StateFlow<List<com.example.data.model.ConnectedChannel>> = automationChannelMgr.connectedChannels
+    val connectedChannel: StateFlow<com.example.data.model.ConnectedChannel> = automationChannelMgr.connectedChannel
+    val automationStatusMessage: StateFlow<String> = automationChannelMgr.automationStatusMessage
+
+    fun selectActiveYouTubeChannel(channelId: String) = automationChannelMgr.selectActiveChannel(channelId)
+    fun addYouTubeChannel(
+        channelName: String,
+        handleOrUrl: String,
+        subscribers: String = "0 Subscribers",
+        category: String = "Animation / Film"
+    ) = automationChannelMgr.addYouTubeChannel(channelName, handleOrUrl, subscribers, category)
+    fun removeYouTubeChannel(channelId: String) = automationChannelMgr.removeYouTubeChannel(channelId)
+
 
     val commandLearningEngine = com.example.data.engine.CommandLearningEngine.getInstance(application)
     val commandLearningSettings = commandLearningEngine.settings
@@ -386,10 +408,63 @@ class AnimeViewModel(application: Application) : AndroidViewModel(application) {
     // -----------------------------------------------------------------------------------------
     // OWNER CREDENTIALS SECURITY & MODIFICATION (ONLY ACCESSIBLE BY OWNER)
     // -----------------------------------------------------------------------------------------
+    fun getOwnerName(): String = authAndWalletRepo.getOwnerName()
     fun getOwnerEmail(): String = authAndWalletRepo.getOwnerEmail()
     fun getOwnerUsername(): String = authAndWalletRepo.getOwnerUsername()
     fun getOwnerAdminUid(): String = authAndWalletRepo.getOwnerAdminUid()
     fun getOwnerMasterPin(): String = ytCredManager.getOwnerMasterPin()
+    fun getOwnerPassword(): String = authAndWalletRepo.getOwnerPassword()
+    fun getOwnerMobile(): String = authAndWalletRepo.getOwnerMobile()
+
+    val subscribers: StateFlow<List<com.example.data.model.SubscriberRecord>> = authAndWalletRepo.subscribers
+
+    fun updateOwnerDashboardDetails(
+        name: String,
+        username: String,
+        password: String,
+        mobile: String,
+        email: String
+    ): Result<String> {
+        val cleanName = name.trim()
+        val cleanUsername = username.trim()
+        val cleanPassword = password.trim()
+        val cleanMobile = mobile.trim()
+        val cleanEmail = email.trim()
+
+        if (cleanName.isBlank()) return Result.failure(IllegalArgumentException("Owner Name cannot be blank"))
+        if (cleanUsername.isBlank()) return Result.failure(IllegalArgumentException("User Name cannot be blank"))
+        if (cleanPassword.length < 4) return Result.failure(IllegalArgumentException("Password must be at least 4 characters"))
+        if (!cleanEmail.contains("@")) return Result.failure(IllegalArgumentException("Please enter a valid Email ID"))
+
+        authAndWalletRepo.updateOwnerDashboardDetails(cleanName, cleanUsername, cleanPassword, cleanMobile, cleanEmail)
+        ytCredManager.setOwnerMasterPin(cleanPassword)
+        _uiState.value = _uiState.value.copy(
+            statusMessage = "👑 Owner Dashboard details updated: $cleanName ($cleanUsername)"
+        )
+        return Result.success("Owner Dashboard credentials successfully updated!")
+    }
+
+    // Dialog toggles for features
+    fun toggleStudioHistoryDialog(show: Boolean) {
+        _uiState.value = _uiState.value.copy(showStudioHistoryDialog = show)
+    }
+
+    fun toggleWalletHistoryDialog(show: Boolean) {
+        _uiState.value = _uiState.value.copy(showWalletHistoryDialog = show)
+    }
+
+    fun toggleSubscriptionHistoryDialog(show: Boolean) {
+        _uiState.value = _uiState.value.copy(showSubscriptionHistoryDialog = show)
+    }
+
+    fun toggleOwnerCurrencyExchangeDialog(show: Boolean) {
+        _uiState.value = _uiState.value.copy(showOwnerCurrencyExchangeDialog = show)
+    }
+
+    fun toggleModifyOwnerCredentialsDialog(show: Boolean) {
+        _uiState.value = _uiState.value.copy(showModifyOwnerCredentialsDialog = show)
+    }
+
 
     /**
      * Modifies Owner Dashboard Username and Password / PIN.
@@ -2391,6 +2466,13 @@ class AnimeViewModel(application: Application) : AndroidViewModel(application) {
         }
         return res
     }
+
+    fun withdrawViaUpi(
+        amount: Double,
+        currency: CurrencyType,
+        upiId: String
+    ): Pair<Boolean, String> = withdrawToUpiGeneric(amount, currency, upiId, "UPI")
+
 
     fun withdrawViaScannedBarcode(
         amount: Double,

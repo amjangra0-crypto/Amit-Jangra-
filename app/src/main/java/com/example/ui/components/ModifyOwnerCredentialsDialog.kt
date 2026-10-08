@@ -16,12 +16,13 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Badge
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material.icons.filled.LockReset
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material.icons.filled.Security
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
@@ -64,8 +65,12 @@ import com.example.ui.theme.TextPrimary
 import com.example.ui.theme.TextSecondary
 
 /**
- * Ultra-secure Dialog allowing ONLY the verified Owner to modify
- * Owner Dashboard Username, Admin Email/UID, and Master Password/PIN.
+ * Ultra-secure Dialog allowing the verified Owner to modify:
+ * 1. Name (Full Name)
+ * 2. User's Name (Username / Admin Handle)
+ * 3. Password (Master Password / PIN)
+ * 4. Mobile No. (Phone Number)
+ * 5. Email ID (Admin Email)
  */
 @Composable
 fun ModifyOwnerCredentialsDialog(
@@ -74,14 +79,13 @@ fun ModifyOwnerCredentialsDialog(
     onSuccess: () -> Unit
 ) {
     val context = LocalContext.current
-    var currentPinInput by remember { mutableStateOf("") }
-    var newUsernameInput by remember { mutableStateOf(viewModel.getOwnerUsername()) }
-    var newEmailInput by remember { mutableStateOf(viewModel.getOwnerEmail()) }
-    var newPinInput by remember { mutableStateOf("") }
-    var confirmPinInput by remember { mutableStateOf("") }
+    var nameInput by remember { mutableStateOf(viewModel.getOwnerName()) }
+    var usernameInput by remember { mutableStateOf(viewModel.getOwnerUsername()) }
+    var passwordInput by remember { mutableStateOf(viewModel.getOwnerPassword()) }
+    var mobileInput by remember { mutableStateOf(viewModel.getOwnerMobile()) }
+    var emailInput by remember { mutableStateOf(viewModel.getOwnerEmail()) }
 
-    var isCurrentPinVisible by remember { mutableStateOf(false) }
-    var isNewPinVisible by remember { mutableStateOf(false) }
+    var isPasswordVisible by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
 
     Dialog(
@@ -90,8 +94,8 @@ fun ModifyOwnerCredentialsDialog(
     ) {
         Card(
             modifier = Modifier
-                .fillMaxWidth(0.94f)
-                .padding(vertical = 24.dp)
+                .fillMaxWidth(0.95f)
+                .padding(vertical = 20.dp)
                 .testTag("modify_owner_credentials_dialog"),
             shape = RoundedCornerShape(20.dp),
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
@@ -113,13 +117,13 @@ fun ModifyOwnerCredentialsDialog(
                         Spacer(modifier = Modifier.width(8.dp))
                         Column {
                             Text(
-                                text = "👑 Edit Owner Credentials",
+                                text = "👑 Edit Owner Dashboard",
                                 color = AnimeGold,
                                 fontSize = 16.sp,
                                 fontWeight = FontWeight.Bold
                             )
                             Text(
-                                text = "Strictly Owner-Only Access",
+                                text = "Manage Name, Username, Password, Mobile & Email",
                                 color = TextSecondary,
                                 fontSize = 11.sp
                             )
@@ -130,17 +134,17 @@ fun ModifyOwnerCredentialsDialog(
                     }
                 }
 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(14.dp))
 
-                // Security Notice Banner
+                // Security Banner
                 Card(
-                    colors = CardDefaults.cardColors(containerColor = AnimePurple.copy(alpha = 0.2f)),
+                    colors = CardDefaults.cardColors(containerColor = AnimePurple.copy(alpha = 0.15f)),
                     shape = RoundedCornerShape(10.dp),
-                    border = BorderStroke(1.dp, AnimePurple.copy(alpha = 0.5f)),
+                    border = BorderStroke(1.dp, AnimePurple.copy(alpha = 0.4f)),
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Text(
-                        text = "🔒 To prevent unauthorized alterations, enter your current Master PIN/Password to confirm identity before saving changes.",
+                        text = "🔒 Owner Exclusive: Changes will update your Owner Dashboard profile, in-app credentials, and security logs instantly.",
                         color = AnimeCyan,
                         fontSize = 11.sp,
                         modifier = Modifier.padding(10.dp)
@@ -149,30 +153,19 @@ fun ModifyOwnerCredentialsDialog(
 
                 Spacer(modifier = Modifier.height(14.dp))
 
-                // 1. Current Master PIN (Required)
-                Text("Current Master PIN / Password:", color = TextSecondary, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                // 1. Owner Full Name
+                Text("1. Owner Full Name (Name):", color = TextSecondary, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
                 Spacer(modifier = Modifier.height(4.dp))
                 OutlinedTextField(
-                    value = currentPinInput,
+                    value = nameInput,
                     onValueChange = {
-                        currentPinInput = it
+                        nameInput = it
                         errorMessage = null
                     },
-                    placeholder = { Text("Enter current PIN (e.g. 1234)", color = TextMuted, fontSize = 12.sp) },
-                    visualTransformation = if (isCurrentPinVisible) VisualTransformation.None else PasswordVisualTransformation(),
-                    trailingIcon = {
-                        IconButton(onClick = { isCurrentPinVisible = !isCurrentPinVisible }) {
-                            Icon(
-                                if (isCurrentPinVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff,
-                                contentDescription = null,
-                                tint = TextMuted
-                            )
-                        }
-                    },
-                    leadingIcon = { Icon(Icons.Default.Lock, contentDescription = null, tint = AnimeGold) },
+                    placeholder = { Text("e.g. Aman Jangra", color = TextMuted, fontSize = 12.sp) },
+                    leadingIcon = { Icon(Icons.Default.Badge, contentDescription = null, tint = AnimeGold) },
                     singleLine = true,
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                    modifier = Modifier.fillMaxWidth().testTag("current_pin_input"),
+                    modifier = Modifier.fillMaxWidth().testTag("owner_name_input"),
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = AnimeGold,
                         focusedTextColor = TextPrimary,
@@ -181,21 +174,21 @@ fun ModifyOwnerCredentialsDialog(
                     shape = RoundedCornerShape(10.dp)
                 )
 
-                Spacer(modifier = Modifier.height(14.dp))
+                Spacer(modifier = Modifier.height(12.dp))
 
-                // 2. New Owner Username
-                Text("New Owner Username / Display Name:", color = TextSecondary, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                // 2. Owner User's Name (Username)
+                Text("2. User's Name (Admin Username):", color = TextSecondary, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
                 Spacer(modifier = Modifier.height(4.dp))
                 OutlinedTextField(
-                    value = newUsernameInput,
+                    value = usernameInput,
                     onValueChange = {
-                        newUsernameInput = it
+                        usernameInput = it
                         errorMessage = null
                     },
                     placeholder = { Text("e.g. Aman Jangra (Owner)", color = TextMuted, fontSize = 12.sp) },
                     leadingIcon = { Icon(Icons.Default.Person, contentDescription = null, tint = AnimeCyan) },
                     singleLine = true,
-                    modifier = Modifier.fillMaxWidth().testTag("new_username_input"),
+                    modifier = Modifier.fillMaxWidth().testTag("owner_username_input"),
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = AnimeCyan,
                         focusedTextColor = TextPrimary,
@@ -204,22 +197,32 @@ fun ModifyOwnerCredentialsDialog(
                     shape = RoundedCornerShape(10.dp)
                 )
 
-                Spacer(modifier = Modifier.height(14.dp))
+                Spacer(modifier = Modifier.height(12.dp))
 
-                // 3. New Owner Email / Admin UID
-                Text("New Owner Email (Admin Login ID):", color = TextSecondary, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                // 3. Password / Master PIN
+                Text("3. Master Password / PIN:", color = TextSecondary, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
                 Spacer(modifier = Modifier.height(4.dp))
                 OutlinedTextField(
-                    value = newEmailInput,
+                    value = passwordInput,
                     onValueChange = {
-                        newEmailInput = it
+                        passwordInput = it
                         errorMessage = null
                     },
-                    placeholder = { Text("e.g. amjangra0@gmail.com", color = TextMuted, fontSize = 12.sp) },
-                    leadingIcon = { Icon(Icons.Default.Email, contentDescription = null, tint = AnimePink) },
+                    placeholder = { Text("e.g. 9999", color = TextMuted, fontSize = 12.sp) },
+                    visualTransformation = if (isPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                    trailingIcon = {
+                        IconButton(onClick = { isPasswordVisible = !isPasswordVisible }) {
+                            Icon(
+                                if (isPasswordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff,
+                                contentDescription = null,
+                                tint = TextMuted
+                            )
+                        }
+                    },
+                    leadingIcon = { Icon(Icons.Default.Lock, contentDescription = null, tint = AnimePink) },
                     singleLine = true,
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
-                    modifier = Modifier.fillMaxWidth().testTag("new_email_input"),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                    modifier = Modifier.fillMaxWidth().testTag("owner_password_input"),
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = AnimePink,
                         focusedTextColor = TextPrimary,
@@ -228,32 +231,22 @@ fun ModifyOwnerCredentialsDialog(
                     shape = RoundedCornerShape(10.dp)
                 )
 
-                Spacer(modifier = Modifier.height(14.dp))
+                Spacer(modifier = Modifier.height(12.dp))
 
-                // 4. New Master Password / PIN
-                Text("New Master Password / PIN:", color = TextSecondary, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                // 4. Mobile Number
+                Text("4. Mobile No. (Phone Number):", color = TextSecondary, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
                 Spacer(modifier = Modifier.height(4.dp))
                 OutlinedTextField(
-                    value = newPinInput,
+                    value = mobileInput,
                     onValueChange = {
-                        newPinInput = it
+                        mobileInput = it
                         errorMessage = null
                     },
-                    placeholder = { Text("Leave blank to keep current PIN", color = TextMuted, fontSize = 12.sp) },
-                    visualTransformation = if (isNewPinVisible) VisualTransformation.None else PasswordVisualTransformation(),
-                    trailingIcon = {
-                        IconButton(onClick = { isNewPinVisible = !isNewPinVisible }) {
-                            Icon(
-                                if (isNewPinVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff,
-                                contentDescription = null,
-                                tint = TextMuted
-                            )
-                        }
-                    },
-                    leadingIcon = { Icon(Icons.Default.LockReset, contentDescription = null, tint = AnimeCyan) },
+                    placeholder = { Text("e.g. +91 98765 43210", color = TextMuted, fontSize = 12.sp) },
+                    leadingIcon = { Icon(Icons.Default.Phone, contentDescription = null, tint = AnimeCyan) },
                     singleLine = true,
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                    modifier = Modifier.fillMaxWidth().testTag("new_pin_input"),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
+                    modifier = Modifier.fillMaxWidth().testTag("owner_mobile_input"),
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = AnimeCyan,
                         focusedTextColor = TextPrimary,
@@ -262,29 +255,29 @@ fun ModifyOwnerCredentialsDialog(
                     shape = RoundedCornerShape(10.dp)
                 )
 
-                if (newPinInput.isNotBlank()) {
-                    Spacer(modifier = Modifier.height(10.dp))
-                    Text("Confirm New Master Password / PIN:", color = TextSecondary, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
-                    Spacer(modifier = Modifier.height(4.dp))
-                    OutlinedTextField(
-                        value = confirmPinInput,
-                        onValueChange = {
-                            confirmPinInput = it
-                            errorMessage = null
-                        },
-                        placeholder = { Text("Re-enter new PIN to confirm", color = TextMuted, fontSize = 12.sp) },
-                        visualTransformation = PasswordVisualTransformation(),
-                        singleLine = true,
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                        modifier = Modifier.fillMaxWidth().testTag("confirm_pin_input"),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = AnimeCyan,
-                            focusedTextColor = TextPrimary,
-                            unfocusedTextColor = TextPrimary
-                        ),
-                        shape = RoundedCornerShape(10.dp)
-                    )
-                }
+                Spacer(modifier = Modifier.height(12.dp))
+
+                // 5. Email ID
+                Text("5. Email ID (Admin Email):", color = TextSecondary, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                Spacer(modifier = Modifier.height(4.dp))
+                OutlinedTextField(
+                    value = emailInput,
+                    onValueChange = {
+                        emailInput = it
+                        errorMessage = null
+                    },
+                    placeholder = { Text("e.g. amjangra0@gmail.com", color = TextMuted, fontSize = 12.sp) },
+                    leadingIcon = { Icon(Icons.Default.Email, contentDescription = null, tint = AnimeGold) },
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+                    modifier = Modifier.fillMaxWidth().testTag("owner_email_input"),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = AnimeGold,
+                        focusedTextColor = TextPrimary,
+                        unfocusedTextColor = TextPrimary
+                    ),
+                    shape = RoundedCornerShape(10.dp)
+                )
 
                 // Error message banner
                 errorMessage?.let { err ->
@@ -320,53 +313,49 @@ fun ModifyOwnerCredentialsDialog(
 
                     Button(
                         onClick = {
-                            if (currentPinInput.isBlank()) {
-                                errorMessage = "Please enter your current Master PIN."
+                            if (nameInput.isBlank()) {
+                                errorMessage = "Name cannot be empty."
                                 return@Button
                             }
-                            if (newUsernameInput.isBlank()) {
-                                errorMessage = "Username cannot be empty."
+                            if (usernameInput.isBlank()) {
+                                errorMessage = "User's name (Username) cannot be empty."
                                 return@Button
                             }
-                            if (newEmailInput.isBlank() || !newEmailInput.contains("@")) {
-                                errorMessage = "Please enter a valid Owner Email."
+                            if (passwordInput.length < 4) {
+                                errorMessage = "Password must be at least 4 characters long."
                                 return@Button
                             }
-                            val targetPin = if (newPinInput.isNotBlank()) {
-                                if (newPinInput != confirmPinInput) {
-                                    errorMessage = "New PIN and Confirm PIN do not match!"
-                                    return@Button
-                                }
-                                if (newPinInput.length < 4) {
-                                    errorMessage = "New PIN must be at least 4 characters long."
-                                    return@Button
-                                }
-                                newPinInput
-                            } else {
-                                currentPinInput
+                            if (mobileInput.isBlank()) {
+                                errorMessage = "Mobile number cannot be empty."
+                                return@Button
+                            }
+                            if (emailInput.isBlank() || !emailInput.contains("@")) {
+                                errorMessage = "Please enter a valid Email ID."
+                                return@Button
                             }
 
-                            val result = viewModel.updateOwnerCredentials(
-                                newUsername = newUsernameInput,
-                                newEmail = newEmailInput,
-                                newPasswordOrPin = targetPin,
-                                currentPin = currentPinInput
+                            val result = viewModel.updateOwnerDashboardDetails(
+                                name = nameInput,
+                                username = usernameInput,
+                                password = passwordInput,
+                                mobile = mobileInput,
+                                email = emailInput
                             )
 
                             if (result.isSuccess) {
-                                Toast.makeText(context, "👑 Owner Credentials successfully updated!", Toast.LENGTH_LONG).show()
+                                Toast.makeText(context, "👑 Owner Dashboard successfully updated!", Toast.LENGTH_LONG).show()
                                 onSuccess()
                             } else {
-                                errorMessage = result.exceptionOrNull()?.message ?: "Failed to update owner credentials."
+                                errorMessage = result.exceptionOrNull()?.message ?: "Failed to update dashboard details."
                             }
                         },
                         colors = ButtonDefaults.buttonColors(containerColor = AnimeGold),
                         shape = RoundedCornerShape(10.dp),
-                        modifier = Modifier.weight(1.5f).testTag("save_owner_credentials_btn")
+                        modifier = Modifier.weight(1.6f).testTag("save_owner_dashboard_btn")
                     ) {
                         Icon(Icons.Default.Check, contentDescription = null, tint = MaterialTheme.colorScheme.surface, modifier = Modifier.size(16.dp))
                         Spacer(modifier = Modifier.width(6.dp))
-                        Text("Update Credentials", color = MaterialTheme.colorScheme.surface, fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                        Text("Save Dashboard Details", color = MaterialTheme.colorScheme.surface, fontWeight = FontWeight.Bold, fontSize = 12.sp)
                     }
                 }
             }

@@ -106,6 +106,10 @@ import com.example.data.model.TransactionType
 import com.example.data.model.WalletTransaction
 import com.example.localization.AppLocaleStrings
 import com.example.ui.AnimeViewModel
+import com.example.ui.AppTab
+import com.example.ui.components.CurrencyExchangeDialog
+import com.example.ui.components.ModifyOwnerCredentialsDialog
+import com.example.ui.components.SubscriptionHistoryDialog
 import com.example.ui.components.OwnerBarcodeScannerDialog
 import com.example.ui.components.OwnerWalletBarcodeCard
 import com.example.ui.components.ScannedBarcodeResult
@@ -191,6 +195,9 @@ fun OwnerDashboardScreen(
     var showYtUserAccessDialog by remember { mutableStateOf(false) }
     var showBarcodeScannerDialog by remember { mutableStateOf(false) }
     var showOwnerBarcodeCardDialog by remember { mutableStateOf(false) }
+    var showCurrencyExchangeDialog by remember { mutableStateOf(false) }
+    var showModifyOwnerCredentialsDialog by remember { mutableStateOf(false) }
+    var showSubscriptionHistoryDialog by remember { mutableStateOf(false) }
     var scannedWithdrawalDestination by remember { mutableStateOf<ScannedBarcodeResult?>(null) }
     var selectedWalletCurrency by remember { mutableStateOf(CurrencyType.INR) }
 
@@ -289,6 +296,148 @@ fun OwnerDashboardScreen(
                     fontSize = 11.sp,
                     fontWeight = FontWeight.Bold
                 )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(14.dp))
+
+        // -----------------------------------------------------------------------------------------
+        // SECTION: OWNER DASHBOARD CREDENTIALS (NAME, USERNAME, PASSWORD, MOBILE NO., EMAIL ID)
+        // -----------------------------------------------------------------------------------------
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .testTag("owner_credentials_dashboard_card"),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+            shape = RoundedCornerShape(16.dp),
+            border = BorderStroke(1.5.dp, Brush.horizontalGradient(listOf(AnimeGold, AnimePurple, AnimePink)))
+        ) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Box(
+                            modifier = Modifier
+                                .size(36.dp)
+                                .clip(CircleShape)
+                                .background(AnimeGold.copy(alpha = 0.2f)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(Icons.Default.ManageAccounts, contentDescription = null, tint = AnimeGold, modifier = Modifier.size(20.dp))
+                        }
+                        Spacer(modifier = Modifier.width(10.dp))
+                        Column {
+                            Text(
+                                text = "👤 Owner Dashboard Identity",
+                                color = AnimeGold,
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Text(
+                                text = "Name, Users Name, Password, Mobile & Email",
+                                color = TextMuted,
+                                fontSize = 10.sp
+                            )
+                        }
+                    }
+
+                    Button(
+                        onClick = { showModifyOwnerCredentialsDialog = true },
+                        colors = ButtonDefaults.buttonColors(containerColor = AnimeGold),
+                        shape = RoundedCornerShape(8.dp),
+                        contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 10.dp, vertical = 4.dp),
+                        modifier = Modifier.height(32.dp).testTag("owner_edit_credentials_btn")
+                    ) {
+                        Icon(Icons.Default.Edit, contentDescription = null, tint = Color.Black, modifier = Modifier.size(13.dp))
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text("Edit Credentials", color = Color.Black, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                // Credentials Grid: Name, Username, Password, Mobile, Email
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(6.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(10.dp))
+                        .background(AnimeSurfaceVariant)
+                        .padding(12.dp)
+                ) {
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                        Text("Owner Full Name:", color = TextSecondary, fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
+                        Text(viewModel.getOwnerName(), color = AnimeGold, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                    }
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f), thickness = 0.5.dp)
+
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                        Text("User's Name (Username):", color = TextSecondary, fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
+                        Text(viewModel.getOwnerUsername(), color = AnimeCyan, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                    }
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f), thickness = 0.5.dp)
+
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                        Text("Master Password / PIN:", color = TextSecondary, fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
+                        Text("•••••••• (${viewModel.getOwnerPassword()})", color = AnimePink, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                    }
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f), thickness = 0.5.dp)
+
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                        Text("Mobile No.:", color = TextSecondary, fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
+                        Text(viewModel.getOwnerMobile(), color = AnimeGreen, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                    }
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f), thickness = 0.5.dp)
+
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                        Text("Email ID:", color = TextSecondary, fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
+                        Text(viewModel.getOwnerEmail(), color = AnimePurple, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                    }
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        // Quick Portal Actions: Currency Exchange, Subscriber History, and Open Wallet
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            OutlinedButton(
+                onClick = { showCurrencyExchangeDialog = true },
+                shape = RoundedCornerShape(10.dp),
+                border = BorderStroke(1.dp, AnimeCyan),
+                modifier = Modifier.weight(1f).height(40.dp).testTag("owner_currency_exchange_quick_btn")
+            ) {
+                Icon(Icons.Default.CurrencyExchange, contentDescription = null, tint = AnimeCyan, modifier = Modifier.size(14.dp))
+                Spacer(modifier = Modifier.width(4.dp))
+                Text("Currency Exchange", color = AnimeCyan, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+            }
+
+            OutlinedButton(
+                onClick = { showSubscriptionHistoryDialog = true },
+                shape = RoundedCornerShape(10.dp),
+                border = BorderStroke(1.dp, AnimeGold),
+                modifier = Modifier.weight(1f).height(40.dp).testTag("owner_subscriber_history_quick_btn")
+            ) {
+                Icon(Icons.Default.History, contentDescription = null, tint = AnimeGold, modifier = Modifier.size(14.dp))
+                Spacer(modifier = Modifier.width(4.dp))
+                Text("Subscribers History", color = AnimeGold, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+            }
+
+            Button(
+                onClick = { viewModel.setTab(AppTab.WALLET) },
+                shape = RoundedCornerShape(10.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = AnimePurple),
+                modifier = Modifier.weight(1f).height(40.dp).testTag("owner_open_wallet_quick_btn")
+            ) {
+                Icon(Icons.Default.Wallet, contentDescription = null, tint = Color.White, modifier = Modifier.size(14.dp))
+                Spacer(modifier = Modifier.width(4.dp))
+                Text("Full Wallet", color = Color.White, fontSize = 11.sp, fontWeight = FontWeight.Bold)
             }
         }
 

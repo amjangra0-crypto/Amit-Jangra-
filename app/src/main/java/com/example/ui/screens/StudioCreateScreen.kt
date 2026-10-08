@@ -26,6 +26,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.GraphicEq
+import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.Link
 import androidx.compose.material.icons.filled.Movie
@@ -34,6 +35,7 @@ import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.TextFields
 import androidx.compose.material.icons.filled.Translate
+import androidx.compose.material.icons.filled.Videocam
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.IconButton
@@ -96,6 +98,7 @@ import coil.compose.AsyncImage
 import com.example.ui.AnimeViewModel
 import com.example.ui.components.AutomationDirectorSection
 import com.example.ui.components.DownloadProjectDialog
+import com.example.ui.components.StudioHistoryDialog
 import com.example.ui.components.ResourceHelpers
 import com.example.ui.components.StudioSceneVideoPlayer
 import com.example.ui.components.UnifiedStudioCreationHub
@@ -222,13 +225,27 @@ fun StudioCreateScreen(viewModel: AnimeViewModel) {
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        // Quick File Action Bar: Upload File & Download Options
+        // Quick Action Bar: Studio History, Upload File & Download Options
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+            horizontalArrangement = Arrangement.spacedBy(6.dp)
         ) {
+            OutlinedButton(
+                onClick = { viewModel.toggleStudioHistoryDialog(true) },
+                modifier = Modifier
+                    .weight(1.1f)
+                    .height(40.dp)
+                    .testTag("quick_studio_history_btn"),
+                shape = RoundedCornerShape(10.dp),
+                border = BorderStroke(1.dp, AnimePurple.copy(alpha = 0.8f))
+            ) {
+                Icon(Icons.Default.History, contentDescription = null, tint = AnimePurple, modifier = Modifier.size(16.dp))
+                Spacer(modifier = Modifier.width(4.dp))
+                Text("Studio History", color = AnimePurple, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+            }
+
             OutlinedButton(
                 onClick = { documentPickerLauncher.launch("*/*") },
                 modifier = Modifier
@@ -1186,7 +1203,98 @@ fun StudioCreateScreen(viewModel: AnimeViewModel) {
                     }
                 }
             }
+        // Video Generation Settings Mode Toggle: Explainer Mode vs Character Dialogue Mode
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp)
+                .testTag("video_synthesis_mode_card"),
+            colors = CardDefaults.cardColors(containerColor = AnimeSurface),
+            shape = RoundedCornerShape(14.dp),
+            border = BorderStroke(1.dp, Brush.horizontalGradient(listOf(AnimeCyan.copy(alpha = 0.6f), AnimePurple.copy(alpha = 0.6f))))
+        ) {
+            Column(modifier = Modifier.padding(14.dp)) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Default.Videocam, contentDescription = null, tint = AnimeGold, modifier = Modifier.size(18.dp))
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = "Video Generation Mode Settings",
+                            color = TextPrimary,
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                    val isExplainerActive = state.videoPresentationMode == com.example.data.model.VideoPresentationMode.EXPLAINER_MODE
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(6.dp))
+                            .background(if (isExplainerActive) AnimeCyan.copy(alpha = 0.2f) else AnimeGold.copy(alpha = 0.2f))
+                            .padding(horizontal = 6.dp, vertical = 2.dp)
+                    ) {
+                        Text(
+                            text = if (isExplainerActive) "Narrative Driven" else "Character Lip-Sync",
+                            color = if (isExplainerActive) AnimeCyan else AnimeGold,
+                            fontSize = 9.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(10.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    val isExplainer = state.videoPresentationMode == com.example.data.model.VideoPresentationMode.EXPLAINER_MODE
+
+                    // Option 1: Explainer Mode (narrative-driven)
+                    Card(
+                        modifier = Modifier
+                            .weight(1f)
+                            .clickable { viewModel.setVideoPresentationMode(com.example.data.model.VideoPresentationMode.EXPLAINER_MODE) }
+                            .testTag("mode_explainer_toggle"),
+                        colors = CardDefaults.cardColors(
+                            containerColor = if (isExplainer) AnimeCyan.copy(alpha = 0.22f) else AnimeSurfaceVariant
+                        ),
+                        shape = RoundedCornerShape(10.dp),
+                        border = BorderStroke(1.5.dp, if (isExplainer) AnimeCyan else Color.Transparent)
+                    ) {
+                        Column(modifier = Modifier.padding(10.dp)) {
+                            Text("🎙️ 'Explainer Mode'", color = if (isExplainer) AnimeCyan else TextPrimary, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                            Spacer(modifier = Modifier.height(2.dp))
+                            Text("Narrative-driven storyline", color = TextSecondary, fontSize = 10.sp)
+                        }
+                    }
+
+                    // Option 2: Character Dialogue Mode
+                    Card(
+                        modifier = Modifier
+                            .weight(1f)
+                            .clickable { viewModel.setVideoPresentationMode(com.example.data.model.VideoPresentationMode.INDEPENDENT_CHARACTERS) }
+                            .testTag("mode_dialogue_toggle"),
+                        colors = CardDefaults.cardColors(
+                            containerColor = if (!isExplainer) AnimeGold.copy(alpha = 0.22f) else AnimeSurfaceVariant
+                        ),
+                        shape = RoundedCornerShape(10.dp),
+                        border = BorderStroke(1.5.dp, if (!isExplainer) AnimeGold else Color.Transparent)
+                    ) {
+                        Column(modifier = Modifier.padding(10.dp)) {
+                            Text("👥 'Character Dialogue Mode'", color = if (!isExplainer) AnimeGold else TextPrimary, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                            Spacer(modifier = Modifier.height(2.dp))
+                            Text("Synthesized independent dialogues", color = TextSecondary, fontSize = 10.sp)
+                        }
+                    }
+                }
+            }
         }
+
+        Spacer(modifier = Modifier.height(12.dp))
 
         // Generate Action Button & Instant Real-Time Preview
         Row(
@@ -1278,8 +1386,18 @@ fun StudioCreateScreen(viewModel: AnimeViewModel) {
         )
     }
 
+    // Studio History Dialog
+    if (state.showStudioHistoryDialog) {
+        StudioHistoryDialog(
+            viewModel = viewModel,
+            onDismiss = { viewModel.toggleStudioHistoryDialog(false) }
+        )
+    }
+
     // Fliki Workflow Interactive Tool Dialog
     if (state.showWorkflowInteractiveModal) {
         WorkflowInteractiveDialog(viewModel = viewModel)
     }
 }
+}
+

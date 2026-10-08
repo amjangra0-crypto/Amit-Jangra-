@@ -41,6 +41,7 @@ import androidx.compose.material.icons.filled.Stars
 import androidx.compose.material.icons.filled.Storage
 import androidx.compose.material.icons.filled.SystemUpdate
 import androidx.compose.material.icons.filled.VideoLibrary
+import androidx.compose.material.icons.filled.Wallet
 import androidx.compose.material.icons.filled.WorkspacePremium
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -92,6 +93,11 @@ import com.example.ui.screens.RecentVideoProjectsScreen
 import com.example.ui.screens.StudioCreateScreen
 import com.example.ui.screens.SubscriptionAdminScreen
 import com.example.ui.screens.UpdateSettingsScreen
+import com.example.ui.screens.WalletScreen
+import com.example.ui.components.StudioHistoryDialog
+import com.example.ui.components.SubscriptionHistoryDialog
+import com.example.ui.components.CurrencyExchangeDialog
+import com.example.ui.components.ModifyOwnerCredentialsDialog
 import com.example.ui.theme.AnimeCyan
 import com.example.ui.theme.AnimeGold
 import com.example.ui.theme.AnimeGreen
@@ -207,6 +213,12 @@ class MainActivity : ComponentActivity() {
                                 // NOTE: Color & Theme option has been removed from header bar per user request.
                                 // It is exclusively housed inside Settings.
 
+                                IconButton(
+                                    onClick = { viewModel.setTab(AppTab.WALLET) },
+                                    modifier = Modifier.testTag("top_bar_wallet_btn")
+                                ) {
+                                    Icon(Icons.Default.Wallet, contentDescription = "Wallet", tint = AnimeGold)
+                                }
                                 IconButton(
                                     onClick = { viewModel.setTab(AppTab.PROJECTS) },
                                     modifier = Modifier.testTag("top_bar_projects_btn")
@@ -416,13 +428,54 @@ class MainActivity : ComponentActivity() {
                                     onNavigateBack = { viewModel.setTab(AppTab.PROFILE) }
                                 )
                             }
+                            AppTab.WALLET -> {
+                                WalletScreen(
+                                    viewModel = viewModel,
+                                    onNavigateBack = { viewModel.setTab(AppTab.PROFILE) }
+                                )
+                            }
                         }
                     }
 
                     // Global Dialog Overlays
+                    if (state.showStudioHistoryDialog) {
+                        StudioHistoryDialog(
+                            viewModel = viewModel,
+                            onDismiss = { viewModel.toggleStudioHistoryDialog(false) }
+                        )
+                    }
+
+                    if (state.showSubscriptionHistoryDialog) {
+                        SubscriptionHistoryDialog(
+                            viewModel = viewModel,
+                            onDismiss = { viewModel.toggleSubscriptionHistoryDialog(false) }
+                        )
+                    }
+
+                    if (state.showOwnerCurrencyExchangeDialog) {
+                        CurrencyExchangeDialog(
+                            viewModel = viewModel,
+                            sourceCurrency = com.example.data.model.CurrencyType.INR,
+                            lang = state.selectedLanguage,
+                            onSuccess = { _ ->
+                                viewModel.toggleOwnerCurrencyExchangeDialog(false)
+                            },
+                            onDismiss = { viewModel.toggleOwnerCurrencyExchangeDialog(false) }
+                        )
+                    }
+
+                    if (state.showModifyOwnerCredentialsDialog) {
+                        ModifyOwnerCredentialsDialog(
+                            viewModel = viewModel,
+                            onDismiss = { viewModel.toggleModifyOwnerCredentialsDialog(false) },
+                            onSuccess = { viewModel.toggleModifyOwnerCredentialsDialog(false) }
+                        )
+                    }
+
                     if (state.showStorageDestinationDialog) {
                         StorageDestinationDialog(
                             viewModel = viewModel,
+
                             onDismiss = { viewModel.toggleStorageDialog(false) }
                         )
                     }

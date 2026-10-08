@@ -24,6 +24,8 @@ import androidx.compose.material.icons.filled.AccountBalance
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.CreditCard
+import androidx.compose.material.icons.filled.Group
+import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.LockOpen
 import androidx.compose.material.icons.filled.Payment
 import androidx.compose.material.icons.filled.PersonAdd
@@ -289,6 +291,51 @@ fun SubscriptionAdminScreen(viewModel: AnimeViewModel) {
                             Text(
                                 text = AppLocaleStrings.tr(lang, "Edit Plan Prices", "मूल्य बदलें"),
                                 color = AnimeGold,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 12.sp
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        OutlinedButton(
+                            onClick = { viewModel.toggleSubscriptionHistoryDialog(true) },
+                            shape = RoundedCornerShape(10.dp),
+                            border = BorderStroke(1.dp, AnimeCyan),
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(44.dp)
+                                .testTag("subscription_view_history_btn")
+                        ) {
+                            Icon(Icons.Default.Group, contentDescription = null, tint = AnimeCyan, modifier = Modifier.size(16.dp))
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(
+                                text = "Subscriber History",
+                                color = AnimeCyan,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 12.sp
+                            )
+                        }
+
+                        Button(
+                            onClick = { viewModel.setTab(com.example.ui.AppTab.WALLET) },
+                            colors = ButtonDefaults.buttonColors(containerColor = AnimePurple),
+                            shape = RoundedCornerShape(10.dp),
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(44.dp)
+                                .testTag("subscription_open_wallet_btn")
+                        ) {
+                            Icon(Icons.Default.Wallet, contentDescription = null, tint = Color.White, modifier = Modifier.size(16.dp))
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(
+                                text = "Open Wallet",
+                                color = Color.White,
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 12.sp
                             )

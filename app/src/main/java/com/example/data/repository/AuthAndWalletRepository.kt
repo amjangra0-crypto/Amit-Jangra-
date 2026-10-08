@@ -28,8 +28,11 @@ class AuthAndWalletRepository(private val context: Context) {
         const val OWNER_UID = "owner_amjangra0"
     }
 
+    fun getOwnerName(): String = prefs.getString("custom_owner_name", "Aman Jangra") ?: "Aman Jangra"
     fun getOwnerEmail(): String = prefs.getString("custom_owner_email", OWNER_EMAIL) ?: OWNER_EMAIL
     fun getOwnerUsername(): String = prefs.getString("custom_owner_username", "Aman Jangra (Owner)") ?: "Aman Jangra (Owner)"
+    fun getOwnerPassword(): String = prefs.getString("custom_owner_password", "9999") ?: "9999"
+    fun getOwnerMobile(): String = prefs.getString("custom_owner_mobile", OWNER_PHONE) ?: OWNER_PHONE
     fun getOwnerAdminUid(): String = prefs.getString("custom_owner_uid", OWNER_UID) ?: OWNER_UID
 
     private val _currentUser = MutableStateFlow(loadUserProfile())
@@ -43,6 +46,9 @@ class AuthAndWalletRepository(private val context: Context) {
 
     private val _transactions = MutableStateFlow(loadTransactions())
     val transactions: StateFlow<List<WalletTransaction>> = _transactions.asStateFlow()
+
+    private val _subscribers = MutableStateFlow(loadSubscribers())
+    val subscribers: StateFlow<List<com.example.data.model.SubscriberRecord>> = _subscribers.asStateFlow()
 
     // -----------------------------------------------------------------------------------------
     // AUTHENTICATION METHODS (Gmail, Mobile Number OTP, Logout)
@@ -114,6 +120,63 @@ class AuthAndWalletRepository(private val context: Context) {
         saveTransactions(updatedTxns)
         return true
     }
+
+    /**
+     * Complete Dashboard Credentials Updater:
+     * Updates Owner Name, User's Name (Username), Password/PIN, Mobile No., and Email ID.
+     */
+    fun updateOwnerDashboardDetails(
+        name: String,
+        username: String,
+        password: String,
+        mobile: String,
+        email: String
+    ): Boolean {
+        val cleanName = name.trim().ifBlank { "Aman Jangra" }
+        val cleanUsername = username.trim().ifBlank { "Aman Jangra (Owner)" }
+        val cleanPassword = password.trim().ifBlank { "9999" }
+        val cleanMobile = mobile.trim().ifBlank { OWNER_PHONE }
+        val cleanEmail = email.trim().ifBlank { OWNER_EMAIL }
+        val cleanUid = "owner_${cleanEmail.substringBefore("@")}"
+
+        prefs.edit()
+            .putString("custom_owner_name", cleanName)
+            .putString("custom_owner_username", cleanUsername)
+            .putString("custom_owner_password", cleanPassword)
+            .putString("custom_owner_mobile", cleanMobile)
+            .putString("custom_owner_email", cleanEmail)
+            .putString("custom_owner_uid", cleanUid)
+            .apply()
+
+        val current = _currentUser.value
+        if (current.isOwner) {
+            val updated = current.copy(
+                displayName = cleanName,
+                email = cleanEmail,
+                phoneNumber = cleanMobile,
+                userId = cleanUid
+            )
+            _currentUser.value = updated
+            saveUserProfile(updated)
+        }
+
+        val auditTxn = WalletTransaction(
+            id = "SEC_DASH_${System.currentTimeMillis()}",
+            timestamp = System.currentTimeMillis(),
+            type = TransactionType.SECURITY_CREDENTIAL_CHANGE,
+            currency = CurrencyType.INR,
+            amount = 0.0,
+            targetAccountOrUser = "Owner Dashboard Admin",
+            description = "Owner Dashboard Updated: Name='$cleanName', Username='$cleanUsername', Phone='$cleanMobile', Email='$cleanEmail'",
+            status = "Security Audit Verified",
+            referenceId = "DASH-${UUID.randomUUID().toString().uppercase().take(6)}"
+        )
+        val updatedTxns = listOf(auditTxn) + _transactions.value
+        _transactions.value = updatedTxns
+        saveTransactions(updatedTxns)
+        return true
+    }
+
 
     fun loginWithMobile(phoneNumber: String, inputOtp: String): Boolean {
         val cleanPhone = phoneNumber.trim()
@@ -223,6 +286,24 @@ class AuthAndWalletRepository(private val context: Context) {
         val updatedTxns = listOf(txn) + _transactions.value
         _transactions.value = updatedTxns
         saveTransactions(updatedTxns)
+
+        // Record Subscriber in Subscription History
+        val cleanUser = subscriberEmailOrPhone.substringBefore("@").replaceFirstChar { it.uppercase() }.ifBlank { "Anime Creator" }
+        val subscriber = com.example.data.model.SubscriberRecord(
+            userName = cleanUser,
+            email = if (subscriberEmailOrPhone.contains("@")) subscriberEmailOrPhone else "$subscriberEmailOrPhone@creator.studio",
+            mobileNumber = if (!subscriberEmailOrPhone.contains("@")) subscriberEmailOrPhone else "+91 98" + (10000000..99999999).random(),
+            planName = planName,
+            amountPaid = amount,
+            currency = currency,
+            paymentGateway = gateway,
+            subscriptionDateMillis = System.currentTimeMillis(),
+            expiryDateString = "Active (Annual Unlimited)",
+            isActive = true
+        )
+        val updatedSubs = listOf(subscriber) + _subscribers.value
+        _subscribers.value = updatedSubs
+        saveSubscribers(updatedSubs)
 
         // Upgrade subscriber's active user profile
         if (!_currentUser.value.isOwner) {
@@ -906,4 +987,134 @@ class AuthAndWalletRepository(private val context: Context) {
             prefs.edit().putString("wallet_txns_json", array.toString()).apply()
         } catch (_: Exception) {}
     }
+
+    private fun loadSubscribers(): List<com.example.data.model.SubscriberRecord> {
+        val raw = prefs.getString("subscribers_history_json", null)
+        if (raw.isNullOrBlank()) {
+            val now = System.currentTimeMillis()
+            return listOf(
+                com.example.data.model.SubscriberRecord(
+                    id = "SUB_01",
+                    userName = "Rahul Sharma",
+                    email = "rahul.sharma.anime@gmail.com",
+                    mobileNumber = "+91 98112 34567",
+                    planName = "Hokage VIP Unlimited",
+                    amountPaid = 999.0,
+                    currency = CurrencyType.INR,
+                    paymentGateway = PaymentGateway.OWNER_WALLET_BARCODE,
+                    subscriptionDateMillis = now - (86400000L * 3),
+                    expiryDateString = "Active (Auto-Renewed 2027)",
+                    isActive = true,
+                    transactionRef = "TXN-SUB9921"
+                ),
+                com.example.data.model.SubscriberRecord(
+                    id = "SUB_02",
+                    userName = "Priya Verma",
+                    email = "priya.verma.creator@gmail.com",
+                    mobileNumber = "+91 98223 45678",
+                    planName = "Shonen Pro Tier",
+                    amountPaid = 499.0,
+                    currency = CurrencyType.INR,
+                    paymentGateway = PaymentGateway.PAYTM,
+                    subscriptionDateMillis = now - (86400000L * 7),
+                    expiryDateString = "Active (Monthly)",
+                    isActive = true,
+                    transactionRef = "TXN-SUB8812"
+                ),
+                com.example.data.model.SubscriberRecord(
+                    id = "SUB_03",
+                    userName = "Alex Chen",
+                    email = "alex.chen.director@hollywood.com",
+                    mobileNumber = "+1 (415) 555-0199",
+                    planName = "Enterprise Studio Global",
+                    amountPaid = 49.0,
+                    currency = CurrencyType.USD,
+                    paymentGateway = PaymentGateway.PAYPAL,
+                    subscriptionDateMillis = now - (86400000L * 12),
+                    expiryDateString = "Active (Annual License)",
+                    isActive = true,
+                    transactionRef = "TXN-SUB7734"
+                ),
+                com.example.data.model.SubscriberRecord(
+                    id = "SUB_04",
+                    userName = "Hiroshi Tanaka",
+                    email = "hiroshi.tanaka@anime-kyoto.jp",
+                    mobileNumber = "+81 90-1234-5678",
+                    planName = "Manga Storyboard Master",
+                    amountPaid = 3500.0,
+                    currency = CurrencyType.JPY,
+                    paymentGateway = PaymentGateway.CARD,
+                    subscriptionDateMillis = now - (86400000L * 18),
+                    expiryDateString = "Active (Annual)",
+                    isActive = true,
+                    transactionRef = "TXN-SUB6651"
+                ),
+                com.example.data.model.SubscriberRecord(
+                    id = "SUB_05",
+                    userName = "Lucas Moreau",
+                    email = "lucas.moreau@paris-art.fr",
+                    mobileNumber = "+33 6 12 34 56 78",
+                    planName = "European Creator VIP",
+                    amountPaid = 19.99,
+                    currency = CurrencyType.EUR,
+                    paymentGateway = PaymentGateway.BANK_TRANSFER,
+                    subscriptionDateMillis = now - (86400000L * 25),
+                    expiryDateString = "Active (Quarterly)",
+                    isActive = true,
+                    transactionRef = "TXN-SUB5540"
+                )
+            )
+        }
+        return try {
+            val list = mutableListOf<com.example.data.model.SubscriberRecord>()
+            val array = JSONArray(raw)
+            for (i in 0 until array.length()) {
+                val obj = array.getJSONObject(i)
+                list.add(
+                    com.example.data.model.SubscriberRecord(
+                        id = obj.getString("id"),
+                        userName = obj.getString("userName"),
+                        email = obj.getString("email"),
+                        mobileNumber = obj.getString("mobileNumber"),
+                        planName = obj.getString("planName"),
+                        amountPaid = obj.getDouble("amountPaid"),
+                        currency = CurrencyType.valueOf(obj.optString("currency", "INR")),
+                        paymentGateway = PaymentGateway.valueOf(obj.optString("paymentGateway", "OWNER_WALLET_BARCODE")),
+                        subscriptionDateMillis = obj.getLong("subscriptionDateMillis"),
+                        expiryDateString = obj.optString("expiryDateString", "Active"),
+                        isActive = obj.optBoolean("isActive", true),
+                        transactionRef = obj.optString("transactionRef", "TXN-000")
+                    )
+                )
+            }
+            list
+        } catch (_: Exception) {
+            emptyList()
+        }
+    }
+
+    private fun saveSubscribers(subs: List<com.example.data.model.SubscriberRecord>) {
+        try {
+            val array = JSONArray()
+            subs.take(50).forEach { s ->
+                val obj = JSONObject().apply {
+                    put("id", s.id)
+                    put("userName", s.userName)
+                    put("email", s.email)
+                    put("mobileNumber", s.mobileNumber)
+                    put("planName", s.planName)
+                    put("amountPaid", s.amountPaid)
+                    put("currency", s.currency.name)
+                    put("paymentGateway", s.paymentGateway.name)
+                    put("subscriptionDateMillis", s.subscriptionDateMillis)
+                    put("expiryDateString", s.expiryDateString)
+                    put("isActive", s.isActive)
+                    put("transactionRef", s.transactionRef)
+                }
+                array.put(obj)
+            }
+            prefs.edit().putString("subscribers_history_json", array.toString()).apply()
+        } catch (_: Exception) {}
+    }
 }
+

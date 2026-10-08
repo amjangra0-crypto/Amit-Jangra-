@@ -149,3 +149,19 @@ data class CardPaymentDetails(
     val billingCountry: String = "United States",
     val saveCard: Boolean = true
 )
+
+data class SubscriberRecord(
+    val id: String = java.util.UUID.randomUUID().toString(),
+    val userName: String,
+    val email: String,
+    val mobileNumber: String,
+    val planName: String,
+    val amountPaid: Double,
+    val currency: CurrencyType = CurrencyType.INR,
+    val paymentGateway: PaymentGateway = PaymentGateway.OWNER_WALLET_BARCODE,
+    val subscriptionDateMillis: Long = System.currentTimeMillis(),
+    val expiryDateString: String = "Active (Annual)",
+    val isActive: Boolean = true,
+    val transactionRef: String = "TXN-" + java.util.UUID.randomUUID().toString().uppercase().take(8)
+)
+

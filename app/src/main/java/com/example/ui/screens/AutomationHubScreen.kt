@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -26,6 +27,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CheckCircle
@@ -33,6 +35,7 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.CloudUpload
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.ContentPaste
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.GraphicEq
 import androidx.compose.material.icons.filled.Link
 import androidx.compose.material.icons.filled.Lock
@@ -125,6 +128,7 @@ fun AutomationHubScreen(
     val lyriaMusicEngine = remember { LyriaMusicEngine.getInstance(context) }
 
     val connectedChannel by automationManager.connectedChannel.collectAsState()
+    val connectedChannels by automationManager.connectedChannels.collectAsState()
     val webSeriesSchedule by automationManager.webSeriesSchedule.collectAsState()
     val episodesQueue by automationManager.episodesQueue.collectAsState()
     val statusMessage by automationManager.automationStatusMessage.collectAsState()
@@ -543,16 +547,35 @@ fun AutomationHubScreen(
 
         when (activeTab) {
             0 -> {
-                // TAB 0: YouTube Channel Link & Web Series Command Hub
+                // TAB 0: YouTube Multi-Channel Link & Web Series Command Hub
                 ChannelConnectionCard(
-                    connectedChannel = connectedChannel,
+                    connectedChannels = connectedChannels,
+                    activeChannel = connectedChannel,
                     channelUrlInput = channelUrlInput,
                     channelNameInput = channelNameInput,
                     onUrlChange = { channelUrlInput = it },
                     onNameChange = { channelNameInput = it },
                     onSaveChannel = {
-                        automationManager.connectChannelByLink(channelUrlInput, channelNameInput)
-                        Toast.makeText(context, "✅ Channel link connected successfully!", Toast.LENGTH_SHORT).show()
+                        if (channelUrlInput.isNotBlank()) {
+                            automationManager.connectChannelByLink(channelUrlInput, channelNameInput)
+                            Toast.makeText(context, "✅ YouTube channel connected to multi-channel automation!", Toast.LENGTH_SHORT).show()
+                            channelUrlInput = ""
+                            channelNameInput = ""
+                        } else {
+                            Toast.makeText(context, "Please enter a channel link or handle", Toast.LENGTH_SHORT).show()
+                        }
+                    },
+                    onSelectChannel = { channelId ->
+                        automationManager.selectActiveChannel(channelId)
+                        Toast.makeText(context, "▶️ Switched active automation channel", Toast.LENGTH_SHORT).show()
+                    },
+                    onRemoveChannel = { channelId ->
+                        val ok = automationManager.removeYouTubeChannel(channelId)
+                        if (ok) {
+                            Toast.makeText(context, "🗑️ Channel removed from automation pool", Toast.LENGTH_SHORT).show()
+                        } else {
+                            Toast.makeText(context, "Cannot remove the only connected channel", Toast.LENGTH_SHORT).show()
+                        }
                     }
                 )
 
@@ -654,16 +677,20 @@ fun AutomationHubScreen(
 }
 
 /**
- * YouTube Channel Connection Card via Link Copy-Paste
+ * YouTube Multi-Channel Connection & Selection Card
+ * Handles multiple YouTube channels simultaneously with 1-click active targeting
  */
 @Composable
 private fun ChannelConnectionCard(
-    connectedChannel: com.example.data.model.ConnectedChannel,
+    connectedChannels: List<com.example.data.model.ConnectedChannel>,
+    activeChannel: com.example.data.model.ConnectedChannel,
     channelUrlInput: String,
     channelNameInput: String,
     onUrlChange: (String) -> Unit,
     onNameChange: (String) -> Unit,
-    onSaveChannel: () -> Unit
+    onSaveChannel: () -> Unit,
+    onSelectChannel: (String) -> Unit,
+    onRemoveChannel: (String) -> Unit
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -672,6 +699,7 @@ private fun ChannelConnectionCard(
         border = BorderStroke(1.dp, Color(0xFFFF0000).copy(alpha = 0.6f))
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
+            // Header
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -689,48 +717,140 @@ private fun ChannelConnectionCard(
                     }
                     Spacer(modifier = Modifier.width(10.dp))
                     Column {
-                        Text("Connect YouTube Channel Link", color = TextPrimary, fontSize = 14.sp, fontWeight = FontWeight.Bold)
-                        Text("Add your personal channel link and enable auto-upload", color = TextSecondary, fontSize = 11.sp)
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text("Multiple YouTube Channels", color = TextPrimary, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Box(
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(4.dp))
+                                    .background(AnimeGreen.copy(alpha = 0.2f))
+                                    .padding(horizontal = 6.dp, vertical = 2.dp)
+                            ) {
+                                Text("${connectedChannels.size} Channels", color = AnimeGreen, fontSize = 9.sp, fontWeight = FontWeight.Bold)
+                            }
+                        }
+                        Text("Switch active automation target or link new channels", color = TextSecondary, fontSize = 11.sp)
                     }
                 }
 
-                if (connectedChannel.isConnected) {
+                if (activeChannel.isConnected) {
                     Box(
                         modifier = Modifier
                             .clip(RoundedCornerShape(6.dp))
                             .background(AnimeGreen.copy(alpha = 0.2f))
                             .padding(horizontal = 8.dp, vertical = 3.dp)
                     ) {
-                        Text("CONNECTED", color = AnimeGreen, fontSize = 9.sp, fontWeight = FontWeight.ExtraBold)
+                        Text("ACTIVE", color = AnimeGreen, fontSize = 9.sp, fontWeight = FontWeight.ExtraBold)
                     }
                 }
             }
 
             Spacer(modifier = Modifier.height(14.dp))
 
-            // Channel Link Input Field
-            Text("Paste personal channel link here:", color = TextMuted, fontSize = 11.sp)
+            // Section 1: Connected Channels Selector (Multi-Channel Horizontal List)
+            Text(
+                text = "📺 Connected YouTube Channels (Tap to switch target):",
+                color = TextSecondary,
+                fontSize = 11.sp,
+                fontWeight = FontWeight.SemiBold
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+
+            LazyRow(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                items(connectedChannels, key = { it.id }) { channel ->
+                    val isSelected = channel.id == activeChannel.id
+                    Card(
+                        modifier = Modifier
+                            .width(220.dp)
+                            .clickable { onSelectChannel(channel.id) }
+                            .testTag("channel_item_${channel.id}"),
+                        colors = CardDefaults.cardColors(
+                            containerColor = if (isSelected) Color(0xFFFF0000).copy(alpha = 0.18f) else AnimeSurfaceVariant
+                        ),
+                        shape = RoundedCornerShape(12.dp),
+                        border = BorderStroke(1.5.dp, if (isSelected) Color(0xFFFF0000) else Color.Transparent)
+                    ) {
+                        Column(modifier = Modifier.padding(10.dp)) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .clip(RoundedCornerShape(4.dp))
+                                        .background(if (isSelected) Color(0xFFFF0000) else TextMuted.copy(alpha = 0.3f))
+                                        .padding(horizontal = 6.dp, vertical = 2.dp)
+                                ) {
+                                    Text(
+                                        text = if (isSelected) "▶ TARGET" else "IDLE",
+                                        color = Color.White,
+                                        fontSize = 9.sp,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                }
+
+                                if (connectedChannels.size > 1) {
+                                    IconButton(
+                                        onClick = { onRemoveChannel(channel.id) },
+                                        modifier = Modifier.size(20.dp)
+                                    ) {
+                                        Icon(Icons.Default.Delete, contentDescription = "Remove Channel", tint = TextMuted, modifier = Modifier.size(14.dp))
+                                    }
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.height(6.dp))
+                            Text(
+                                text = channel.channelName,
+                                color = if (isSelected) AnimeGold else TextPrimary,
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Bold,
+                                maxLines = 1
+                            )
+                            Text(
+                                text = "${channel.channelHandle} • ${channel.subscriberCount}",
+                                color = TextSecondary,
+                                fontSize = 10.sp,
+                                maxLines = 1
+                            )
+                        }
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(14.dp))
+
+            // Section 2: Link / Add New Channel to Network
+            Text(
+                text = "➕ Add Another YouTube Channel:",
+                color = AnimeCyan,
+                fontSize = 11.sp,
+                fontWeight = FontWeight.Bold
+            )
             Spacer(modifier = Modifier.height(6.dp))
+
+            // Channel Link Input Field
             OutlinedTextField(
                 value = channelUrlInput,
                 onValueChange = onUrlChange,
-                placeholder = { Text("उदा: https://youtube.com/@MyAnimeChannel", color = TextMuted, fontSize = 12.sp) },
+                placeholder = { Text("e.g. https://youtube.com/@MyAnimeChannel or @ChannelHandle", color = TextMuted, fontSize = 11.sp) },
                 leadingIcon = {
                     Icon(Icons.Default.Link, contentDescription = null, tint = Color(0xFFFF0000), modifier = Modifier.size(18.dp))
                 },
                 trailingIcon = {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        IconButton(onClick = {
-                            if (channelUrlInput.isNotBlank()) {
-                                onSaveChannel()
-                            }
-                        }) {
-                            Icon(Icons.Default.Search, contentDescription = "Search & Connect", tint = Color(0xFFFF0000), modifier = Modifier.size(18.dp))
+                        IconButton(onClick = onSaveChannel) {
+                            Icon(Icons.Default.Add, contentDescription = "Add Channel", tint = Color(0xFFFF0000), modifier = Modifier.size(18.dp))
                         }
                         IconButton(onClick = {
                             onUrlChange("https://youtube.com/@AmanAnimeStudioOfficial")
+                            onNameChange("Aman Anime Studio Official")
                         }) {
-                            Icon(Icons.Default.ContentPaste, contentDescription = "Paste", tint = AnimeCyan, modifier = Modifier.size(18.dp))
+                            Icon(Icons.Default.ContentPaste, contentDescription = "Paste Preset", tint = AnimeCyan, modifier = Modifier.size(18.dp))
                         }
                     }
                 },
@@ -744,45 +864,44 @@ private fun ChannelConnectionCard(
                 shape = RoundedCornerShape(10.dp)
             )
 
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // Channel Name Input & Add Button
             Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 4.dp),
-                horizontalArrangement = Arrangement.End
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
+                OutlinedTextField(
+                    value = channelNameInput,
+                    onValueChange = onNameChange,
+                    placeholder = { Text("Display Name (e.g. Shonen Anime TV)", color = TextMuted, fontSize = 11.sp) },
+                    singleLine = true,
+                    modifier = Modifier.weight(1f).testTag("youtube_channel_name_input"),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = AnimeCyan,
+                        focusedTextColor = TextPrimary,
+                        unfocusedTextColor = TextPrimary
+                    ),
+                    shape = RoundedCornerShape(10.dp)
+                )
+
                 Button(
-                    onClick = { onSaveChannel() },
+                    onClick = onSaveChannel,
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF0000)),
-                    shape = RoundedCornerShape(8.dp),
-                    contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 10.dp, vertical = 4.dp)
+                    shape = RoundedCornerShape(10.dp),
+                    contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 14.dp, vertical = 10.dp),
+                    modifier = Modifier.testTag("save_channel_link_btn")
                 ) {
-                    Icon(Icons.Default.Search, contentDescription = null, tint = Color.White, modifier = Modifier.size(14.dp))
+                    Icon(Icons.Default.Add, contentDescription = null, tint = Color.White, modifier = Modifier.size(14.dp))
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text("Search & Link Channel", color = Color.White, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                    Text("Add Channel", color = Color.White, fontSize = 11.sp, fontWeight = FontWeight.Bold)
                 }
             }
 
             Spacer(modifier = Modifier.height(10.dp))
 
-            // Channel Name Input
-            Text("Channel Display Name:", color = TextMuted, fontSize = 11.sp)
-            Spacer(modifier = Modifier.height(6.dp))
-            OutlinedTextField(
-                value = channelNameInput,
-                onValueChange = onNameChange,
-                singleLine = true,
-                modifier = Modifier.fillMaxWidth().testTag("youtube_channel_name_input"),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = AnimeCyan,
-                    focusedTextColor = TextPrimary,
-                    unfocusedTextColor = TextPrimary
-                ),
-                shape = RoundedCornerShape(10.dp)
-            )
-
-            Spacer(modifier = Modifier.height(14.dp))
-
-            // Connected Channel Status Summary
+            // Active Target Channel Banner
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -793,21 +912,19 @@ private fun ChannelConnectionCard(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Column {
-                    Text(connectedChannel.channelName, color = AnimeGold, fontSize = 12.sp, fontWeight = FontWeight.Bold)
-                    Text("${connectedChannel.channelHandle} • ${connectedChannel.subscriberCount}", color = TextSecondary, fontSize = 10.sp)
+                    Text(
+                        text = "Current Active Automation Channel: ${activeChannel.channelName}",
+                        color = AnimeGold,
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Text(
+                        text = "${activeChannel.channelHandle} • ${activeChannel.subscriberCount} • Web Series Schedule Linked",
+                        color = TextSecondary,
+                        fontSize = 10.sp
+                    )
                 }
-
-                Button(
-                    onClick = onSaveChannel,
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF0000)),
-                    shape = RoundedCornerShape(8.dp),
-                    contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 12.dp, vertical = 6.dp),
-                    modifier = Modifier.testTag("save_channel_link_btn")
-                ) {
-                    Icon(Icons.Default.Check, contentDescription = null, tint = Color.White, modifier = Modifier.size(14.dp))
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text("Save Channel", color = Color.White, fontSize = 11.sp, fontWeight = FontWeight.Bold)
-                }
+                Icon(Icons.Default.CheckCircle, contentDescription = null, tint = AnimeGreen, modifier = Modifier.size(18.dp))
             }
         }
     }

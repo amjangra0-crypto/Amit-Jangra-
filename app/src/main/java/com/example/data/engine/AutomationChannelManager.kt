@@ -36,7 +36,12 @@ class AutomationChannelManager private constructor(private val context: Context)
 
     private val scope = CoroutineScope(Dispatchers.Default + SupervisorJob())
 
-    private val _connectedChannel = MutableStateFlow(loadChannel())
+    private val _connectedChannels = MutableStateFlow(loadChannels())
+    val connectedChannels: StateFlow<List<ConnectedChannel>> = _connectedChannels.asStateFlow()
+
+    private val _connectedChannel = MutableStateFlow(
+        _connectedChannels.value.firstOrNull() ?: loadChannel()
+    )
     val connectedChannel: StateFlow<ConnectedChannel> = _connectedChannel.asStateFlow()
 
     private val _webSeriesSchedule = MutableStateFlow(loadWebSeriesSchedule())
@@ -45,7 +50,7 @@ class AutomationChannelManager private constructor(private val context: Context)
     private val _episodesQueue = MutableStateFlow(loadInitialQueue())
     val episodesQueue: StateFlow<List<AutomatedEpisode>> = _episodesQueue.asStateFlow()
 
-    private val _automationStatusMessage = MutableStateFlow("ऑटोमेशन सक्रिय: YouTube चैनल लिंक जुड़ा हुआ है।")
+    private val _automationStatusMessage = MutableStateFlow("ऑटोमेशन सक्रिय: मल्टीपल YouTube चैनल ऑटोमेशन तैयार है।")
     val automationStatusMessage: StateFlow<String> = _automationStatusMessage.asStateFlow()
 
     companion object {
@@ -63,6 +68,87 @@ class AutomationChannelManager private constructor(private val context: Context)
         }
     }
 
+    private fun loadChannels(): List<ConnectedChannel> {
+        val raw = prefs.getString("connected_channels_json", null)
+        if (raw.isNullOrBlank()) {
+            return listOf(
+                ConnectedChannel(
+                    id = "yt_chan_1",
+                    platform = ChannelPlatform.YOUTUBE,
+                    channelUrl = "https://youtube.com/@AnimeStudioCreator",
+                    channelHandle = "@AnimeStudioCreator",
+                    channelName = "Anime Studio Official",
+                    subscriberCount = "24.8K Subscribers",
+                    isConnected = true
+                ),
+                ConnectedChannel(
+                    id = "yt_chan_2",
+                    platform = ChannelPlatform.YOUTUBE,
+                    channelUrl = "https://youtube.com/@ShonenBattlesTV",
+                    channelHandle = "@ShonenBattlesTV",
+                    channelName = "Shonen Battles & Lore TV",
+                    subscriberCount = "89.2K Subscribers",
+                    isConnected = true
+                ),
+                ConnectedChannel(
+                    id = "yt_chan_3",
+                    platform = ChannelPlatform.YOUTUBE,
+                    channelUrl = "https://youtube.com/@CyberKyotoAnime",
+                    channelHandle = "@CyberKyotoAnime",
+                    channelName = "Cyber Kyoto 2099 Sci-Fi",
+                    subscriberCount = "14.5K Subscribers",
+                    isConnected = true
+                )
+            )
+        }
+        return try {
+            val list = mutableListOf<ConnectedChannel>()
+            val array = org.json.JSONArray(raw)
+            for (i in 0 until array.length()) {
+                val obj = array.getJSONObject(i)
+                list.add(
+                    ConnectedChannel(
+                        id = obj.getString("id"),
+                        platform = ChannelPlatform.valueOf(obj.optString("platform", "YOUTUBE")),
+                        channelUrl = obj.getString("channelUrl"),
+                        channelHandle = obj.getString("channelHandle"),
+                        channelName = obj.getString("channelName"),
+                        subscriberCount = obj.optString("subscriberCount", "10K Subscribers"),
+                        isConnected = obj.optBoolean("isConnected", true),
+                        defaultCategory = obj.optString("defaultCategory", "Animation / Film"),
+                        defaultTags = obj.optString("defaultTags", "anime, ai video"),
+                        connectedAt = obj.optLong("connectedAt", System.currentTimeMillis())
+                    )
+                )
+            }
+            if (list.isEmpty()) listOf(loadChannel()) else list
+        } catch (_: Exception) {
+            listOf(loadChannel())
+        }
+    }
+
+    private fun saveChannels(channels: List<ConnectedChannel>) {
+        try {
+            val array = org.json.JSONArray()
+            channels.forEach { c ->
+                val obj = org.json.JSONObject().apply {
+                    put("id", c.id)
+                    put("platform", c.platform.name)
+                    put("channelUrl", c.channelUrl)
+                    put("channelHandle", c.channelHandle)
+                    put("channelName", c.channelName)
+                    put("subscriberCount", c.subscriberCount)
+                    put("isConnected", c.isConnected)
+                    put("defaultCategory", c.defaultCategory)
+                    put("defaultTags", c.defaultTags)
+                    put("connectedAt", c.connectedAt)
+                }
+                array.put(obj)
+            }
+            prefs.edit().putString("connected_channels_json", array.toString()).apply()
+        } catch (_: Exception) {}
+    }
+
     private fun loadChannel(): ConnectedChannel {
         val url = prefs.getString("channel_url", "https://youtube.com/@AnimeStudioCreator") ?: "https://youtube.com/@AnimeStudioCreator"
         val name = prefs.getString("channel_name", "My Anime YouTube Channel") ?: "My Anime YouTube Channel"
@@ -78,6 +164,7 @@ class AutomationChannelManager private constructor(private val context: Context)
             isConnected = isConnected
         )
     }
+
 
     private fun loadWebSeriesSchedule(): WebSeriesSchedule {
         val title = prefs.getString("series_title", "The Cyber Shinobi 2099") ?: "The Cyber Shinobi 2099"
@@ -147,15 +234,89 @@ class AutomationChannelManager private constructor(private val context: Context)
             .putBoolean("channel_connected", true)
             .apply()
 
-        _connectedChannel.value = _connectedChannel.value.copy(
+        val newOrUpdatedChannel = ConnectedChannel(
+            id = "yt_" + System.currentTimeMillis().toString().takeLast(6),
             channelUrl = cleanUrl,
             channelName = channelName,
             channelHandle = extractedHandle,
+            subscriberCount = "New Channel",
             isConnected = true
         )
 
+        val updatedList = listOf(newOrUpdatedChannel) + _connectedChannels.value.filter { it.channelHandle != extractedHandle }
+        _connectedChannels.value = updatedList
+        saveChannels(updatedList)
+
+        _connectedChannel.value = newOrUpdatedChannel
         _automationStatusMessage.value = "✅ ${platform.displayName} चैनल लिंक सफलतापूर्वक जुड़ा: $extractedHandle"
     }
+
+    /**
+     * Switch the currently active YouTube Channel for publishing and automation
+     */
+    fun selectActiveChannel(channelId: String) {
+        val found = _connectedChannels.value.firstOrNull { it.id == channelId } ?: return
+        _connectedChannel.value = found
+        prefs.edit()
+            .putString("channel_url", found.channelUrl)
+            .putString("channel_name", found.channelName)
+            .putString("channel_handle", found.channelHandle)
+            .apply()
+        _automationStatusMessage.value = "▶️ सक्रिय YouTube चैनल बदला गया: ${found.channelName} (${found.channelHandle})"
+    }
+
+    /**
+     * Add a brand new YouTube Channel to the multi-channel network
+     */
+    fun addYouTubeChannel(
+        channelName: String,
+        channelHandleOrUrl: String,
+        subscribers: String = "0 Subscribers",
+        category: String = "Animation / Film"
+    ): ConnectedChannel {
+        val cleanInput = channelHandleOrUrl.trim()
+        val handle = if (cleanInput.startsWith("@")) cleanInput
+        else if (cleanInput.contains("@")) "@" + cleanInput.substringAfter("@").substringBefore("/")
+        else "@$cleanInput"
+        val url = if (cleanInput.startsWith("http")) cleanInput else "https://youtube.com/$handle"
+
+        val newChannel = ConnectedChannel(
+            id = "yt_" + System.currentTimeMillis(),
+            channelName = channelName.ifBlank { "YouTube Channel ($handle)" },
+            channelHandle = handle,
+            channelUrl = url,
+            subscriberCount = subscribers.ifBlank { "New Channel" },
+            defaultCategory = category,
+            isConnected = true,
+            connectedAt = System.currentTimeMillis()
+        )
+
+        val updated = listOf(newChannel) + _connectedChannels.value
+        _connectedChannels.value = updated
+        saveChannels(updated)
+        _connectedChannel.value = newChannel
+        _automationStatusMessage.value = "🎉 नया YouTube चैनल जोड़ा गया: ${newChannel.channelName} ($handle)"
+        return newChannel
+    }
+
+    /**
+     * Remove a channel from the multi-channel network
+     */
+    fun removeYouTubeChannel(channelId: String): Boolean {
+        if (_connectedChannels.value.size <= 1) {
+            _automationStatusMessage.value = "⚠️ कम से कम एक YouTube चैनल जुड़ा होना आवश्यक है।"
+            return false
+        }
+        val updated = _connectedChannels.value.filter { it.id != channelId }
+        _connectedChannels.value = updated
+        saveChannels(updated)
+        if (_connectedChannel.value.id == channelId) {
+            _connectedChannel.value = updated.first()
+        }
+        _automationStatusMessage.value = "🗑️ YouTube चैनल हटाया गया।"
+        return true
+    }
+
 
     /**
      * Configure Web Series automation settings based on user command (e.g. 1, 2, or 3 episodes per day)
