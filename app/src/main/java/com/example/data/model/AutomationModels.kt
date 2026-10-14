@@ -6,11 +6,13 @@ package com.example.data.model
 enum class ChannelPlatform(val id: String, val displayName: String, val iconEmoji: String, val colorHex: String) {
     YOUTUBE("youtube", "YouTube", "▶️", "#FF0000"),
     INSTAGRAM("instagram", "Instagram Reels", "📸", "#E1306C"),
+    FACEBOOK("facebook", "Facebook Video & Reels", "📘", "#1877F2"),
     TIKTOK("tiktok", "TikTok", "🎵", "#00F2FE")
 }
 
 enum class UploadPrivacyStatus(val id: String, val title: String, val description: String) {
     PUBLIC("public", "सार्वजनिक (Public)", "Upload directly to public audience"),
+    DRAFT_PRIVATE("draft", "ड्राफ्ट / प्राइवेट (Draft / Private)", "Save as Draft / Private first for safety before publishing"),
     UNLISTED("unlisted", "अनलिस्टेड (Unlisted)", "Visible only via link for testing"),
     SCHEDULED("scheduled", "शेड्यूल (Scheduled)", "Publish automatically at set time")
 }
@@ -28,7 +30,8 @@ data class ConnectedChannel(
     val defaultCategory: String = "Animation / Film",
     val defaultTags: String = "anime, animation, ai anime, shonen, webtoon, manga",
     val autoUploadAfterReview: Boolean = true,
-    val autoPublishTimerMinutes: Int = 120, // 2 hours fallback if no review given
+    val requireOwnerVerificationBeforeUpload: Boolean = true, // When true: won't upload until Owner verifies / gives permission
+    val autoPublishTimerMinutes: Int = 120, // fallback if verification toggle is disabled
     val connectedAt: Long = System.currentTimeMillis()
 )
 
@@ -37,7 +40,8 @@ enum class EpisodeReviewStatus(val id: String, val label: String, val emoji: Str
     PENDING_REVIEW("pending_review", "रिव्यू की प्रतीक्षा (Pending Review)", "⏳"),
     APPROVED("approved", "ग्रीन सिग्नल मिला (Approved)", "🟢"),
     SCHEDULED("scheduled", "शेड्यूल टाइम पर अपलोड होगा", "⏰"),
-    UPLOADED("uploaded", "YouTube पर अपलोड हो गया", "✅"),
+    UPLOADED("uploaded", "प्लेटफॉर्म पर अपलोड हो गया", "✅"),
+    DRAFT_SAVED("draft_saved", "ड्राफ्ट में सेव हुआ (Draft Saved)", "📝"),
     REJECTED("rejected", "अस्वीकृत (Rejected)", "❌")
 }
 
@@ -53,7 +57,9 @@ data class WebSeriesSchedule(
     val totalEpisodesPlanned: Int = 12,
     val currentEpisodeIndex: Int = 1,
     val isDailyAutomationActive: Boolean = true,
-    val autoPublishIfNoReview: Boolean = true,
+    val requireOwnerVerificationBeforeUpload: Boolean = true, // When active: stops auto upload until owner verifies
+    val defaultUploadPrivacy: UploadPrivacyStatus = UploadPrivacyStatus.PUBLIC, // Public vs Draft / Private
+    val autoPublishIfNoReview: Boolean = false,
     val fallbackTimerHours: Int = 2,
     val targetChannelUrl: String = "https://youtube.com/@AnimeStudioCreator",
     val promptLoreBible: String = "Neo Kyoto year 2099. Cyber samurai warriors battle corrupt neon mega-corporations using enchanted plasma katanas.",
@@ -75,6 +81,7 @@ data class AutomatedEpisode(
     val reviewDeadlineMillis: Long = System.currentTimeMillis() + (2 * 60 * 60 * 1000L), // 2 hours
     val uploadedPlatform: ChannelPlatform = ChannelPlatform.YOUTUBE,
     val uploadedUrl: String = "",
+    val uploadPrivacy: UploadPrivacyStatus = UploadPrivacyStatus.PUBLIC,
     val viewCountEstimate: String = "Just Published",
     val userReviewNote: String = "",
     val isGreenSignalGiven: Boolean = false

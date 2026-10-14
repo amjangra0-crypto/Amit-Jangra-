@@ -58,6 +58,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -99,12 +102,14 @@ import com.example.ui.AnimeViewModel
 import com.example.ui.components.AutomationDirectorSection
 import com.example.ui.components.DownloadProjectDialog
 import com.example.ui.components.StudioHistoryDialog
+import com.example.ui.components.StudioTrendAgentModal
 import com.example.ui.components.ResourceHelpers
 import com.example.ui.components.StudioSceneVideoPlayer
 import com.example.ui.components.UnifiedStudioCreationHub
 import com.example.ui.components.WorkflowCardsSection
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Psychology
 import com.example.ui.components.WorkflowInputBox
 import com.example.ui.components.WorkflowInteractiveDialog
 import com.example.ui.components.WorkflowSelectorPills
@@ -122,8 +127,10 @@ import com.example.ui.theme.TextSecondary
 @Composable
 fun StudioCreateScreen(viewModel: AnimeViewModel) {
     val state by viewModel.uiState.collectAsState()
+    val currentUser by viewModel.currentUser.collectAsState()
     val context = LocalContext.current
     val scrollState = rememberScrollState()
+    var showStudioTrendAgentModal by remember { mutableStateOf(false) }
 
     val photoPickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickVisualMedia()
@@ -272,6 +279,34 @@ fun StudioCreateScreen(viewModel: AnimeViewModel) {
                 Icon(Icons.Default.FileDownload, contentDescription = null, tint = AnimeGold, modifier = Modifier.size(16.dp))
                 Spacer(modifier = Modifier.width(4.dp))
                 Text(AppLocaleStrings.get("quick_download_project", state.selectedLanguage), color = AnimeGold, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+            }
+        }
+
+        if (currentUser.isOwner) {
+            Spacer(modifier = Modifier.height(6.dp))
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp)
+            ) {
+                OutlinedButton(
+                    onClick = { showStudioTrendAgentModal = true },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(38.dp)
+                        .testTag("open_studio_trend_agent_modal_btn"),
+                    shape = RoundedCornerShape(10.dp),
+                    border = BorderStroke(1.dp, Brush.horizontalGradient(listOf(AnimeCyan, AnimePurple, AnimeGold)))
+                ) {
+                    Icon(Icons.Default.Psychology, contentDescription = null, tint = AnimeGold, modifier = Modifier.size(16.dp))
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        text = "🌐 TrendPulse AI Agent (Sync Viral & Future Trends)",
+                        color = AnimeGold,
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
             }
         }
 
@@ -1397,6 +1432,15 @@ fun StudioCreateScreen(viewModel: AnimeViewModel) {
     // Fliki Workflow Interactive Tool Dialog
     if (state.showWorkflowInteractiveModal) {
         WorkflowInteractiveDialog(viewModel = viewModel)
+    }
+
+    // TrendPulse AI Agent Studio Sync Dialog
+    if (showStudioTrendAgentModal) {
+        StudioTrendAgentModal(
+            viewModel = viewModel,
+            lang = state.selectedLanguage,
+            onDismiss = { showStudioTrendAgentModal = false }
+        )
     }
 }
 }

@@ -34,6 +34,13 @@ class AuthAndWalletRepository(private val context: Context) {
     fun getOwnerPassword(): String = prefs.getString("custom_owner_password", "9999") ?: "9999"
     fun getOwnerMobile(): String = prefs.getString("custom_owner_mobile", OWNER_PHONE) ?: OWNER_PHONE
     fun getOwnerAdminUid(): String = prefs.getString("custom_owner_uid", OWNER_UID) ?: OWNER_UID
+    fun getOwnerWalletId(): String = prefs.getString("custom_owner_wallet_id", com.example.data.model.OwnerWalletConstants.OWNER_WALLET_ID) ?: com.example.data.model.OwnerWalletConstants.OWNER_WALLET_ID
+
+    fun updateOwnerWalletId(newWalletId: String): Boolean {
+        val clean = newWalletId.trim().ifBlank { com.example.data.model.OwnerWalletConstants.OWNER_WALLET_ID }
+        prefs.edit().putString("custom_owner_wallet_id", clean).apply()
+        return true
+    }
 
     private val _currentUser = MutableStateFlow(loadUserProfile())
     val currentUser: StateFlow<UserProfile> = _currentUser.asStateFlow()

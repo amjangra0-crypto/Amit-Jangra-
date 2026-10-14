@@ -72,13 +72,16 @@ class AutomationChannelManager private constructor(private val context: Context)
         val raw = prefs.getString("connected_channels_json", null)
         if (raw.isNullOrBlank()) {
             return listOf(
+                // YouTube Channels
                 ConnectedChannel(
                     id = "yt_chan_1",
                     platform = ChannelPlatform.YOUTUBE,
                     channelUrl = "https://youtube.com/@AnimeStudioCreator",
                     channelHandle = "@AnimeStudioCreator",
-                    channelName = "Anime Studio Official",
+                    channelName = "Anime Studio Official (YouTube)",
                     subscriberCount = "24.8K Subscribers",
+                    defaultPrivacy = UploadPrivacyStatus.PUBLIC,
+                    requireOwnerVerificationBeforeUpload = true,
                     isConnected = true
                 ),
                 ConnectedChannel(
@@ -86,17 +89,56 @@ class AutomationChannelManager private constructor(private val context: Context)
                     platform = ChannelPlatform.YOUTUBE,
                     channelUrl = "https://youtube.com/@ShonenBattlesTV",
                     channelHandle = "@ShonenBattlesTV",
-                    channelName = "Shonen Battles & Lore TV",
+                    channelName = "Shonen Battles TV (YouTube)",
                     subscriberCount = "89.2K Subscribers",
+                    defaultPrivacy = UploadPrivacyStatus.DRAFT_PRIVATE,
+                    requireOwnerVerificationBeforeUpload = true,
+                    isConnected = true
+                ),
+                // Instagram Accounts
+                ConnectedChannel(
+                    id = "ig_acc_1",
+                    platform = ChannelPlatform.INSTAGRAM,
+                    channelUrl = "https://instagram.com/animestudio.ai",
+                    channelHandle = "@animestudio.ai",
+                    channelName = "Anime Studio Reels (Instagram)",
+                    subscriberCount = "45.1K Followers",
+                    defaultPrivacy = UploadPrivacyStatus.PUBLIC,
+                    requireOwnerVerificationBeforeUpload = true,
                     isConnected = true
                 ),
                 ConnectedChannel(
-                    id = "yt_chan_3",
-                    platform = ChannelPlatform.YOUTUBE,
-                    channelUrl = "https://youtube.com/@CyberKyotoAnime",
-                    channelHandle = "@CyberKyotoAnime",
-                    channelName = "Cyber Kyoto 2099 Sci-Fi",
-                    subscriberCount = "14.5K Subscribers",
+                    id = "ig_acc_2",
+                    platform = ChannelPlatform.INSTAGRAM,
+                    channelUrl = "https://instagram.com/cyberpunk.anime.reels",
+                    channelHandle = "@cyberpunk.anime.reels",
+                    channelName = "Cyberpunk Anime Reels (Instagram)",
+                    subscriberCount = "18.3K Followers",
+                    defaultPrivacy = UploadPrivacyStatus.DRAFT_PRIVATE,
+                    requireOwnerVerificationBeforeUpload = true,
+                    isConnected = true
+                ),
+                // Facebook Accounts & Pages
+                ConnectedChannel(
+                    id = "fb_page_1",
+                    platform = ChannelPlatform.FACEBOOK,
+                    channelUrl = "https://facebook.com/AnimeStudioCreators",
+                    channelHandle = "@AnimeStudioCreators",
+                    channelName = "Anime Studio Creators (Facebook Page)",
+                    subscriberCount = "32.5K Followers",
+                    defaultPrivacy = UploadPrivacyStatus.PUBLIC,
+                    requireOwnerVerificationBeforeUpload = true,
+                    isConnected = true
+                ),
+                ConnectedChannel(
+                    id = "fb_page_2",
+                    platform = ChannelPlatform.FACEBOOK,
+                    channelUrl = "https://facebook.com/ShonenAnimeCommunity",
+                    channelHandle = "@ShonenAnimeCommunity",
+                    channelName = "Shonen Anime Community (Facebook)",
+                    subscriberCount = "15.7K Members",
+                    defaultPrivacy = UploadPrivacyStatus.DRAFT_PRIVATE,
+                    requireOwnerVerificationBeforeUpload = true,
                     isConnected = true
                 )
             )
@@ -109,14 +151,24 @@ class AutomationChannelManager private constructor(private val context: Context)
                 list.add(
                     ConnectedChannel(
                         id = obj.getString("id"),
-                        platform = ChannelPlatform.valueOf(obj.optString("platform", "YOUTUBE")),
+                        platform = try {
+                            ChannelPlatform.valueOf(obj.optString("platform", "YOUTUBE"))
+                        } catch (_: Exception) {
+                            ChannelPlatform.YOUTUBE
+                        },
                         channelUrl = obj.getString("channelUrl"),
                         channelHandle = obj.getString("channelHandle"),
                         channelName = obj.getString("channelName"),
                         subscriberCount = obj.optString("subscriberCount", "10K Subscribers"),
                         isConnected = obj.optBoolean("isConnected", true),
+                        defaultPrivacy = try {
+                            UploadPrivacyStatus.valueOf(obj.optString("defaultPrivacy", "PUBLIC"))
+                        } catch (_: Exception) {
+                            UploadPrivacyStatus.PUBLIC
+                        },
                         defaultCategory = obj.optString("defaultCategory", "Animation / Film"),
                         defaultTags = obj.optString("defaultTags", "anime, ai video"),
+                        requireOwnerVerificationBeforeUpload = obj.optBoolean("requireOwnerVerificationBeforeUpload", true),
                         connectedAt = obj.optLong("connectedAt", System.currentTimeMillis())
                     )
                 )
@@ -139,8 +191,10 @@ class AutomationChannelManager private constructor(private val context: Context)
                     put("channelName", c.channelName)
                     put("subscriberCount", c.subscriberCount)
                     put("isConnected", c.isConnected)
+                    put("defaultPrivacy", c.defaultPrivacy.name)
                     put("defaultCategory", c.defaultCategory)
                     put("defaultTags", c.defaultTags)
+                    put("requireOwnerVerificationBeforeUpload", c.requireOwnerVerificationBeforeUpload)
                     put("connectedAt", c.connectedAt)
                 }
                 array.put(obj)
@@ -151,7 +205,7 @@ class AutomationChannelManager private constructor(private val context: Context)
 
     private fun loadChannel(): ConnectedChannel {
         val url = prefs.getString("channel_url", "https://youtube.com/@AnimeStudioCreator") ?: "https://youtube.com/@AnimeStudioCreator"
-        val name = prefs.getString("channel_name", "My Anime YouTube Channel") ?: "My Anime YouTube Channel"
+        val name = prefs.getString("channel_name", "Anime Studio Official") ?: "Anime Studio Official"
         val handle = prefs.getString("channel_handle", "@AnimeStudioCreator") ?: "@AnimeStudioCreator"
         val subs = prefs.getString("channel_subs", "24.8K Subscribers") ?: "24.8K Subscribers"
         val isConnected = prefs.getBoolean("channel_connected", true)
@@ -165,18 +219,26 @@ class AutomationChannelManager private constructor(private val context: Context)
         )
     }
 
-
     private fun loadWebSeriesSchedule(): WebSeriesSchedule {
         val title = prefs.getString("series_title", "The Cyber Shinobi 2099") ?: "The Cyber Shinobi 2099"
         val epCount = prefs.getInt("episodes_per_day", 1)
         val targetChannel = prefs.getString("channel_url", "https://youtube.com/@AnimeStudioCreator") ?: "https://youtube.com/@AnimeStudioCreator"
-        val autoPub = prefs.getBoolean("auto_publish_fallback", true)
+        val autoPub = prefs.getBoolean("auto_publish_fallback", false)
         val fallbackHours = prefs.getInt("fallback_hours", 2)
+        val requireVerify = prefs.getBoolean("require_owner_verification", true)
+        val defaultPrivacyStr = prefs.getString("default_upload_privacy", "PUBLIC") ?: "PUBLIC"
+        val privacy = try {
+            UploadPrivacyStatus.valueOf(defaultPrivacyStr)
+        } catch (_: Exception) {
+            UploadPrivacyStatus.PUBLIC
+        }
 
         return WebSeriesSchedule(
             seriesTitle = title,
             episodesPerDay = epCount,
             targetChannelUrl = targetChannel,
+            requireOwnerVerificationBeforeUpload = requireVerify,
+            defaultUploadPrivacy = privacy,
             autoPublishIfNoReview = autoPub,
             fallbackTimerHours = fallbackHours
         )
@@ -252,7 +314,7 @@ class AutomationChannelManager private constructor(private val context: Context)
     }
 
     /**
-     * Switch the currently active YouTube Channel for publishing and automation
+     * Switch the currently active Account/Channel for publishing and automation
      */
     fun selectActiveChannel(channelId: String) {
         val found = _connectedChannels.value.firstOrNull { it.id == channelId } ?: return
@@ -262,31 +324,41 @@ class AutomationChannelManager private constructor(private val context: Context)
             .putString("channel_name", found.channelName)
             .putString("channel_handle", found.channelHandle)
             .apply()
-        _automationStatusMessage.value = "▶️ सक्रिय YouTube चैनल बदला गया: ${found.channelName} (${found.channelHandle})"
+        _automationStatusMessage.value = "▶️ सक्रिय अकाउंट बदला गया: ${found.platform.displayName} • ${found.channelName} (${found.channelHandle})"
     }
 
     /**
-     * Add a brand new YouTube Channel to the multi-channel network
+     * Add a brand new YouTube Channel, Instagram Account, or Facebook Page to the multi-channel network
      */
-    fun addYouTubeChannel(
+    fun addChannel(
         channelName: String,
         channelHandleOrUrl: String,
-        subscribers: String = "0 Subscribers",
+        platform: ChannelPlatform = ChannelPlatform.YOUTUBE,
+        defaultPrivacy: UploadPrivacyStatus = UploadPrivacyStatus.PUBLIC,
+        subscribers: String = "10K Followers",
         category: String = "Animation / Film"
     ): ConnectedChannel {
         val cleanInput = channelHandleOrUrl.trim()
         val handle = if (cleanInput.startsWith("@")) cleanInput
         else if (cleanInput.contains("@")) "@" + cleanInput.substringAfter("@").substringBefore("/")
         else "@$cleanInput"
-        val url = if (cleanInput.startsWith("http")) cleanInput else "https://youtube.com/$handle"
+        val url = if (cleanInput.startsWith("http")) cleanInput else when (platform) {
+            ChannelPlatform.YOUTUBE -> "https://youtube.com/$handle"
+            ChannelPlatform.INSTAGRAM -> "https://instagram.com/${handle.removePrefix("@")}"
+            ChannelPlatform.FACEBOOK -> "https://facebook.com/${handle.removePrefix("@")}"
+            ChannelPlatform.TIKTOK -> "https://tiktok.com/$handle"
+        }
 
         val newChannel = ConnectedChannel(
-            id = "yt_" + System.currentTimeMillis(),
-            channelName = channelName.ifBlank { "YouTube Channel ($handle)" },
+            id = "${platform.id}_" + System.currentTimeMillis(),
+            platform = platform,
+            channelName = channelName.ifBlank { "${platform.displayName} ($handle)" },
             channelHandle = handle,
             channelUrl = url,
-            subscriberCount = subscribers.ifBlank { "New Channel" },
+            subscriberCount = subscribers.ifBlank { "Connected Account" },
+            defaultPrivacy = defaultPrivacy,
             defaultCategory = category,
+            requireOwnerVerificationBeforeUpload = true,
             isConnected = true,
             connectedAt = System.currentTimeMillis()
         )
@@ -295,16 +367,25 @@ class AutomationChannelManager private constructor(private val context: Context)
         _connectedChannels.value = updated
         saveChannels(updated)
         _connectedChannel.value = newChannel
-        _automationStatusMessage.value = "🎉 नया YouTube चैनल जोड़ा गया: ${newChannel.channelName} ($handle)"
+        _automationStatusMessage.value = "🎉 नया ${platform.displayName} अकाउंट जोड़ा गया: ${newChannel.channelName} ($handle)"
         return newChannel
     }
 
+    fun addYouTubeChannel(
+        channelName: String,
+        channelHandleOrUrl: String,
+        subscribers: String = "0 Subscribers",
+        category: String = "Animation / Film"
+    ): ConnectedChannel {
+        return addChannel(channelName, channelHandleOrUrl, ChannelPlatform.YOUTUBE, UploadPrivacyStatus.PUBLIC, subscribers, category)
+    }
+
     /**
-     * Remove a channel from the multi-channel network
+     * Remove a channel/account from the multi-channel network
      */
-    fun removeYouTubeChannel(channelId: String): Boolean {
+    fun removeChannel(channelId: String): Boolean {
         if (_connectedChannels.value.size <= 1) {
-            _automationStatusMessage.value = "⚠️ कम से कम एक YouTube चैनल जुड़ा होना आवश्यक है।"
+            _automationStatusMessage.value = "⚠️ कम से कम एक अकाउंट जुड़ा होना आवश्यक है।"
             return false
         }
         val updated = _connectedChannels.value.filter { it.id != channelId }
@@ -313,10 +394,46 @@ class AutomationChannelManager private constructor(private val context: Context)
         if (_connectedChannel.value.id == channelId) {
             _connectedChannel.value = updated.first()
         }
-        _automationStatusMessage.value = "🗑️ YouTube चैनल हटाया गया।"
+        _automationStatusMessage.value = "🗑️ अकाउंट हटाया गया।"
         return true
     }
 
+    fun removeYouTubeChannel(channelId: String): Boolean = removeChannel(channelId)
+
+    /**
+     * Toggle whether the Owner must verify / give permission before uploading.
+     * When true: AI agent waits for Owner Verification / Green Signal.
+     * When false: AI agent automatically uploads directly according to schedule.
+     */
+    fun setRequireOwnerVerification(required: Boolean) {
+        prefs.edit().putBoolean("require_owner_verification", required).apply()
+        _webSeriesSchedule.value = _webSeriesSchedule.value.copy(
+            requireOwnerVerificationBeforeUpload = required
+        )
+        val msg = if (required) {
+            "🔒 ओनर वेरिफिकेशन एक्टिव: जब तक आप वेरीफाई ना करें, वीडियो ऑटोमैटिक अपलोड नहीं होगी।"
+        } else {
+            "⚡ डायरेक्ट ऑटो-अपलोड एक्टिव: AI एजेंट बिना वेरिफिकेशन के सीधे शेड्यूल पर वीडियो अपलोड करेगा।"
+        }
+        _automationStatusMessage.value = msg
+    }
+
+    /**
+     * Toggle Default Upload Mode: Direct Public vs Save as Draft / Private first
+     */
+    fun setDefaultUploadPrivacy(privacy: UploadPrivacyStatus) {
+        prefs.edit().putString("default_upload_privacy", privacy.name).apply()
+        _webSeriesSchedule.value = _webSeriesSchedule.value.copy(
+            defaultUploadPrivacy = privacy
+        )
+        val msg = when (privacy) {
+            UploadPrivacyStatus.DRAFT_PRIVATE -> "📝 अपलोड मोड: पहले ड्राफ्ट / प्राइवेट में सुरक्षित सेव होगी।"
+            UploadPrivacyStatus.PUBLIC -> "🌍 अपलोड मोड: सीधे पब्लिक के लिए लाइव अपलोड होगी।"
+            UploadPrivacyStatus.UNLISTED -> "🔗 अपलोड मोड: अनलिस्टेड लिंक के रूप में अपलोड होगी।"
+            UploadPrivacyStatus.SCHEDULED -> "⏰ अपलोड मोड: शेड्यूल टाइम पर पब्लिश होगी।"
+        }
+        _automationStatusMessage.value = msg
+    }
 
     /**
      * Configure Web Series automation settings based on user command (e.g. 1, 2, or 3 episodes per day)
@@ -348,35 +465,72 @@ class AutomationChannelManager private constructor(private val context: Context)
 
     /**
      * User Green Signal / OK Approval:
-     * Immediately uploads the reviewed episode to the connected YouTube channel
+     * Uploads the reviewed episode directly to the connected platform, honoring Public vs Draft / Private!
      */
-    suspend fun giveGreenSignalAndUpload(episodeId: String): AutomatedEpisode = withContext(Dispatchers.Default) {
-        _automationStatusMessage.value = "🟢 ग्रीन सिग्नल प्राप्त! YouTube पर ऑटोमेटिक अपलोडिंग शुरू..."
+    suspend fun giveGreenSignalAndUpload(
+        episodeId: String,
+        targetPrivacy: UploadPrivacyStatus? = null
+    ): AutomatedEpisode = withContext(Dispatchers.Default) {
+        val channel = _connectedChannel.value
+        val schedule = _webSeriesSchedule.value
+        val privacy = targetPrivacy ?: schedule.defaultUploadPrivacy
+
+        val isDraft = privacy == UploadPrivacyStatus.DRAFT_PRIVATE
+        val actionText = if (isDraft) "ड्राफ्ट में सुरक्षित सेविंग..." else "${channel.platform.displayName} पर ऑटोमैटिक अपलोडिंग शुरू..."
+        _automationStatusMessage.value = "🟢 ग्रीन सिग्नल प्राप्त! $actionText"
 
         // Step 1: Mark Approved
         updateEpisodeStatus(episodeId, EpisodeReviewStatus.APPROVED)
         delay(1200)
 
-        // Step 2: Uploading via YouTube Data API v3 pipeline
-        val channel = _connectedChannel.value
         val timeFormatted = SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date())
-        val generatedVideoId = "yt_v_" + System.currentTimeMillis().toString().takeLast(8)
-        val finalUrl = "https://youtu.be/$generatedVideoId"
+        val generatedId = "v_" + System.currentTimeMillis().toString().takeLast(8)
+        val finalUrl = when (channel.platform) {
+            ChannelPlatform.YOUTUBE -> if (isDraft) "https://studio.youtube.com/video/$generatedId/edit" else "https://youtu.be/$generatedId"
+            ChannelPlatform.INSTAGRAM -> "https://instagram.com/reel/$generatedId"
+            ChannelPlatform.FACEBOOK -> "https://facebook.com/watch/?v=$generatedId"
+            ChannelPlatform.TIKTOK -> "https://tiktok.com/@video/$generatedId"
+        }
+
+        val finalStatus = if (isDraft) EpisodeReviewStatus.DRAFT_SAVED else EpisodeReviewStatus.UPLOADED
+        val statusNote = if (isDraft) {
+            "Saved as Draft on ${channel.platform.displayName} (${channel.channelHandle}) at $timeFormatted"
+        } else {
+            "Published Publicly on ${channel.platform.displayName} (${channel.channelHandle}) at $timeFormatted"
+        }
 
         val updated = _episodesQueue.value.map { ep ->
             if (ep.id == episodeId) {
                 ep.copy(
-                    status = EpisodeReviewStatus.UPLOADED,
+                    status = finalStatus,
+                    uploadedPlatform = channel.platform,
                     uploadedUrl = finalUrl,
+                    uploadPrivacy = privacy,
                     isGreenSignalGiven = true,
-                    viewCountEstimate = "12 Views (Uploaded to ${channel.channelHandle} at $timeFormatted)"
+                    viewCountEstimate = statusNote
                 )
             } else ep
         }
 
         _episodesQueue.value = updated
-        _automationStatusMessage.value = "✅ सफलतापूर्वक YouTube (${channel.channelHandle}) पर पब्लिश हो गया! लिंक: $finalUrl"
-        updated.first { it.id == episodeId }
+        val successMsg = if (isDraft) {
+            "📝 सफलतापूर्वक ${channel.platform.displayName} (${channel.channelHandle}) के ड्राफ्ट में सेव हो गया! लिंक: $finalUrl"
+        } else {
+            "✅ सफलतापूर्वक ${channel.platform.displayName} (${channel.channelHandle}) पर पब्लिक अपलोड हो गया! लिंक: $finalUrl"
+        }
+        _automationStatusMessage.value = successMsg
+
+        // Send system push notification alert
+        val episodeObj = updated.first { it.id == episodeId }
+        com.example.util.NotificationHelper.sendUploadAlert(
+            context = context,
+            episodeTitle = episodeObj.title,
+            channelName = channel.channelName,
+            platformName = channel.platform.displayName,
+            requiresOwnerVerification = false
+        )
+
+        episodeObj
     }
 
     /**
@@ -394,6 +548,7 @@ class AutomationChannelManager private constructor(private val context: Context)
         val count = commandCount ?: _webSeriesSchedule.value.episodesPerDay
         val currentMax = _episodesQueue.value.maxOfOrNull { it.episodeNumber } ?: 0
         val schedule = _webSeriesSchedule.value
+        val activeChan = _connectedChannel.value
 
         _automationStatusMessage.value = "⚡ AI ऑटोमेशन कमांड: आज $count एपिसोड बनाए जा रहे हैं..."
 
@@ -406,9 +561,11 @@ class AutomationChannelManager private constructor(private val context: Context)
                 seriesId = schedule.seriesTitle.lowercase().replace(" ", "_"),
                 episodeNumber = epNum,
                 title = "Episode $epNum: ${schedule.seriesTitle} - Part $epNum",
-                synopsis = "The cyber samurai saga continues as the neon conspiracy unfolds in Neo Kyoto.",
+                synopsis = "The cyber samurai saga continues as the neon conspiracy unfolds across ${activeChan.platform.displayName}.",
                 durationSeconds = 60,
                 status = EpisodeReviewStatus.PENDING_REVIEW,
+                uploadedPlatform = activeChan.platform,
+                uploadPrivacy = schedule.defaultUploadPrivacy,
                 generatedAtMillis = System.currentTimeMillis(),
                 reviewDeadlineMillis = System.currentTimeMillis() + (schedule.fallbackTimerHours * 60 * 60 * 1000L)
             )
@@ -416,7 +573,56 @@ class AutomationChannelManager private constructor(private val context: Context)
         }
 
         _episodesQueue.value = newEpisodes + _episodesQueue.value
-        _automationStatusMessage.value = "🔔 $count नए एपिसोड तैयार हैं! कृपया रिव्यू करके ग्रीन सिग्नल (OK) दें या शेड्यूल समय पर स्वतः अपलोड होंगे।"
+
+        // Check verification requirement
+        if (schedule.requireOwnerVerificationBeforeUpload) {
+            _automationStatusMessage.value = "🔔 $count नए एपिसोड तैयार हैं! ओनर वेरिफिकेशन चालू है: कृपया रिव्यू करके ग्रीन सिग्नल (OK) दें।"
+            // Alert owner via push notification that verification is required before upload
+            newEpisodes.firstOrNull()?.let { firstEp ->
+                com.example.util.NotificationHelper.sendUploadAlert(
+                    context = context,
+                    episodeTitle = firstEp.title,
+                    channelName = activeChan.channelName,
+                    platformName = activeChan.platform.displayName,
+                    requiresOwnerVerification = true
+                )
+            }
+        } else {
+            // Instant Auto-Upload without waiting for owner verification
+            _automationStatusMessage.value = "🚀 ओनर वेरिफिकेशन बंद है: सभी $count एपिसोड सीधे ऑटो-अपलोड हो रहे हैं..."
+            for (ep in newEpisodes) {
+                giveGreenSignalAndUpload(ep.id)
+            }
+        }
+    }
+
+    /**
+     * Enqueue a researched trend episode directly into the YouTube Automation queue
+     */
+    fun addEpisodeToQueue(
+        episodeTitle: String,
+        prompt: String,
+        synopsis: String,
+        channelHandle: String,
+        durationSeconds: Int = 60
+    ): AutomatedEpisode {
+        val currentMax = _episodesQueue.value.maxOfOrNull { it.episodeNumber } ?: 0
+        val epNum = currentMax + 1
+        val schedule = _webSeriesSchedule.value
+        val newEp = AutomatedEpisode(
+            id = "ep_trend_${System.currentTimeMillis()}",
+            seriesId = schedule.seriesTitle.lowercase().replace(" ", "_"),
+            episodeNumber = epNum,
+            title = episodeTitle,
+            synopsis = "$synopsis | Prompt: $prompt",
+            durationSeconds = durationSeconds,
+            status = EpisodeReviewStatus.PENDING_REVIEW,
+            generatedAtMillis = System.currentTimeMillis(),
+            reviewDeadlineMillis = System.currentTimeMillis() + (schedule.fallbackTimerHours * 60 * 60 * 1000L)
+        )
+        _episodesQueue.value = listOf(newEp) + _episodesQueue.value
+        _automationStatusMessage.value = "⚡ नया ट्रेंड एपिसोड ऑटोमेशन कतार में जोड़ा गया: $episodeTitle"
+        return newEp
     }
 
     /**

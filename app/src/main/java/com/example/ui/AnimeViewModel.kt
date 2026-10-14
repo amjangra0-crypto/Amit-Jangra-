@@ -415,6 +415,15 @@ class AnimeViewModel(application: Application) : AndroidViewModel(application) {
     fun getOwnerMasterPin(): String = ytCredManager.getOwnerMasterPin()
     fun getOwnerPassword(): String = authAndWalletRepo.getOwnerPassword()
     fun getOwnerMobile(): String = authAndWalletRepo.getOwnerMobile()
+    fun getOwnerWalletId(): String = authAndWalletRepo.getOwnerWalletId()
+
+    fun updateOwnerWalletId(newWalletId: String): Boolean {
+        val ok = authAndWalletRepo.updateOwnerWalletId(newWalletId)
+        _uiState.value = _uiState.value.copy(
+            statusMessage = "👑 Owner Wallet ID updated: ${authAndWalletRepo.getOwnerWalletId()}"
+        )
+        return ok
+    }
 
     val subscribers: StateFlow<List<com.example.data.model.SubscriberRecord>> = authAndWalletRepo.subscribers
 
@@ -1703,6 +1712,23 @@ class AnimeViewModel(application: Application) : AndroidViewModel(application) {
             if (idx == sceneIndex) s.copy(isMuted = !s.isMuted) else s
         }
         _uiState.value = _uiState.value.copy(currentScript = script.copy(scenes = updatedScenes))
+    }
+
+    /**
+     * Updates an individual scene's timing (duration in seconds)
+     */
+    fun updateSceneTiming(sceneIndex: Int, newDurationSec: Int) {
+        val script = _uiState.value.currentScript ?: return
+        val clampedSec = newDurationSec.coerceIn(3, 120)
+        val updatedScenes = script.scenes.mapIndexed { idx, s ->
+            if (idx == sceneIndex) s.copy(durationSec = clampedSec) else s
+        }
+        val totalSec = updatedScenes.sumOf { it.durationSec }
+        _uiState.value = _uiState.value.copy(
+            currentScript = script.copy(scenes = updatedScenes),
+            automationDurationSeconds = totalSec,
+            statusMessage = "⏱️ Scene ${sceneIndex + 1} timing set to ${clampedSec}s (Total: ${totalSec}s)"
+        )
     }
 
     fun updateSceneTransition(sceneIndex: Int, transitionEffect: String, transitionDurationSec: Float) {

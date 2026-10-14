@@ -81,6 +81,7 @@ import com.example.ui.theme.TextMuted
 import com.example.ui.theme.TextPrimary
 import com.example.ui.theme.TextSecondary
 import com.example.ui.components.OwnerCommandLearningControlDialog
+import com.example.ui.components.OwnerTrendPulseAgentSection
 import androidx.compose.material.icons.filled.Psychology
 import androidx.compose.material.icons.filled.Security
 
@@ -615,6 +616,16 @@ fun ProfileScreen(
                     }
                 }
             }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // =========================================================================================
+            // VIP OWNER AI AGENT: INTERNET & SOCIAL MEDIA TREND RESEARCH & FUTURE FORECASTING
+            // =========================================================================================
+            OwnerTrendPulseAgentSection(
+                viewModel = viewModel,
+                lang = lang
+            )
 
             Spacer(modifier = Modifier.height(18.dp))
         }

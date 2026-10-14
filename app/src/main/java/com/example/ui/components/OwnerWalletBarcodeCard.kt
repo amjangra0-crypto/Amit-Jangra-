@@ -77,14 +77,22 @@ fun OwnerWalletBarcodeCard(
     currency: CurrencyType = CurrencyType.INR,
     language: String = "Hindi",
     modifier: Modifier = Modifier,
-    isOwnerSelfView: Boolean = false
+    isOwnerSelfView: Boolean = false,
+    customWalletId: String? = null
 ) {
     val context = LocalContext.current
+    val authRepo = remember { com.example.data.repository.AuthAndWalletRepository.getInstance(context) }
+    var currentWalletId by remember(customWalletId) {
+        mutableStateOf(customWalletId ?: authRepo.getOwnerWalletId())
+    }
+    var showEditWalletIdDialog by remember { mutableStateOf(false) }
+    var newWalletIdInput by remember { mutableStateOf(currentWalletId) }
+
     var isBarcodeMode by remember { mutableStateOf(false) } // false = QR Code, true = 1D Barcode
     var hasCopied by remember { mutableStateOf(false) }
 
-    val walletId = OwnerWalletConstants.OWNER_WALLET_ID
-    val ownerName = OwnerWalletConstants.OWNER_DISPLAY_NAME
+    val walletId = currentWalletId
+    val ownerName = authRepo.getOwnerName()
     val upiId = OwnerWalletConstants.OWNER_UPI_ID
 
     fun copyWalletId() {

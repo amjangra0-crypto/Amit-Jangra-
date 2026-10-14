@@ -113,6 +113,10 @@ import com.example.ui.components.SubscriptionHistoryDialog
 import com.example.ui.components.OwnerBarcodeScannerDialog
 import com.example.ui.components.OwnerWalletBarcodeCard
 import com.example.ui.components.ScannedBarcodeResult
+import com.example.ui.components.SubscriptionRevenueChartCard
+import com.example.ui.components.FirebaseCloudSyncCard
+import com.example.ui.components.OwnerTrendPulseAgentSection
+import com.example.ui.components.OwnerAiAgentResearchHub
 import com.example.ui.theme.AnimeCyan
 import com.example.ui.theme.AnimeCyanLight
 import com.example.ui.theme.AnimeGold
@@ -158,6 +162,7 @@ fun OwnerDashboardScreen(
     val bankAccount by viewModel.connectedBankAccount.collectAsState()
     val wallets by viewModel.wallets.collectAsState()
     val transactions by viewModel.transactions.collectAsState()
+    val subscribers by viewModel.subscribers.collectAsState()
     val isOwnerUnlocked by viewModel.isOwnerAccessUnlocked.collectAsState()
     val isYtGloballyEnabled by viewModel.isYouTubeAutomationGloballyEnabled.collectAsState()
     val ytManagedUsers by viewModel.youtubeManagedUsers.collectAsState()
@@ -510,6 +515,44 @@ fun OwnerDashboardScreen(
                 }
             }
         }
+
+        Spacer(modifier = Modifier.height(18.dp))
+
+        // =========================================================================================
+        // REVENUE PERFORMANCE CHARTS: DAILY, WEEKLY & MONTHLY VISUALIZATION
+        // =========================================================================================
+        SubscriptionRevenueChartCard(
+            subscribers = subscribers,
+            transactions = transactions,
+            lang = lang
+        )
+
+        Spacer(modifier = Modifier.height(18.dp))
+
+        // =========================================================================================
+        // ROOM TO FIREBASE CLOUD PROJECT SYNC: PERIODIC WORKER & REINSTALL PRESERVATION
+        // =========================================================================================
+        FirebaseCloudSyncCard(lang = lang)
+
+        Spacer(modifier = Modifier.height(18.dp))
+
+        // =========================================================================================
+        // TRENDPULSE AI AGENT: INTERNET & SOCIAL MEDIA RESEARCH & FUTURE FORECASTING
+        // =========================================================================================
+        OwnerTrendPulseAgentSection(
+            viewModel = viewModel,
+            lang = lang
+        )
+
+        Spacer(modifier = Modifier.height(18.dp))
+
+        // =========================================================================================
+        // AI AGENT RESEARCH HUB: LIVE SOCIAL TREND FEED & FUTURE PREDICTION SCORE
+        // =========================================================================================
+        OwnerAiAgentResearchHub(
+            viewModel = viewModel,
+            lang = lang
+        )
 
         Spacer(modifier = Modifier.height(18.dp))
 

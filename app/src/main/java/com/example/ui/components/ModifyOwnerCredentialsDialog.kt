@@ -84,6 +84,7 @@ fun ModifyOwnerCredentialsDialog(
     var passwordInput by remember { mutableStateOf(viewModel.getOwnerPassword()) }
     var mobileInput by remember { mutableStateOf(viewModel.getOwnerMobile()) }
     var emailInput by remember { mutableStateOf(viewModel.getOwnerEmail()) }
+    var walletIdInput by remember { mutableStateOf(viewModel.getOwnerWalletId()) }
 
     var isPasswordVisible by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
@@ -279,6 +280,29 @@ fun ModifyOwnerCredentialsDialog(
                     shape = RoundedCornerShape(10.dp)
                 )
 
+                Spacer(modifier = Modifier.height(12.dp))
+
+                // 6. Owner Wallet ID (Custom Receiving Wallet ID)
+                Text("6. Owner Wallet ID (Custom Receiving Wallet ID):", color = TextSecondary, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                Spacer(modifier = Modifier.height(4.dp))
+                OutlinedTextField(
+                    value = walletIdInput,
+                    onValueChange = {
+                        walletIdInput = it
+                        errorMessage = null
+                    },
+                    placeholder = { Text("e.g. WALLET_OWNER_AMJANGRA0_9999", color = TextMuted, fontSize = 12.sp) },
+                    leadingIcon = { Icon(Icons.Default.Security, contentDescription = null, tint = AnimePurple) },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth().testTag("owner_wallet_id_input"),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = AnimePurple,
+                        focusedTextColor = TextPrimary,
+                        unfocusedTextColor = TextPrimary
+                    ),
+                    shape = RoundedCornerShape(10.dp)
+                )
+
                 // Error message banner
                 errorMessage?.let { err ->
                     Spacer(modifier = Modifier.height(12.dp))
@@ -333,6 +357,10 @@ fun ModifyOwnerCredentialsDialog(
                                 errorMessage = "Please enter a valid Email ID."
                                 return@Button
                             }
+                            if (walletIdInput.isBlank()) {
+                                errorMessage = "Owner Wallet ID cannot be empty."
+                                return@Button
+                            }
 
                             val result = viewModel.updateOwnerDashboardDetails(
                                 name = nameInput,
@@ -343,7 +371,8 @@ fun ModifyOwnerCredentialsDialog(
                             )
 
                             if (result.isSuccess) {
-                                Toast.makeText(context, "👑 Owner Dashboard successfully updated!", Toast.LENGTH_LONG).show()
+                                viewModel.updateOwnerWalletId(walletIdInput)
+                                Toast.makeText(context, "👑 Owner Dashboard & Wallet ID successfully updated!", Toast.LENGTH_LONG).show()
                                 onSuccess()
                             } else {
                                 errorMessage = result.exceptionOrNull()?.message ?: "Failed to update dashboard details."

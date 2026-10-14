@@ -240,6 +240,34 @@ class VoiceSyncEngine(private val context: Context) {
         }
     }
 
+    /**
+     * Speaks dialogue utilizing a dedicated CharacterVoicePreset and VoiceLanguage.
+     * Fully synchronized with Character Age Groups and Tone Weights (Heavy/Light).
+     */
+    fun speakWithPreset(
+        preset: com.example.data.model.CharacterVoicePreset,
+        dialogueText: String,
+        language: com.example.data.model.VoiceLanguage = preset.defaultLanguage,
+        characterName: String = preset.nameEn,
+        onStart: (() -> Unit)? = null,
+        onDone: (() -> Unit)? = null
+    ) {
+        setLanguage(language.code)
+        speakDialogue(
+            characterName = characterName,
+            dialogueText = dialogueText,
+            emotion = "Expressive",
+            voiceType = preset.ageGroup.displayNameEn,
+            pitch = preset.pitch,
+            speed = preset.speed,
+            voiceGender = preset.gender,
+            voicePersona = "${preset.nameEn} (${preset.toneWeight.displayNameEn})",
+            voiceAccent = language.displayNameEn,
+            onStart = onStart,
+            onDone = onDone
+        )
+    }
+
     private fun fallbackSimulation(text: String, speed: Float) {
         simulationJob?.cancel()
         simulationJob = scope.launch {
