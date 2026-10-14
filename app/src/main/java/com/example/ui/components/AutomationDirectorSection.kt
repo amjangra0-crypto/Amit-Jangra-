@@ -330,7 +330,7 @@ fun AutomationDirectorSection(viewModel: AnimeViewModel) {
 
             Spacer(modifier = Modifier.height(14.dp))
 
-            // Duration Customizer
+            // Duration Customizer Header
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
@@ -342,8 +342,8 @@ fun AutomationDirectorSection(viewModel: AnimeViewModel) {
                     Text(
                         text = AppLocaleStrings.tr(
                             state.selectedLanguage,
-                            "Video Duration (15s to 2 Hours):",
-                            "वीडियो की अवधि (15s से 2 घंटे तक):"
+                            "Clip Duration Slider (Shorts & Reels):",
+                            "क्लिप अवधि स्लाइडर (शॉर्ट्स व रील्स):"
                         ),
                         color = TextPrimary,
                         fontSize = 12.sp,
@@ -364,11 +364,12 @@ fun AutomationDirectorSection(viewModel: AnimeViewModel) {
                 Box(
                     modifier = Modifier
                         .clip(RoundedCornerShape(8.dp))
-                        .background(AnimePurple.copy(alpha = 0.35f))
+                        .background(AnimeGold.copy(alpha = 0.25f))
+                        .border(1.dp, AnimeGold, RoundedCornerShape(8.dp))
                         .padding(horizontal = 8.dp, vertical = 3.dp)
                 ) {
                     Text(
-                        text = "$formattedDuration (${parsedPreview.calculatedSceneCount} $scenesWord)",
+                        text = "$formattedDuration (${state.customSceneCount} $scenesWord)",
                         color = AnimeGold,
                         fontSize = 12.sp,
                         fontWeight = FontWeight.ExtraBold
@@ -376,11 +377,75 @@ fun AutomationDirectorSection(viewModel: AnimeViewModel) {
                 }
             }
 
+            Spacer(modifier = Modifier.height(4.dp))
+
+            // Interactive Duration Slider (15s to 60s for Shorts/Reels, up to 180s)
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(10.dp))
+                    .background(AnimeSurfaceVariant)
+                    .padding(horizontal = 12.dp, vertical = 8.dp)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = AppLocaleStrings.tr(
+                            state.selectedLanguage,
+                            "15s (Shorts/Reels)",
+                            "15 सेकंड (शॉर्ट्स)"
+                        ),
+                        color = TextMuted,
+                        fontSize = 10.sp
+                    )
+                    Text(
+                        text = "${state.automationDurationSeconds}s (" + AppLocaleStrings.tr(
+                            state.selectedLanguage,
+                            "Current Length",
+                            "वर्तमान लंबाई"
+                        ) + ")",
+                        color = AnimeCyan,
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Text(
+                        text = AppLocaleStrings.tr(
+                            state.selectedLanguage,
+                            "60s (Max Reel)",
+                            "60 सेकंड (रील्स)"
+                        ),
+                        color = TextMuted,
+                        fontSize = 10.sp
+                    )
+                }
+
+                Slider(
+                    value = state.automationDurationSeconds.coerceIn(15, 60).toFloat(),
+                    onValueChange = { newValue ->
+                        viewModel.setAutomationDurationSeconds(newValue.toInt())
+                    },
+                    valueRange = 15f..60f,
+                    steps = 8,
+                    colors = SliderDefaults.colors(
+                        thumbColor = AnimeGold,
+                        activeTrackColor = AnimeGold,
+                        inactiveTrackColor = AnimePurple.copy(alpha = 0.3f)
+                    ),
+                    modifier = Modifier.fillMaxWidth().testTag("video_duration_slider")
+                )
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
             // Duration Quick Presets including 1 Hour & 2 Hours
             val durationPresets = listOf(
-                15 to "15s",
-                30 to "30s",
-                60 to "1m",
+                15 to "15s Reel",
+                30 to "30s Short",
+                45 to "45s Story",
+                60 to "60s Reel",
                 300 to "5m",
                 1800 to "30m",
                 3600 to "1 Hour",
@@ -404,6 +469,216 @@ fun AutomationDirectorSection(viewModel: AnimeViewModel) {
                         ),
                         modifier = Modifier.height(28.dp)
                     )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(14.dp))
+
+            // SCENE COUNT & PER-SCENE TIMING CUSTOMIZER
+            Card(
+                modifier = Modifier.fillMaxWidth().testTag("scenes_timing_customizer_card"),
+                colors = CardDefaults.cardColors(containerColor = AnimeSurfaceVariant),
+                shape = RoundedCornerShape(12.dp),
+                border = BorderStroke(1.dp, AnimeCyan.copy(alpha = 0.4f))
+            ) {
+                Column(modifier = Modifier.padding(12.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(Icons.Default.Movie, contentDescription = null, tint = AnimeCyan, modifier = Modifier.size(16.dp))
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(
+                                text = AppLocaleStrings.tr(
+                                    state.selectedLanguage,
+                                    "Scene Count & Scene Timing Control:",
+                                    "सीन संख्या व हर सीन की टाइमिंग सेटिंग:"
+                                ),
+                                color = TextPrimary,
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(6.dp))
+                                .background(AnimeCyan.copy(alpha = 0.2f))
+                                .padding(horizontal = 6.dp, vertical = 2.dp)
+                        ) {
+                            Text(
+                                text = "${state.customSceneCount} " + AppLocaleStrings.tr(state.selectedLanguage, "Scenes", "सीन्स"),
+                                color = AnimeCyan,
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = AppLocaleStrings.tr(
+                            state.selectedLanguage,
+                            "User decides कितने scenes कितनी देर की video में चाहिए (e.g. 2 scenes for 15s to 60s shorts/reels).",
+                            "आप तय कर सकते हैं कितने scenes कितनी देर की video में चाहिए (जैसे शॉर्ट्स व रील्स में 2 सीन्स 15 से 60 सेकंड)।"
+                        ),
+                        color = TextMuted,
+                        fontSize = 10.sp
+                    )
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    // Number of Scenes Chips
+                    Text(
+                        text = AppLocaleStrings.tr(state.selectedLanguage, "Select Number of Scenes:", "सीन्स की संख्या चुनें:"),
+                        color = TextSecondary,
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        val sceneCountOptions = listOf(
+                            2 to "2 Scenes (Shorts/Reels)",
+                            3 to "3 Scenes",
+                            4 to "4 Scenes",
+                            5 to "5 Scenes"
+                        )
+                        sceneCountOptions.forEach { (count, label) ->
+                            val isSelected = state.customSceneCount == count
+                            Box(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .background(if (isSelected) AnimeCyan.copy(alpha = 0.25f) else AnimeSurface)
+                                    .border(1.dp, if (isSelected) AnimeCyan else Color.Transparent, RoundedCornerShape(8.dp))
+                                    .clickable {
+                                        val perScene = (state.automationDurationSeconds / count).coerceAtLeast(5)
+                                        val timings = MutableList(count) { perScene }
+                                        val rem = state.automationDurationSeconds - (perScene * count)
+                                        if (rem > 0) timings[0] += rem
+                                        viewModel.setCustomSceneCountAndTimings(count, timings)
+                                    }
+                                    .padding(vertical = 6.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = if (count == 2) "2 Scenes (Reels)" else "$count Scenes",
+                                    color = if (isSelected) AnimeCyanLight else TextSecondary,
+                                    fontSize = 10.sp,
+                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
+                                )
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    // Quick Timing Presets for Shorts & Reels
+                    Text(
+                        text = AppLocaleStrings.tr(state.selectedLanguage, "Quick Scene Timing Presets:", "त्वरित सीन टाइमिंग प्रीसेट:"),
+                        color = TextSecondary,
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        item {
+                            FilterChip(
+                                selected = state.customSceneCount == 2 && state.customSceneTimings == listOf(15, 15),
+                                onClick = { viewModel.setCustomSceneCountAndTimings(2, listOf(15, 15)) },
+                                label = { Text("2 Scenes (15s + 15s = 30s Short)", fontSize = 10.sp) },
+                                colors = FilterChipDefaults.filterChipColors(selectedContainerColor = AnimeGold.copy(alpha = 0.3f), selectedLabelColor = AnimeGold)
+                            )
+                        }
+                        item {
+                            FilterChip(
+                                selected = state.customSceneCount == 2 && state.customSceneTimings == listOf(30, 30),
+                                onClick = { viewModel.setCustomSceneCountAndTimings(2, listOf(30, 30)) },
+                                label = { Text("2 Scenes (30s + 30s = 60s Reel)", fontSize = 10.sp) },
+                                colors = FilterChipDefaults.filterChipColors(selectedContainerColor = AnimeGold.copy(alpha = 0.3f), selectedLabelColor = AnimeGold)
+                            )
+                        }
+                        item {
+                            FilterChip(
+                                selected = state.customSceneCount == 2 && state.customSceneTimings == listOf(10, 20),
+                                onClick = { viewModel.setCustomSceneCountAndTimings(2, listOf(10, 20)) },
+                                label = { Text("2 Scenes (10s hook + 20s action)", fontSize = 10.sp) },
+                                colors = FilterChipDefaults.filterChipColors(selectedContainerColor = AnimeGold.copy(alpha = 0.3f), selectedLabelColor = AnimeGold)
+                            )
+                        }
+                        item {
+                            FilterChip(
+                                selected = state.customSceneCount == 3 && state.customSceneTimings == listOf(10, 10, 10),
+                                onClick = { viewModel.setCustomSceneCountAndTimings(3, listOf(10, 10, 10)) },
+                                label = { Text("3 Scenes (10s + 10s + 10s = 30s)", fontSize = 10.sp) },
+                                colors = FilterChipDefaults.filterChipColors(selectedContainerColor = AnimeGold.copy(alpha = 0.3f), selectedLabelColor = AnimeGold)
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    // Individual Scene Sliders
+                    Text(
+                        text = AppLocaleStrings.tr(state.selectedLanguage, "Adjust Individual Scene Timings:", "प्रत्येक सीन की टाइमिंग व्यक्तिगत बदलें:"),
+                        color = TextSecondary,
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+
+                    state.customSceneTimings.forEachIndexed { sceneIdx, timingSec ->
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 2.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "Scene ${sceneIdx + 1}:",
+                                color = AnimeCyan,
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier.width(60.dp)
+                            )
+
+                            Slider(
+                                value = timingSec.toFloat(),
+                                onValueChange = { newVal ->
+                                    viewModel.updateSingleSceneTiming(sceneIdx, newVal.toInt())
+                                },
+                                valueRange = 5f..60f,
+                                steps = 10,
+                                colors = SliderDefaults.colors(
+                                    thumbColor = AnimeCyan,
+                                    activeTrackColor = AnimeCyan,
+                                    inactiveTrackColor = AnimePurple.copy(alpha = 0.3f)
+                                ),
+                                modifier = Modifier.weight(1f).testTag("scene_slider_$sceneIdx")
+                            )
+
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Box(
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(6.dp))
+                                    .background(AnimeSurface)
+                                    .border(0.5.dp, AnimeCyan.copy(alpha = 0.5f), RoundedCornerShape(6.dp))
+                                    .padding(horizontal = 6.dp, vertical = 2.dp)
+                            ) {
+                                Text(
+                                    text = "${timingSec}s",
+                                    color = AnimeCyanLight,
+                                    fontSize = 10.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                        }
+                    }
                 }
             }
 

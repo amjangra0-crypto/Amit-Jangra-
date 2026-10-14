@@ -180,6 +180,8 @@ data class AnimeStudioUiState(
     // Autonomous AI Director Pipeline State
     val automationCommandInput: String = "",
     val automationDurationSeconds: Int = 30,
+    val customSceneCount: Int = 2,
+    val customSceneTimings: List<Int> = listOf(15, 15),
     val automationSelectedLanguage: String = "Auto-Detect",
     val automationSelectedAccent: String = "Auto-Detect",
     val isAutonomousExecuting: Boolean = false,
@@ -987,7 +989,42 @@ class AnimeViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun setAutomationDurationSeconds(seconds: Int) {
-        _uiState.value = _uiState.value.copy(automationDurationSeconds = seconds.coerceIn(15, 7200))
+        val clamped = seconds.coerceIn(15, 7200)
+        val count = _uiState.value.customSceneCount.coerceIn(2, 6)
+        val perScene = (clamped / count).coerceAtLeast(5)
+        val timings = MutableList(count) { perScene }
+        val rem = clamped - (perScene * count)
+        if (rem > 0) timings[0] += rem
+        _uiState.value = _uiState.value.copy(
+            automationDurationSeconds = clamped,
+            customSceneTimings = timings
+        )
+    }
+
+    fun setCustomSceneCountAndTimings(count: Int, timings: List<Int>) {
+        val clampedCount = count.coerceIn(2, 6)
+        val validTimings = if (timings.size == clampedCount) timings else {
+            val perScene = (_uiState.value.automationDurationSeconds / clampedCount).coerceAtLeast(5)
+            MutableList(clampedCount) { perScene }
+        }
+        val total = validTimings.sum().coerceAtLeast(15)
+        _uiState.value = _uiState.value.copy(
+            customSceneCount = clampedCount,
+            customSceneTimings = validTimings,
+            automationDurationSeconds = total
+        )
+    }
+
+    fun updateSingleSceneTiming(sceneIndex: Int, newSeconds: Int) {
+        val current = _uiState.value.customSceneTimings.toMutableList()
+        if (sceneIndex in current.indices) {
+            current[sceneIndex] = newSeconds.coerceIn(5, 120)
+            val total = current.sum().coerceAtLeast(15)
+            _uiState.value = _uiState.value.copy(
+                customSceneTimings = current,
+                automationDurationSeconds = total
+            )
+        }
     }
 
     /**
@@ -1081,7 +1118,9 @@ class AnimeViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun setAppLanguage(language: String) {
-        setAppInterfaceLanguage(language)
+        val normalized = com.example.localization.AppLocaleStrings.normalizeLanguage(language)
+        setAppInterfaceLanguage(normalized)
+        setVideoGenerationLanguage(normalized)
     }
 
     /**

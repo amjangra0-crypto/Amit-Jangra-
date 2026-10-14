@@ -436,6 +436,49 @@ class AutomationChannelManager private constructor(private val context: Context)
     }
 
     /**
+     * Configure individual settings per connected account (YouTube, Instagram, Facebook):
+     * - Require Owner Verification (True: Pending Review; False: Auto Upload)
+     * - Default Privacy (Direct Publish vs Save as Draft)
+     */
+    fun updateChannelSettings(
+        channelId: String,
+        requireVerification: Boolean,
+        privacy: UploadPrivacyStatus
+    ) {
+        val updated = _connectedChannels.value.map { ch ->
+            if (ch.id == channelId) {
+                ch.copy(
+                    requireOwnerVerificationBeforeUpload = requireVerification,
+                    defaultPrivacy = privacy
+                )
+            } else ch
+        }
+        _connectedChannels.value = updated
+        saveChannels(updated)
+
+        if (_connectedChannel.value.id == channelId) {
+            _connectedChannel.value = _connectedChannel.value.copy(
+                requireOwnerVerificationBeforeUpload = requireVerification,
+                defaultPrivacy = privacy
+            )
+        }
+        val chName = _connectedChannels.value.find { it.id == channelId }?.channelName ?: channelId
+        val verifyText = if (requireVerification) "वेरिफिकेशन आवश्यक (Pending Review)" else "स्वतः अपलोड (Direct Auto-Upload)"
+        val privacyText = if (privacy == UploadPrivacyStatus.PUBLIC) "डायरेक्ट पब्लिक" else "ड्राफ्ट में सेव"
+        _automationStatusMessage.value = "✓ $chName: $verifyText • $privacyText"
+    }
+
+    fun toggleChannelVerification(channelId: String, required: Boolean) {
+        val ch = _connectedChannels.value.find { it.id == channelId } ?: return
+        updateChannelSettings(channelId, required, ch.defaultPrivacy)
+    }
+
+    fun setChannelPrivacy(channelId: String, privacy: UploadPrivacyStatus) {
+        val ch = _connectedChannels.value.find { it.id == channelId } ?: return
+        updateChannelSettings(channelId, ch.requireOwnerVerificationBeforeUpload, privacy)
+    }
+
+    /**
      * Configure Web Series automation settings based on user command (e.g. 1, 2, or 3 episodes per day)
      */
     fun setSeriesEpisodesPerDay(episodesPerDay: Int, seriesTitle: String? = null) {

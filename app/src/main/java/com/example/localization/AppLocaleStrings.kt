@@ -1591,18 +1591,18 @@ object AppLocaleStrings {
     fun normalizeLanguage(lang: String): String {
         val l = lang.trim().lowercase()
         return when {
-            l == "hi" || l.contains("hindi") || l.contains("हिन्दी") -> "Hindi"
-            l == "en" || l.contains("english") -> "English"
-            l == "ja" || l.contains("japan") || l.contains("日本語") -> "Japanese"
-            l == "ko" || l.contains("korea") || l.contains("한국어") -> "Korean"
-            l == "es" || l.contains("spanish") || l.contains("español") -> "Spanish"
-            l == "de" || l.contains("german") || l.contains("deutsch") -> "German"
-            l == "fr" || l.contains("french") || l.contains("français") -> "French"
-            l == "zh" || l.contains("chinese") || l.contains("中文") -> "Chinese"
-            l == "ar" || l.contains("arabic") || l.contains("العربية") -> "Arabic"
-            l == "ru" || l.contains("russian") || l.contains("русский") -> "Russian"
-            l == "pt" || l.contains("portuguese") || l.contains("português") -> "Portuguese"
-            l == "id" || l.contains("indonesian") || l.contains("bahasa") -> "Indonesian"
+            l == "hi" || l == "hin" || l.contains("hindi") || l.contains("हिन्दी") -> "Hindi"
+            l == "en" || l == "eng" || l.contains("english") -> "English"
+            l == "ja" || l == "jp" || l.contains("japan") || l.contains("日本語") -> "Japanese"
+            l == "ko" || l == "kr" || l.contains("korea") || l.contains("한국어") -> "Korean"
+            l == "es" || l == "spa" || l.contains("spanish") || l.contains("español") || l.contains("espanol") -> "Spanish"
+            l == "de" || l == "ger" || l.contains("german") || l.contains("deutsch") -> "German"
+            l == "fr" || l == "fre" || l.contains("french") || l.contains("français") || l.contains("francais") -> "French"
+            l == "zh" || l == "chi" || l.contains("chinese") || l.contains("中文") -> "Chinese"
+            l == "ar" || l == "ara" || l.contains("arabic") || l.contains("العربية") -> "Arabic"
+            l == "ru" || l == "rus" || l.contains("russian") || l.contains("русский") -> "Russian"
+            l == "pt" || l == "por" || l.contains("portuguese") || l.contains("português") || l.contains("portugues") -> "Portuguese"
+            l == "id" || l == "ind" || l.contains("indonesian") || l.contains("bahasa") -> "Indonesian"
             else -> "English"
         }
     }
@@ -1611,17 +1611,188 @@ object AppLocaleStrings {
         return normalizeLanguage(language) == "Hindi"
     }
 
+    private val englishToKey: Map<String, String> by lazy {
+        val map = mutableMapOf<String, String>()
+        translations["English"]?.forEach { (k, v) ->
+            map[v.trim().lowercase()] = k
+        }
+        map
+    }
+
+    private val hindiToKey: Map<String, String> by lazy {
+        val map = mutableMapOf<String, String>()
+        translations["Hindi"]?.forEach { (k, v) ->
+            map[v.trim().lowercase()] = k
+        }
+        map
+    }
+
+    // Common global vocabulary for words frequently used in UI across all 12 supported languages
+    private val globalVocab: Map<String, Map<String, String>> = mapOf(
+        "Japanese" to mapOf(
+            "Settings" to "設定", "Save" to "保存", "Cancel" to "キャンセル", "Delete" to "削除", "Edit" to "編集",
+            "Back" to "戻る", "Next" to "次へ", "Close" to "閉じる", "Search" to "検索", "Confirm" to "確認",
+            "Scenes" to "シーン", "Duration" to "再生時間", "Seconds" to "秒", "Minutes" to "分", "Hours" to "時間",
+            "Public" to "公開", "Draft" to "下書き", "Verified" to "確認済み", "Pending" to "保留中",
+            "Dark Mode" to "ダークモード", "Light Mode" to "ライトモード", "Theme" to "テーマ",
+            "Voice" to "音声", "Dubbing" to "吹き替え", "Storage" to "ストレージ", "Camera" to "カメラ",
+            "Microphone" to "マイク", "Wallet" to "ウォレット", "Owner" to "オーナー", "Profile" to "プロフィール",
+            "Upload" to "アップロード", "Download" to "ダウンロード", "Export" to "エクスポート", "Play" to "再生",
+            "Direct Publish" to "直接公開", "Save as Draft" to "下書き保存", "Approve" to "承認"
+        ),
+        "Spanish" to mapOf(
+            "Settings" to "Configuración", "Save" to "Guardar", "Cancel" to "Cancelar", "Delete" to "Eliminar", "Edit" to "Editar",
+            "Back" to "Atrás", "Next" to "Siguiente", "Close" to "Cerrar", "Search" to "Buscar", "Confirm" to "Confirmar",
+            "Scenes" to "Escenas", "Duration" to "Duración", "Seconds" to "segundos", "Minutes" to "minutos", "Hours" to "horas",
+            "Public" to "Público", "Draft" to "Borrador", "Verified" to "Verificado", "Pending" to "Pendiente",
+            "Dark Mode" to "Modo Oscuro", "Light Mode" to "Modo Claro", "Theme" to "Tema",
+            "Voice" to "Voz", "Dubbing" to "Doblaje", "Storage" to "Almacenamiento", "Camera" to "Cámara",
+            "Microphone" to "Micrófono", "Wallet" to "Billetera", "Owner" to "Propietario", "Profile" to "Perfil",
+            "Upload" to "Subir", "Download" to "Descargar", "Export" to "Exportar", "Play" to "Reproducir",
+            "Direct Publish" to "Publicación Directa", "Save as Draft" to "Guardar como Borrador", "Approve" to "Aprobar"
+        ),
+        "German" to mapOf(
+            "Settings" to "Einstellungen", "Save" to "Speichern", "Cancel" to "Abbrechen", "Delete" to "Löschen", "Edit" to "Bearbeiten",
+            "Back" to "Zurück", "Next" to "Weiter", "Close" to "Schließen", "Search" to "Suchen", "Confirm" to "Bestätigen",
+            "Scenes" to "Szenen", "Duration" to "Dauer", "Seconds" to "Sekunden", "Minutes" to "Minuten", "Hours" to "Stunden",
+            "Public" to "Öffentlich", "Draft" to "Entwurf", "Verified" to "Verifiziert", "Pending" to "Ausstehend",
+            "Dark Mode" to "Dunkelmodus", "Light Mode" to "Hellmodus", "Theme" to "Design",
+            "Voice" to "Stimme", "Dubbing" to "Synchronisation", "Storage" to "Speicher", "Camera" to "Kamera",
+            "Microphone" to "Mikrofon", "Wallet" to "Wallet", "Owner" to "Eigentümer", "Profile" to "Profil",
+            "Upload" to "Hochladen", "Download" to "Herunterladen", "Export" to "Exportieren", "Play" to "Abspielen",
+            "Direct Publish" to "Direkt Veröffentlichen", "Save as Draft" to "Als Entwurf Speichern", "Approve" to "Genehmigen"
+        ),
+        "French" to mapOf(
+            "Settings" to "Paramètres", "Save" to "Enregistrer", "Cancel" to "Annuler", "Delete" to "Supprimer", "Edit" to "Modifier",
+            "Back" to "Retour", "Next" to "Suivant", "Close" to "Fermer", "Search" to "Rechercher", "Confirm" to "Confirmer",
+            "Scenes" to "Scènes", "Duration" to "Durée", "Seconds" to "secondes", "Minutes" to "minutes", "Hours" to "heures",
+            "Public" to "Public", "Draft" to "Brouillon", "Verified" to "Vérifié", "Pending" to "En attente",
+            "Dark Mode" to "Mode Sombre", "Light Mode" to "Mode Clair", "Theme" to "Thème",
+            "Voice" to "Voix", "Dubbing" to "Doublage", "Storage" to "Stockage", "Camera" to "Caméra",
+            "Microphone" to "Microphone", "Wallet" to "Portefeuille", "Owner" to "Propriétaire", "Profile" to "Profil",
+            "Upload" to "Téléverser", "Download" to "Télécharger", "Export" to "Exporter", "Play" to "Lire",
+            "Direct Publish" to "Publication Directe", "Save as Draft" to "Enregistrer en Brouillon", "Approve" to "Approuver"
+        ),
+        "Korean" to mapOf(
+            "Settings" to "설정", "Save" to "저장", "Cancel" to "취소", "Delete" to "삭제", "Edit" to "수정",
+            "Back" to "뒤로", "Next" to "다음", "Close" to "닫기", "Search" to "검색", "Confirm" to "확인",
+            "Scenes" to "장면", "Duration" to "재생 시간", "Seconds" to "초", "Minutes" to "분", "Hours" to "시간",
+            "Public" to "공개", "Draft" to "임시 저장", "Verified" to "확인됨", "Pending" to "대기 중",
+            "Dark Mode" to "다크 모드", "Light Mode" to "라이트 모드", "Theme" to "테마",
+            "Voice" to "음성", "Dubbing" to "더빙", "Storage" to "저장 공간", "Camera" to "카메라",
+            "Microphone" to "마이크", "Wallet" to "지갑", "Owner" to "소유자", "Profile" to "프로필",
+            "Upload" to "업로드", "Download" to "다운로드", "Export" to "내보내기", "Play" to "재생",
+            "Direct Publish" to "직접 게시", "Save as Draft" to "초안으로 저장", "Approve" to "승인"
+        ),
+        "Chinese" to mapOf(
+            "Settings" to "设置", "Save" to "保存", "Cancel" to "取消", "Delete" to "删除", "Edit" to "编辑",
+            "Back" to "返回", "Next" to "下一步", "Close" to "关闭", "Search" to "搜索", "Confirm" to "确认",
+            "Scenes" to "场景", "Duration" to "时长", "Seconds" to "秒", "Minutes" to "分钟", "Hours" to "小时",
+            "Public" to "公开", "Draft" to "草稿", "Verified" to "已验证", "Pending" to "等待中",
+            "Dark Mode" to "深色模式", "Light Mode" to "浅色模式", "Theme" to "主题",
+            "Voice" to "声音", "Dubbing" to "配音", "Storage" to "存储", "Camera" to "相机",
+            "Microphone" to "麦克风", "Wallet" to "钱包", "Owner" to "所有者", "Profile" to "个人主页",
+            "Upload" to "上传", "Download" to "下载", "Export" to "导出", "Play" to "播放",
+            "Direct Publish" to "直接发布", "Save as Draft" to "保存为草稿", "Approve" to "批准"
+        ),
+        "Arabic" to mapOf(
+            "Settings" to "الإعدادات", "Save" to "حفظ", "Cancel" to "إلغاء", "Delete" to "حذف", "Edit" to "تعديل",
+            "Back" to "رجوع", "Next" to "التالي", "Close" to "إغلاق", "Search" to "بحث", "Confirm" to "تأكيد",
+            "Scenes" to "المشاهد", "Duration" to "المدة", "Seconds" to "ثواني", "Minutes" to "دقائق", "Hours" to "ساعات",
+            "Public" to "عام", "Draft" to "مسودة", "Verified" to "مؤكد", "Pending" to "قيد الانتظار",
+            "Dark Mode" to "الوضع الداكن", "Light Mode" to "الوضع الفاتح", "Theme" to "المظهر",
+            "Voice" to "الصوت", "Dubbing" to "الدبلجة", "Storage" to "التخزين", "Camera" to "الكاميرا",
+            "Microphone" to "الميكروفون", "Wallet" to "المحفظة", "Owner" to "المالك", "Profile" to "الملف الشخصي",
+            "Upload" to "رفع", "Download" to "تحميل", "Export" to "تصدير", "Play" to "تشغيل",
+            "Direct Publish" to "نشر مباشر", "Save as Draft" to "حفظ كمسودة", "Approve" to "موافقة"
+        ),
+        "Russian" to mapOf(
+            "Settings" to "Настройки", "Save" to "Сохранить", "Cancel" to "Отмена", "Delete" to "Удалить", "Edit" to "Изменить",
+            "Back" to "Назад", "Next" to "Далее", "Close" to "Закрыть", "Search" to "Поиск", "Confirm" to "Подтвердить",
+            "Scenes" to "Сцены", "Duration" to "Длительность", "Seconds" to "секунд", "Minutes" to "минут", "Hours" to "часов",
+            "Public" to "Публично", "Draft" to "Черновик", "Verified" to "Проверено", "Pending" to "В ожидании",
+            "Dark Mode" to "Темная тема", "Light Mode" to "Светлая тема", "Theme" to "Тема",
+            "Voice" to "Голос", "Dubbing" to "Дубляж", "Storage" to "Хранилище", "Camera" to "Камера",
+            "Microphone" to "Микрофон", "Wallet" to "Кошелек", "Owner" to "Владелец", "Profile" to "Профиль",
+            "Upload" to "Загрузить", "Download" to "Скачать", "Export" to "Экспорт", "Play" to "Воспроизвести",
+            "Direct Publish" to "Прямая публикация", "Save as Draft" to "Сохранить как черновик", "Approve" to "Одобрить"
+        ),
+        "Portuguese" to mapOf(
+            "Settings" to "Configurações", "Save" to "Salvar", "Cancel" to "Cancelar", "Delete" to "Excluir", "Edit" to "Editar",
+            "Back" to "Voltar", "Next" to "Próximo", "Close" to "Fechar", "Search" to "Buscar", "Confirm" to "Confirmar",
+            "Scenes" to "Cenas", "Duration" to "Duração", "Seconds" to "segundos", "Minutes" to "minutos", "Hours" to "horas",
+            "Public" to "Público", "Draft" to "Rascunho", "Verified" to "Verificado", "Pending" to "Pendente",
+            "Dark Mode" to "Modo Escuro", "Light Mode" to "Modo Claro", "Theme" to "Tema",
+            "Voice" to "Voz", "Dubbing" to "Dublagem", "Storage" to "Armazenamento", "Camera" to "Câmera",
+            "Microphone" to "Microfone", "Wallet" to "Carteira", "Owner" to "Proprietário", "Profile" to "Perfil",
+            "Upload" to "Enviar", "Download" to "Baixar", "Export" to "Exportar", "Play" to "Reproduzir",
+            "Direct Publish" to "Publicação Direta", "Save as Draft" to "Salvar como Rascunho", "Approve" to "Aprovar"
+        ),
+        "Indonesian" to mapOf(
+            "Settings" to "Pengaturan", "Save" to "Simpan", "Cancel" to "Batal", "Delete" to "Hapus", "Edit" to "Edit",
+            "Back" to "Kembali", "Next" to "Lanjut", "Close" to "Tutup", "Search" to "Cari", "Confirm" to "Konfirmasi",
+            "Scenes" to "Adegan", "Duration" to "Durasi", "Seconds" to "detik", "Minutes" to "menit", "Hours" to "jam",
+            "Public" to "Publik", "Draft" to "Draf", "Verified" to "Terverifikasi", "Pending" to "Menunggu",
+            "Dark Mode" to "Mode Gelap", "Light Mode" to "Mode Terang", "Theme" to "Tema",
+            "Voice" to "Suara", "Dubbing" to "Sulih Suara", "Storage" to "Penyimpanan", "Camera" to "Kamera",
+            "Microphone" to "Mikrofon", "Wallet" to "Dompet", "Owner" to "Pemilik", "Profile" to "Profil",
+            "Upload" to "Unggah", "Download" to "Unduh", "Export" to "Ekspor", "Play" to "Putar",
+            "Direct Publish" to "Publikasi Langsung", "Save as Draft" to "Simpan sebagai Draf", "Approve" to "Setujui"
+        )
+    )
+
     /**
-     * Clean bilingual translation helper.
-     * When language is English (or any non-Hindi language), it strictly returns English.
-     * Only when language is explicitly Hindi does it return Hindi.
+     * Clean global multi-language translation helper.
+     * Supports all 12 worldwide languages seamlessly:
+     * When language is Hindi -> returns Hindi.
+     * When language is English -> returns English.
+     * When language is Japanese, Spanish, German, French, Korean, Chinese, Arabic, Russian, Portuguese, or Indonesian:
+     * -> Resolves matching translated string from translations map or global vocabulary.
      */
     fun tr(language: String, en: String, hi: String): String {
-        return if (isHindi(language)) hi else en
+        val norm = normalizeLanguage(language)
+        if (norm == "Hindi") return hi
+        if (norm == "English") return en
+
+        val cleanEn = en.trim().replace(Regex("^[\\s✓•▶👑🎬✨🌍⚡⚙🔒➕:]+|[\\s✓•▶👑🎬✨🌍⚡⚙🔒➕:]+$"), "").trim()
+        val cleanHi = hi.trim().replace(Regex("^[\\s✓•▶👑🎬✨🌍⚡⚙🔒➕:]+|[\\s✓•▶👑🎬✨🌍⚡⚙🔒➕:]+$"), "").trim()
+        val key = englishToKey[en.trim().lowercase()]
+            ?: englishToKey[cleanEn.lowercase()]
+            ?: hindiToKey[hi.trim().lowercase()]
+            ?: hindiToKey[cleanHi.lowercase()]
+
+        if (key != null) {
+            val localized = translations[norm]?.get(key)
+            if (!localized.isNullOrBlank()) return localized
+        }
+
+        // Check global vocabulary for exact or partial matches
+        val vocab = globalVocab[norm]
+        if (vocab != null) {
+            val direct = vocab[en.trim()] ?: vocab[cleanEn]
+            if (!direct.isNullOrBlank()) return direct
+
+            for ((term, replacement) in vocab) {
+                if (en.equals(term, ignoreCase = true) || cleanEn.equals(term, ignoreCase = true)) {
+                    return replacement
+                }
+            }
+
+            // Replace known keyword tokens inside compound strings
+            var translated = en
+            for ((term, replacement) in vocab) {
+                if (translated.contains(term, ignoreCase = true)) {
+                    translated = translated.replace(Regex("(?i)\\b" + Regex.escape(term) + "\\b"), replacement)
+                }
+            }
+            if (translated != en) return translated
+        }
+
+        return en
     }
 
     fun localize(en: String, hi: String, language: String): String {
-        return if (isHindi(language)) hi else en
+        return tr(language, en, hi)
     }
 
     fun get(key: String, language: String): String {
@@ -1630,7 +1801,6 @@ object AppLocaleStrings {
             ?: translations["English"]
             ?: emptyMap()
 
-        // When the user chose English or other languages, NEVER fall back to Hindi!
         if (normalized != "Hindi") {
             return langMap[key]
                 ?: translations["English"]?.get(key)
@@ -1643,3 +1813,4 @@ object AppLocaleStrings {
         }
     }
 }
+

@@ -17,6 +17,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
+import android.content.Intent
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -118,6 +119,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         com.example.ui.theme.AppThemeController.initialize(this)
         enableEdgeToEdge()
+        handleViralIntent(intent)
         setContent {
             val state by viewModel.uiState.collectAsState()
             val currentUser by viewModel.currentUser.collectAsState()
@@ -512,6 +514,25 @@ class MainActivity : ComponentActivity() {
                         )
                     }
                 }
+            }
+        }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        handleViralIntent(intent)
+    }
+
+    private fun handleViralIntent(intent: Intent?) {
+        val action = intent?.getStringExtra("action")
+        if (action == "open_viral_studio") {
+            val topic = intent.getStringExtra("viral_topic") ?: ""
+            val prompt = intent.getStringExtra("viral_prompt") ?: ""
+            viewModel.setTab(AppTab.STUDIO)
+            if (prompt.isNotBlank()) {
+                viewModel.setPromptInput(prompt)
+                viewModel.generateAnimeVideo()
             }
         }
     }

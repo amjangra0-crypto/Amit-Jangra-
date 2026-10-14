@@ -63,9 +63,11 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -91,6 +93,9 @@ import com.example.data.model.AutomatedEpisode
 import com.example.data.model.ChannelPlatform
 import com.example.data.model.EpisodeReviewStatus
 import com.example.data.model.MusicMood
+import com.example.data.model.UploadPrivacyStatus
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import com.example.ui.AnimeViewModel
 import com.example.ui.components.AudioWaveformCanvas
 import com.example.ui.theme.AnimeCyan
@@ -547,18 +552,26 @@ fun AutomationHubScreen(
 
         when (activeTab) {
             0 -> {
-                // TAB 0: YouTube Multi-Channel Link & Web Series Command Hub
-                ChannelConnectionCard(
+                // TAB 0: Multi-Platform (YouTube, Instagram, Facebook) Channels & Automation Hub
+                MultiPlatformChannelConnectionCard(
                     connectedChannels = connectedChannels,
                     activeChannel = connectedChannel,
+                    schedule = webSeriesSchedule,
                     channelUrlInput = channelUrlInput,
                     channelNameInput = channelNameInput,
                     onUrlChange = { channelUrlInput = it },
                     onNameChange = { channelNameInput = it },
-                    onSaveChannel = {
+                    onSaveChannel = { platform, privacy, requireVerify ->
                         if (channelUrlInput.isNotBlank()) {
-                            automationManager.connectChannelByLink(channelUrlInput, channelNameInput)
-                            Toast.makeText(context, "✅ YouTube channel connected to multi-channel automation!", Toast.LENGTH_SHORT).show()
+                            automationManager.addChannel(
+                                channelName = channelNameInput,
+                                channelHandleOrUrl = channelUrlInput,
+                                platform = platform,
+                                defaultPrivacy = privacy,
+                                subscribers = "Connected Account",
+                                category = "Animation / Film"
+                            )
+                            Toast.makeText(context, "✅ ${platform.displayName} account connected!", Toast.LENGTH_SHORT).show()
                             channelUrlInput = ""
                             channelNameInput = ""
                         } else {
@@ -570,12 +583,24 @@ fun AutomationHubScreen(
                         Toast.makeText(context, "▶️ Switched active automation channel", Toast.LENGTH_SHORT).show()
                     },
                     onRemoveChannel = { channelId ->
-                        val ok = automationManager.removeYouTubeChannel(channelId)
+                        val ok = automationManager.removeChannel(channelId)
                         if (ok) {
-                            Toast.makeText(context, "🗑️ Channel removed from automation pool", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, "🗑️ Account removed from automation pool", Toast.LENGTH_SHORT).show()
                         } else {
                             Toast.makeText(context, "Cannot remove the only connected channel", Toast.LENGTH_SHORT).show()
                         }
+                    },
+                    onToggleChannelVerification = { chId, req ->
+                        automationManager.toggleChannelVerification(chId, req)
+                    },
+                    onSetChannelPrivacy = { chId, priv ->
+                        automationManager.setChannelPrivacy(chId, priv)
+                    },
+                    onToggleGlobalVerification = { req ->
+                        automationManager.setRequireOwnerVerification(req)
+                    },
+                    onSetGlobalPrivacy = { priv ->
+                        automationManager.setDefaultUploadPrivacy(priv)
                     }
                 )
 
@@ -677,26 +702,45 @@ fun AutomationHubScreen(
 }
 
 /**
- * YouTube Multi-Channel Connection & Selection Card
- * Handles multiple YouTube channels simultaneously with 1-click active targeting
+ * Multi-Platform Social Media Connection & Automation Card
+ * Handles multiple YouTube channels, Instagram accounts, and Facebook pages simultaneously.
+ * Includes:
+ * 1. Manual Verification toggle (require owner approval before uploading or allow auto-upload without review).
+ * 2. Per-account & global visibility setting ('Direct Publish' vs 'Save as Draft').
  */
 @Composable
-private fun ChannelConnectionCard(
+private fun MultiPlatformChannelConnectionCard(
     connectedChannels: List<com.example.data.model.ConnectedChannel>,
     activeChannel: com.example.data.model.ConnectedChannel,
+    schedule: com.example.data.model.WebSeriesSchedule,
     channelUrlInput: String,
     channelNameInput: String,
     onUrlChange: (String) -> Unit,
     onNameChange: (String) -> Unit,
-    onSaveChannel: () -> Unit,
+    onSaveChannel: (ChannelPlatform, UploadPrivacyStatus, Boolean) -> Unit,
     onSelectChannel: (String) -> Unit,
-    onRemoveChannel: (String) -> Unit
+    onRemoveChannel: (String) -> Unit,
+    onToggleChannelVerification: (String, Boolean) -> Unit,
+    onSetChannelPrivacy: (String, UploadPrivacyStatus) -> Unit,
+    onToggleGlobalVerification: (Boolean) -> Unit,
+    onSetGlobalPrivacy: (UploadPrivacyStatus) -> Unit
 ) {
+    var selectedPlatformTab by remember { mutableStateOf<ChannelPlatform?>(null) } // null = All
+    var newAccountPlatform by remember { mutableStateOf(ChannelPlatform.YOUTUBE) }
+    var newAccountPrivacy by remember { mutableStateOf(UploadPrivacyStatus.PUBLIC) }
+    var newAccountRequireVerify by remember { mutableStateOf(true) }
+
+    val filteredChannels = if (selectedPlatformTab == null) {
+        connectedChannels
+    } else {
+        connectedChannels.filter { it.platform == selectedPlatformTab }
+    }
+
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth().testTag("multi_platform_social_card"),
         colors = CardDefaults.cardColors(containerColor = AnimeSurface),
         shape = RoundedCornerShape(16.dp),
-        border = BorderStroke(1.dp, Color(0xFFFF0000).copy(alpha = 0.6f))
+        border = BorderStroke(1.dp, AnimePurple.copy(alpha = 0.6f))
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             // Header
@@ -710,100 +754,232 @@ private fun ChannelConnectionCard(
                         modifier = Modifier
                             .size(36.dp)
                             .clip(CircleShape)
-                            .background(Color(0xFFFF0000).copy(alpha = 0.2f)),
+                            .background(AnimePurple.copy(alpha = 0.2f)),
                         contentAlignment = Alignment.Center
                     ) {
-                        Icon(Icons.Default.Tv, contentDescription = null, tint = Color(0xFFFF0000), modifier = Modifier.size(20.dp))
+                        Icon(Icons.Default.Tv, contentDescription = null, tint = AnimePurple, modifier = Modifier.size(20.dp))
                     }
                     Spacer(modifier = Modifier.width(10.dp))
                     Column {
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text("Multiple YouTube Channels", color = TextPrimary, fontSize = 14.sp, fontWeight = FontWeight.Bold)
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Box(
-                                modifier = Modifier
-                                    .clip(RoundedCornerShape(4.dp))
-                                    .background(AnimeGreen.copy(alpha = 0.2f))
-                                    .padding(horizontal = 6.dp, vertical = 2.dp)
-                            ) {
-                                Text("${connectedChannels.size} Channels", color = AnimeGreen, fontSize = 9.sp, fontWeight = FontWeight.Bold)
-                            }
+                            Text("YouTube, Instagram & Facebook AI Automation", color = TextPrimary, fontSize = 13.sp, fontWeight = FontWeight.Bold)
                         }
-                        Text("Switch active automation target or link new channels", color = TextSecondary, fontSize = 11.sp)
+                        Text("${connectedChannels.size} Connected Accounts • Multi-Platform Management", color = TextSecondary, fontSize = 11.sp)
                     }
                 }
 
-                if (activeChannel.isConnected) {
-                    Box(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(6.dp))
-                            .background(AnimeGreen.copy(alpha = 0.2f))
-                            .padding(horizontal = 8.dp, vertical = 3.dp)
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(6.dp))
+                        .background(AnimeGreen.copy(alpha = 0.2f))
+                        .padding(horizontal = 8.dp, vertical = 3.dp)
+                ) {
+                    Text("ACTIVE: ${activeChannel.platform.displayName.take(8)}", color = AnimeGreen, fontSize = 9.sp, fontWeight = FontWeight.ExtraBold)
+                }
+            }
+
+            Spacer(modifier = Modifier.height(14.dp))
+
+            // GLOBAL MANUAL VERIFICATION & DEFAULT PRIVACY MASTER CONTROLS
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(containerColor = AnimeSurfaceVariant),
+                shape = RoundedCornerShape(12.dp),
+                border = BorderStroke(1.dp, AnimeGold.copy(alpha = 0.4f))
+            ) {
+                Column(modifier = Modifier.padding(12.dp)) {
+                    // Control 1: Manual Verification Gate Toggle
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text("ACTIVE", color = AnimeGreen, fontSize = 9.sp, fontWeight = FontWeight.ExtraBold)
+                        Column(modifier = Modifier.weight(1f)) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text(
+                                    text = if (schedule.requireOwnerVerificationBeforeUpload) "🔒 Manual Verification Gate: ON" else "⚡ Direct Auto-Publish: ON",
+                                    color = if (schedule.requireOwnerVerificationBeforeUpload) AnimeGold else AnimeGreen,
+                                    fontSize = 12.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                            Text(
+                                text = if (schedule.requireOwnerVerificationBeforeUpload)
+                                    "AI agent holds videos in 'Pending Review'. You must tap 'Approve / Green Signal' before sending."
+                                else
+                                    "AI agent uploads directly according to schedule without waiting for manual verification.",
+                                color = TextSecondary,
+                                fontSize = 10.sp
+                            )
+                        }
+
+                        Switch(
+                            checked = schedule.requireOwnerVerificationBeforeUpload,
+                            onCheckedChange = onToggleGlobalVerification,
+                            colors = SwitchDefaults.colors(
+                                checkedThumbColor = AnimeGold,
+                                checkedTrackColor = AnimeGold.copy(alpha = 0.4f),
+                                uncheckedThumbColor = AnimeGreen,
+                                uncheckedTrackColor = AnimeGreen.copy(alpha = 0.4f)
+                            ),
+                            modifier = Modifier.testTag("manual_verification_master_toggle")
+                        )
+                    }
+
+                    HorizontalDivider(color = TextMuted.copy(alpha = 0.2f), modifier = Modifier.padding(vertical = 10.dp))
+
+                    // Control 2: Global Upload Visibility (Direct Publish vs Save as Draft)
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "Default Upload Mode (पब्लिश मोड):",
+                                color = TextPrimary,
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Text(
+                                text = if (schedule.defaultUploadPrivacy == UploadPrivacyStatus.PUBLIC)
+                                    "Videos are published directly to the public live stream."
+                                else
+                                    "Videos are saved privately as drafts first for review.",
+                                color = TextSecondary,
+                                fontSize = 10.sp
+                            )
+                        }
+
+                        Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                            FilterChip(
+                                selected = schedule.defaultUploadPrivacy == UploadPrivacyStatus.PUBLIC,
+                                onClick = { onSetGlobalPrivacy(UploadPrivacyStatus.PUBLIC) },
+                                label = { Text("Direct Public", fontSize = 10.sp) },
+                                colors = FilterChipDefaults.filterChipColors(
+                                    selectedContainerColor = AnimeGreen.copy(alpha = 0.3f),
+                                    selectedLabelColor = AnimeGreen
+                                )
+                            )
+                            FilterChip(
+                                selected = schedule.defaultUploadPrivacy == UploadPrivacyStatus.DRAFT_PRIVATE,
+                                onClick = { onSetGlobalPrivacy(UploadPrivacyStatus.DRAFT_PRIVATE) },
+                                label = { Text("Save Draft", fontSize = 10.sp) },
+                                colors = FilterChipDefaults.filterChipColors(
+                                    selectedContainerColor = AnimeCyan.copy(alpha = 0.3f),
+                                    selectedLabelColor = AnimeCyan
+                                )
+                            )
+                        }
                     }
                 }
             }
 
             Spacer(modifier = Modifier.height(14.dp))
 
-            // Section 1: Connected Channels Selector (Multi-Channel Horizontal List)
-            Text(
-                text = "📺 Connected YouTube Channels (Tap to switch target):",
-                color = TextSecondary,
-                fontSize = 11.sp,
-                fontWeight = FontWeight.SemiBold
-            )
-            Spacer(modifier = Modifier.height(8.dp))
+            // Platform Filter Chips: All, YouTube, Instagram, Facebook
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                FilterChip(
+                    selected = selectedPlatformTab == null,
+                    onClick = { selectedPlatformTab = null },
+                    label = { Text("All (${connectedChannels.size})", fontSize = 11.sp) },
+                    colors = FilterChipDefaults.filterChipColors(selectedContainerColor = AnimePurple.copy(alpha = 0.3f), selectedLabelColor = AnimeCyan)
+                )
+                FilterChip(
+                    selected = selectedPlatformTab == ChannelPlatform.YOUTUBE,
+                    onClick = { selectedPlatformTab = ChannelPlatform.YOUTUBE },
+                    label = { Text("YouTube (${connectedChannels.count { it.platform == ChannelPlatform.YOUTUBE }})", fontSize = 11.sp) },
+                    colors = FilterChipDefaults.filterChipColors(selectedContainerColor = Color(0xFFFF0000).copy(alpha = 0.3f), selectedLabelColor = Color(0xFFFF6B6B))
+                )
+                FilterChip(
+                    selected = selectedPlatformTab == ChannelPlatform.INSTAGRAM,
+                    onClick = { selectedPlatformTab = ChannelPlatform.INSTAGRAM },
+                    label = { Text("Instagram (${connectedChannels.count { it.platform == ChannelPlatform.INSTAGRAM }})", fontSize = 11.sp) },
+                    colors = FilterChipDefaults.filterChipColors(selectedContainerColor = Color(0xFFE1306C).copy(alpha = 0.3f), selectedLabelColor = Color(0xFFFF7BB0))
+                )
+                FilterChip(
+                    selected = selectedPlatformTab == ChannelPlatform.FACEBOOK,
+                    onClick = { selectedPlatformTab = ChannelPlatform.FACEBOOK },
+                    label = { Text("Facebook (${connectedChannels.count { it.platform == ChannelPlatform.FACEBOOK }})", fontSize = 11.sp) },
+                    colors = FilterChipDefaults.filterChipColors(selectedContainerColor = Color(0xFF1877F2).copy(alpha = 0.3f), selectedLabelColor = Color(0xFF68A7FF))
+                )
+            }
 
+            Spacer(modifier = Modifier.height(10.dp))
+
+            // Connected Accounts List (Cards with per-account settings)
             LazyRow(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
                 modifier = Modifier.fillMaxWidth()
             ) {
-                items(connectedChannels, key = { it.id }) { channel ->
+                items(filteredChannels, key = { it.id }) { channel ->
                     val isSelected = channel.id == activeChannel.id
+                    val platformColor = when (channel.platform) {
+                        ChannelPlatform.YOUTUBE -> Color(0xFFFF0000)
+                        ChannelPlatform.INSTAGRAM -> Color(0xFFE1306C)
+                        ChannelPlatform.FACEBOOK -> Color(0xFF1877F2)
+                        ChannelPlatform.TIKTOK -> Color(0xFF00F2FE)
+                    }
+
                     Card(
                         modifier = Modifier
-                            .width(220.dp)
-                            .clickable { onSelectChannel(channel.id) }
-                            .testTag("channel_item_${channel.id}"),
+                            .width(260.dp)
+                            .testTag("channel_card_${channel.id}"),
                         colors = CardDefaults.cardColors(
-                            containerColor = if (isSelected) Color(0xFFFF0000).copy(alpha = 0.18f) else AnimeSurfaceVariant
+                            containerColor = if (isSelected) platformColor.copy(alpha = 0.15f) else AnimeSurfaceVariant
                         ),
                         shape = RoundedCornerShape(12.dp),
-                        border = BorderStroke(1.5.dp, if (isSelected) Color(0xFFFF0000) else Color.Transparent)
+                        border = BorderStroke(1.5.dp, if (isSelected) platformColor else Color.Transparent)
                     ) {
-                        Column(modifier = Modifier.padding(10.dp)) {
+                        Column(modifier = Modifier.padding(12.dp)) {
+                            // Card Top: Platform Badge & Active Status & Remove
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.SpaceBetween,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Box(
-                                    modifier = Modifier
-                                        .clip(RoundedCornerShape(4.dp))
-                                        .background(if (isSelected) Color(0xFFFF0000) else TextMuted.copy(alpha = 0.3f))
-                                        .padding(horizontal = 6.dp, vertical = 2.dp)
-                                ) {
-                                    Text(
-                                        text = if (isSelected) "▶ TARGET" else "IDLE",
-                                        color = Color.White,
-                                        fontSize = 9.sp,
-                                        fontWeight = FontWeight.Bold
-                                    )
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Text(channel.platform.iconEmoji, fontSize = 14.sp)
+                                    Spacer(modifier = Modifier.width(4.dp))
+                                    Text(channel.platform.displayName, color = platformColor, fontSize = 10.sp, fontWeight = FontWeight.Bold)
                                 }
 
-                                if (connectedChannels.size > 1) {
-                                    IconButton(
-                                        onClick = { onRemoveChannel(channel.id) },
-                                        modifier = Modifier.size(20.dp)
-                                    ) {
-                                        Icon(Icons.Default.Delete, contentDescription = "Remove Channel", tint = TextMuted, modifier = Modifier.size(14.dp))
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    if (isSelected) {
+                                        Box(
+                                            modifier = Modifier
+                                                .clip(RoundedCornerShape(4.dp))
+                                                .background(platformColor)
+                                                .padding(horizontal = 6.dp, vertical = 2.dp)
+                                        ) {
+                                            Text("▶ TARGET", color = Color.White, fontSize = 8.sp, fontWeight = FontWeight.Bold)
+                                        }
+                                    } else {
+                                        TextButton(
+                                            onClick = { onSelectChannel(channel.id) },
+                                            contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 4.dp, vertical = 1.dp),
+                                            modifier = Modifier.height(24.dp)
+                                        ) {
+                                            Text("Set Active", color = AnimeCyan, fontSize = 9.sp, fontWeight = FontWeight.Bold)
+                                        }
+                                    }
+
+                                    if (connectedChannels.size > 1) {
+                                        IconButton(
+                                            onClick = { onRemoveChannel(channel.id) },
+                                            modifier = Modifier.size(20.dp)
+                                        ) {
+                                            Icon(Icons.Default.Delete, contentDescription = "Remove Account", tint = TextMuted, modifier = Modifier.size(14.dp))
+                                        }
                                     }
                                 }
                             }
 
                             Spacer(modifier = Modifier.height(6.dp))
+
                             Text(
                                 text = channel.channelName,
                                 color = if (isSelected) AnimeGold else TextPrimary,
@@ -817,6 +993,62 @@ private fun ChannelConnectionCard(
                                 fontSize = 10.sp,
                                 maxLines = 1
                             )
+
+                            Spacer(modifier = Modifier.height(8.dp))
+
+                            // Per-Account Setting 1: Direct Publish vs Save as Draft
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text("Mode:", color = TextMuted, fontSize = 9.sp)
+                                Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                                    Box(
+                                        modifier = Modifier
+                                            .clip(RoundedCornerShape(4.dp))
+                                            .background(if (channel.defaultPrivacy == UploadPrivacyStatus.PUBLIC) AnimeGreen.copy(alpha = 0.3f) else AnimeSurface)
+                                            .clickable { onSetChannelPrivacy(channel.id, UploadPrivacyStatus.PUBLIC) }
+                                            .padding(horizontal = 6.dp, vertical = 2.dp)
+                                    ) {
+                                        Text("Public", color = if (channel.defaultPrivacy == UploadPrivacyStatus.PUBLIC) AnimeGreen else TextMuted, fontSize = 8.sp, fontWeight = FontWeight.Bold)
+                                    }
+                                    Box(
+                                        modifier = Modifier
+                                            .clip(RoundedCornerShape(4.dp))
+                                            .background(if (channel.defaultPrivacy == UploadPrivacyStatus.DRAFT_PRIVATE) AnimeCyan.copy(alpha = 0.3f) else AnimeSurface)
+                                            .clickable { onSetChannelPrivacy(channel.id, UploadPrivacyStatus.DRAFT_PRIVATE) }
+                                            .padding(horizontal = 6.dp, vertical = 2.dp)
+                                    ) {
+                                        Text("Draft", color = if (channel.defaultPrivacy == UploadPrivacyStatus.DRAFT_PRIVATE) AnimeCyan else TextMuted, fontSize = 8.sp, fontWeight = FontWeight.Bold)
+                                    }
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.height(6.dp))
+
+                            // Per-Account Setting 2: Verification Required Toggle
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = if (channel.requireOwnerVerificationBeforeUpload) "Verify Before Upload" else "Auto-Upload Direct",
+                                    color = if (channel.requireOwnerVerificationBeforeUpload) AnimeGold else AnimeGreen,
+                                    fontSize = 9.sp,
+                                    fontWeight = FontWeight.Medium
+                                )
+                                Switch(
+                                    checked = channel.requireOwnerVerificationBeforeUpload,
+                                    onCheckedChange = { onToggleChannelVerification(channel.id, it) },
+                                    modifier = Modifier.size(24.dp).padding(end = 4.dp),
+                                    colors = SwitchDefaults.colors(
+                                        checkedThumbColor = AnimeGold,
+                                        checkedTrackColor = AnimeGold.copy(alpha = 0.4f)
+                                    )
+                                )
+                            }
                         }
                     }
                 }
@@ -824,40 +1056,61 @@ private fun ChannelConnectionCard(
 
             Spacer(modifier = Modifier.height(14.dp))
 
-            // Section 2: Link / Add New Channel to Network
+            // ADD NEW SOCIAL ACCOUNT SECTION (YouTube, Instagram, Facebook)
             Text(
-                text = "➕ Add Another YouTube Channel:",
+                text = "➕ Add Another Connected Social Media Account:",
                 color = AnimeCyan,
                 fontSize = 11.sp,
                 fontWeight = FontWeight.Bold
             )
             Spacer(modifier = Modifier.height(6.dp))
 
-            // Channel Link Input Field
+            // Select platform for new account
+            Row(horizontalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.fillMaxWidth()) {
+                ChannelPlatform.entries.filter { it != ChannelPlatform.TIKTOK }.forEach { platform ->
+                    val isSel = newAccountPlatform == platform
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(if (isSel) AnimeCyan.copy(alpha = 0.25f) else AnimeSurfaceVariant)
+                            .border(1.dp, if (isSel) AnimeCyan else Color.Transparent, RoundedCornerShape(8.dp))
+                        .clickable { newAccountPlatform = platform }
+                        .padding(vertical = 6.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "${platform.iconEmoji} ${platform.displayName.take(9)}",
+                            color = if (isSel) AnimeCyanLight else TextSecondary,
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // Channel Link / Handle Input
             OutlinedTextField(
                 value = channelUrlInput,
                 onValueChange = onUrlChange,
-                placeholder = { Text("e.g. https://youtube.com/@MyAnimeChannel or @ChannelHandle", color = TextMuted, fontSize = 11.sp) },
-                leadingIcon = {
-                    Icon(Icons.Default.Link, contentDescription = null, tint = Color(0xFFFF0000), modifier = Modifier.size(18.dp))
-                },
-                trailingIcon = {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        IconButton(onClick = onSaveChannel) {
-                            Icon(Icons.Default.Add, contentDescription = "Add Channel", tint = Color(0xFFFF0000), modifier = Modifier.size(18.dp))
-                        }
-                        IconButton(onClick = {
-                            onUrlChange("https://youtube.com/@AmanAnimeStudioOfficial")
-                            onNameChange("Aman Anime Studio Official")
-                        }) {
-                            Icon(Icons.Default.ContentPaste, contentDescription = "Paste Preset", tint = AnimeCyan, modifier = Modifier.size(18.dp))
-                        }
+                placeholder = {
+                    val sample = when (newAccountPlatform) {
+                        ChannelPlatform.YOUTUBE -> "https://youtube.com/@Channel or @handle"
+                        ChannelPlatform.INSTAGRAM -> "https://instagram.com/username or @handle"
+                        ChannelPlatform.FACEBOOK -> "https://facebook.com/pagename or @page"
+                        else -> "Profile URL or handle"
                     }
+                    Text(sample, color = TextMuted, fontSize = 11.sp)
+                },
+                leadingIcon = {
+                    Icon(Icons.Default.Link, contentDescription = null, tint = AnimeCyan, modifier = Modifier.size(18.dp))
                 },
                 singleLine = true,
-                modifier = Modifier.fillMaxWidth().testTag("youtube_channel_link_input"),
+                modifier = Modifier.fillMaxWidth().testTag("social_channel_link_input"),
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = Color(0xFFFF0000),
+                    focusedBorderColor = AnimeCyan,
                     focusedTextColor = TextPrimary,
                     unfocusedTextColor = TextPrimary
                 ),
@@ -866,7 +1119,7 @@ private fun ChannelConnectionCard(
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // Channel Name Input & Add Button
+            // Account Name Input & Add Button
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -875,9 +1128,9 @@ private fun ChannelConnectionCard(
                 OutlinedTextField(
                     value = channelNameInput,
                     onValueChange = onNameChange,
-                    placeholder = { Text("Display Name (e.g. Shonen Anime TV)", color = TextMuted, fontSize = 11.sp) },
+                    placeholder = { Text("Display Name (e.g. My Anime Page)", color = TextMuted, fontSize = 11.sp) },
                     singleLine = true,
-                    modifier = Modifier.weight(1f).testTag("youtube_channel_name_input"),
+                    modifier = Modifier.weight(1f).testTag("social_channel_name_input"),
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = AnimeCyan,
                         focusedTextColor = TextPrimary,
@@ -887,15 +1140,17 @@ private fun ChannelConnectionCard(
                 )
 
                 Button(
-                    onClick = onSaveChannel,
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF0000)),
+                    onClick = {
+                        onSaveChannel(newAccountPlatform, newAccountPrivacy, newAccountRequireVerify)
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = AnimeCyan),
                     shape = RoundedCornerShape(10.dp),
                     contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 14.dp, vertical = 10.dp),
-                    modifier = Modifier.testTag("save_channel_link_btn")
+                    modifier = Modifier.testTag("save_social_channel_btn")
                 ) {
-                    Icon(Icons.Default.Add, contentDescription = null, tint = Color.White, modifier = Modifier.size(14.dp))
+                    Icon(Icons.Default.Add, contentDescription = null, tint = Color.Black, modifier = Modifier.size(14.dp))
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text("Add Channel", color = Color.White, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                    Text("Add Account", color = Color.Black, fontSize = 11.sp, fontWeight = FontWeight.Bold)
                 }
             }
 
@@ -913,13 +1168,13 @@ private fun ChannelConnectionCard(
             ) {
                 Column {
                     Text(
-                        text = "Current Active Automation Channel: ${activeChannel.channelName}",
+                        text = "Current Active Target: ${activeChannel.platform.iconEmoji} ${activeChannel.channelName}",
                         color = AnimeGold,
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Bold
                     )
                     Text(
-                        text = "${activeChannel.channelHandle} • ${activeChannel.subscriberCount} • Web Series Schedule Linked",
+                        text = "${activeChannel.channelHandle} • Mode: ${if (activeChannel.defaultPrivacy == UploadPrivacyStatus.PUBLIC) "Direct Public" else "Draft"} • Verify: ${if (activeChannel.requireOwnerVerificationBeforeUpload) "Required" else "Auto"}",
                         color = TextSecondary,
                         fontSize = 10.sp
                     )

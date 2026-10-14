@@ -27,11 +27,15 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.CameraAlt
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.DarkMode
+import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.OpenInNew
 import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.PhotoLibrary
+import androidx.compose.material.icons.filled.Public
 import androidx.compose.material.icons.filled.Security
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Shield
@@ -225,6 +229,213 @@ fun SettingsScreen(
                     color = TextSecondary,
                     fontSize = 11.sp
                 )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(14.dp))
+
+        // APPEARANCE THEME: LIGHT / DARK MODE TOGGLE SWITCH
+        Card(
+            modifier = Modifier.fillMaxWidth().testTag("settings_theme_card"),
+            colors = CardDefaults.cardColors(containerColor = AnimeSurface),
+            shape = RoundedCornerShape(16.dp),
+            border = BorderStroke(1.dp, AnimePurple.copy(alpha = 0.5f))
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
+                    Box(
+                        modifier = Modifier
+                            .size(38.dp)
+                            .clip(CircleShape)
+                            .background(if (uiState.isDarkMode) AnimeGold.copy(alpha = 0.2f) else AnimePurple.copy(alpha = 0.2f)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = if (uiState.isDarkMode) Icons.Default.DarkMode else Icons.Default.LightMode,
+                            contentDescription = null,
+                            tint = if (uiState.isDarkMode) AnimeGold else AnimePurple,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Column {
+                        Text(
+                            text = AppLocaleStrings.tr(lang, "Display Theme (Light / Dark)", "थीम व डिस्प्ले मोड (लाइट / डार्क)"),
+                            color = TextPrimary,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 14.sp
+                        )
+                        Text(
+                            text = if (uiState.isDarkMode)
+                                AppLocaleStrings.tr(lang, "Active: Cinematic Dark AMOLED", "सक्रिय: सिनेमाई डार्क एमोलेड")
+                            else
+                                AppLocaleStrings.tr(lang, "Active: Crisp Studio Light Mode", "सक्रिय: स्टूडियो लाइट मोड"),
+                            color = if (uiState.isDarkMode) AnimeGold else AnimeCyan,
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
+                }
+
+                Switch(
+                    checked = uiState.isDarkMode,
+                    onCheckedChange = { viewModel.toggleTheme() },
+                    colors = SwitchDefaults.colors(
+                        checkedThumbColor = AnimeGold,
+                        checkedTrackColor = AnimeGold.copy(alpha = 0.4f),
+                        uncheckedThumbColor = AnimePurple,
+                        uncheckedTrackColor = AnimePurple.copy(alpha = 0.3f)
+                    ),
+                    modifier = Modifier.testTag("settings_theme_toggle_switch")
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(14.dp))
+
+        // GLOBAL DEFAULT LANGUAGE CUSTOMIZATION CARD
+        Card(
+            modifier = Modifier.fillMaxWidth().testTag("settings_language_card"),
+            colors = CardDefaults.cardColors(containerColor = AnimeSurface),
+            shape = RoundedCornerShape(16.dp),
+            border = BorderStroke(1.dp, AnimeCyan.copy(alpha = 0.5f))
+        ) {
+            Column(modifier = Modifier.padding(14.dp)) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Box(
+                            modifier = Modifier
+                                .size(36.dp)
+                                .clip(CircleShape)
+                                .background(AnimeCyan.copy(alpha = 0.2f)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(Icons.Default.Public, contentDescription = null, tint = AnimeCyan, modifier = Modifier.size(20.dp))
+                        }
+                        Spacer(modifier = Modifier.width(10.dp))
+                        Column {
+                            Text(
+                                text = AppLocaleStrings.tr(lang, "Global Default Language", "ग्लोबल डिफ़ॉल्ट भाषा प्रणाली"),
+                                color = TextPrimary,
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Text(
+                                text = "${AppLocaleStrings.tr(lang, "Current", "वर्तमान")}: ${uiState.selectedLanguage} • 12 Supported Worldwide",
+                                color = TextSecondary,
+                                fontSize = 11.sp
+                            )
+                        }
+                    }
+
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(6.dp))
+                            .background(AnimeCyan.copy(alpha = 0.2f))
+                            .padding(horizontal = 7.dp, vertical = 3.dp)
+                    ) {
+                        Text(
+                            text = uiState.selectedLanguage.uppercase(),
+                            color = AnimeCyan,
+                            fontSize = 9.sp,
+                            fontWeight = FontWeight.ExtraBold
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Text(
+                    text = AppLocaleStrings.tr(
+                        lang,
+                        "Customize default app language globally. All screens, buttons, menus & dubbing voice reflect your selected language.",
+                        "पूरी ऐप के लिए मुख्य भाषा कस्टमाइज़ करें। स्क्रीन, बटन, मेन्यू व वॉइस तुरंत उसी भाषा में अपडेट होंगे।"
+                    ),
+                    color = TextSecondary,
+                    fontSize = 11.sp
+                )
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                // 12 Worldwide Language Grid Options
+                val globalLanguages = listOf(
+                    Triple("Hindi", "🇮🇳 हिन्दी", "hi"),
+                    Triple("English", "🇺🇸 English", "en"),
+                    Triple("Japanese", "🇯🇵 日本語", "ja"),
+                    Triple("Korean", "🇰🇷 한국어", "ko"),
+                    Triple("Spanish", "🇪🇸 Español", "es"),
+                    Triple("German", "🇩🇪 Deutsch", "de"),
+                    Triple("French", "🇫🇷 Français", "fr"),
+                    Triple("Chinese", "🇨🇳 中文", "zh"),
+                    Triple("Arabic", "🇦🇪 العربية", "ar"),
+                    Triple("Russian", "🇷🇺 Русский", "ru"),
+                    Triple("Portuguese", "🇧🇷 Português", "pt"),
+                    Triple("Indonesian", "🇮🇩 Bahasa", "id")
+                )
+
+                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    globalLanguages.chunked(3).forEach { rowLangs ->
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            rowLangs.forEach { (langName, label, _) ->
+                                val isSelected = uiState.selectedLanguage.equals(langName, ignoreCase = true)
+                                Box(
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .clip(RoundedCornerShape(10.dp))
+                                        .background(if (isSelected) AnimeCyan.copy(alpha = 0.25f) else AnimeSurfaceVariant)
+                                        .border(
+                                            1.dp,
+                                            if (isSelected) AnimeCyan else Color.Transparent,
+                                            RoundedCornerShape(10.dp)
+                                        )
+                                        .clickable {
+                                            viewModel.setAppInterfaceLanguage(langName)
+                                            viewModel.setLanguage(langName)
+                                            Toast.makeText(
+                                                context,
+                                                "🌍 Global Default Language: $label ($langName)",
+                                                Toast.LENGTH_SHORT
+                                            ).show()
+                                        }
+                                        .padding(vertical = 8.dp, horizontal = 4.dp)
+                                        .testTag("global_lang_btn_$langName"),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Text(
+                                            text = label,
+                                            color = if (isSelected) AnimeCyanLight else TextPrimary,
+                                            fontSize = 10.sp,
+                                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
+                                        )
+                                        if (isSelected) {
+                                            Spacer(modifier = Modifier.width(3.dp))
+                                            Icon(
+                                                Icons.Default.Check,
+                                                contentDescription = null,
+                                                tint = AnimeGreen,
+                                                modifier = Modifier.size(12.dp)
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
             }
         }
 

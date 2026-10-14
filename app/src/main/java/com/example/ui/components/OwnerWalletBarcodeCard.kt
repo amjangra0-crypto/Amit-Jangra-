@@ -24,15 +24,22 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.ContentCopy
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.QrCode2
 import androidx.compose.material.icons.filled.Security
 import androidx.compose.material.icons.filled.ViewWeek
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -310,24 +317,51 @@ fun OwnerWalletBarcodeCard(
                         )
                     }
 
-                    OutlinedButton(
-                        onClick = { copyWalletId() },
-                        modifier = Modifier.height(30.dp),
-                        contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 8.dp, vertical = 2.dp)
-                    ) {
-                        Icon(
-                            if (hasCopied) Icons.Default.CheckCircle else Icons.Default.ContentCopy,
-                            contentDescription = "Copy",
-                            tint = if (hasCopied) AnimeGreen else AnimeCyan,
-                            modifier = Modifier.size(12.dp)
-                        )
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text(
-                            text = if (hasCopied) "Copied!" else "Copy ID",
-                            color = if (hasCopied) AnimeGreen else AnimeCyan,
-                            fontSize = 10.sp,
-                            fontWeight = FontWeight.Bold
-                        )
+                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
+                        OutlinedButton(
+                            onClick = { copyWalletId() },
+                            modifier = Modifier.height(30.dp).testTag("copy_owner_wallet_id_btn"),
+                            contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 8.dp, vertical = 2.dp)
+                        ) {
+                            Icon(
+                                if (hasCopied) Icons.Default.CheckCircle else Icons.Default.ContentCopy,
+                                contentDescription = "Copy",
+                                tint = if (hasCopied) AnimeGreen else AnimeCyan,
+                                modifier = Modifier.size(12.dp)
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = if (hasCopied) "Copied!" else "Copy ID",
+                                color = if (hasCopied) AnimeGreen else AnimeCyan,
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+
+                        if (isOwnerSelfView || authRepo.currentUser.value.isOwner) {
+                            OutlinedButton(
+                                onClick = {
+                                    newWalletIdInput = currentWalletId
+                                    showEditWalletIdDialog = true
+                                },
+                                modifier = Modifier.height(30.dp).testTag("edit_owner_wallet_id_btn"),
+                                contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 8.dp, vertical = 2.dp)
+                            ) {
+                                Icon(
+                                    Icons.Default.Edit,
+                                    contentDescription = "Customize Owner Wallet ID",
+                                    tint = AnimeGold,
+                                    modifier = Modifier.size(12.dp)
+                                )
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text(
+                                    text = AppLocaleStrings.tr(language, "Edit ID", "बदलें"),
+                                    color = AnimeGold,
+                                    fontSize = 10.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                        }
                     }
                 }
             }
@@ -387,4 +421,67 @@ fun OwnerWalletBarcodeCard(
             }
         }
     }
+
+    if (showEditWalletIdDialog) {
+        AlertDialog(
+            onDismissRequest = { showEditWalletIdDialog = false },
+            title = {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text("👑", fontSize = 20.sp)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = AppLocaleStrings.tr(language, "Customize Owner Wallet ID", "ओनर वॉलेट ID कस्टमाइज़ करें"),
+                        color = MaterialTheme.colorScheme.onSurface,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 16.sp
+                    )
+                }
+            },
+            text = {
+                Column {
+                    Text(
+                        text = AppLocaleStrings.tr(
+                            language,
+                            "Enter new custom Owner Wallet ID for receiving payments & in-app deposits:",
+                            "भुगतान व इन-ऐप डिपॉजिट प्राप्त करने हेतु नई ओनर वॉलेट ID दर्ज करें:"
+                        ),
+                        color = TextSecondary,
+                        fontSize = 12.sp
+                    )
+                    Spacer(modifier = Modifier.height(10.dp))
+                    OutlinedTextField(
+                        value = newWalletIdInput,
+                        onValueChange = { newWalletIdInput = it },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth().testTag("custom_owner_wallet_id_field"),
+                        placeholder = { Text("e.g. WALLET_OWNER_AMJANGRA0_9999", color = TextMuted, fontSize = 12.sp) }
+                    )
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        val trimmed = newWalletIdInput.trim()
+                        if (trimmed.isNotBlank()) {
+                            authRepo.updateOwnerWalletId(trimmed)
+                            currentWalletId = trimmed
+                            showEditWalletIdDialog = false
+                            Toast.makeText(context, "👑 Owner Wallet ID updated: $trimmed", Toast.LENGTH_SHORT).show()
+                        }
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = AnimeGold),
+                    shape = RoundedCornerShape(8.dp),
+                    modifier = Modifier.testTag("save_custom_wallet_id_btn")
+                ) {
+                    Text(AppLocaleStrings.tr(language, "Save Wallet ID", "सेव करें"), color = Color.Black, fontWeight = FontWeight.Bold)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showEditWalletIdDialog = false }) {
+                    Text(AppLocaleStrings.tr(language, "Cancel", "रद्द करें"), color = TextSecondary)
+                }
+            }
+        )
+    }
 }
+

@@ -26,6 +26,17 @@ class AuthAndWalletRepository(private val context: Context) {
         const val OWNER_EMAIL = "amjangra0@gmail.com"
         const val OWNER_PHONE = "+91 98765 43210"
         const val OWNER_UID = "owner_amjangra0"
+
+        @Volatile
+        private var INSTANCE: AuthAndWalletRepository? = null
+
+        fun getInstance(context: Context): AuthAndWalletRepository {
+            return INSTANCE ?: synchronized(this) {
+                val inst = AuthAndWalletRepository(context.applicationContext)
+                INSTANCE = inst
+                inst
+            }
+        }
     }
 
     fun getOwnerName(): String = prefs.getString("custom_owner_name", "Aman Jangra") ?: "Aman Jangra"
