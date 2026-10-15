@@ -104,6 +104,7 @@ import com.example.ui.AppTab
 import com.example.ui.components.ProjectQuickVideoPreviewModal
 import com.example.ui.components.ProjectThumbnailVideoPreview
 import com.example.ui.components.ResourceHelpers
+import com.example.ui.components.StudioAnalyticsDataViz
 import com.example.ui.theme.AnimeCyan
 import com.example.ui.theme.AnimeCyanLight
 import com.example.ui.theme.AnimeGold
@@ -249,6 +250,15 @@ fun RecentVideoProjectsScreen(viewModel: AnimeViewModel) {
                 totalProjects = totalProjects,
                 totalDurationSec = totalDurationSeconds,
                 totalCharacters = totalCharactersCount
+            )
+        }
+
+        // 2b. Recharts-Inspired Studio Data Visualization Module
+        item {
+            StudioAnalyticsDataViz(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag("recent_projects_recharts_analytics")
             )
         }
 

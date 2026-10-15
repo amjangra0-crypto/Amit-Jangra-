@@ -84,7 +84,52 @@ data class AutomatedEpisode(
     val uploadPrivacy: UploadPrivacyStatus = UploadPrivacyStatus.PUBLIC,
     val viewCountEstimate: String = "Just Published",
     val userReviewNote: String = "",
-    val isGreenSignalGiven: Boolean = false
+    val isGreenSignalGiven: Boolean = false,
+    val originalPrompt: String = "Cyberpunk samurai duel under crimson cherry blossoms in futuristic Neo-Tokyo rain",
+    val aiDirectorEnrichedPrompt: String = "Cinematic 4K Makoto Shinkai style: Dynamic camera panning, electric katana sparks reflecting in puddle reflections, binaural atmospheric thunder audio, 60fps high motion choreography",
+    val viralityScore: Int = 94,
+    val fps: Int = 60,
+    val resolution: String = "1080p Full HD"
+)
+
+/**
+ * Owner-controlled Monetization & Access Configuration for Automation Trend Horizon
+ */
+enum class TrendHorizonAccessTier(val title: String, val description: String) {
+    FREE_FOR_ALL("Free for All Creators (मुफ़्त)", "Everyone can freely research viral trends and run automated video generation pipelines"),
+    VIP_PAID_ONLY("VIP & Paid Subscribers Only (पेड / वीआईपी)", "Strictly requires PRO Creator or VIP Lifetime subscription to access trend horizon features"),
+    CREDITS_PER_USE("Pay-Per-Use with Credits (क्रेडिट्स)", "Charges 10 wallet credits per trend horizon video generation pipeline")
+}
+
+data class TrendHorizonConfig(
+    val accessTier: TrendHorizonAccessTier = TrendHorizonAccessTier.FREE_FOR_ALL,
+    val creditCostPerRun: Int = 10,
+    val isOwnerOverrideActive: Boolean = true,
+    val totalTrendPipelinesRun: Int = 142
+)
+
+/**
+ * Kotlin Flow Tracking for Video Generation Tasks
+ */
+enum class GenerationStage(val label: String, val stepIndex: Int, val totalSteps: Int = 5) {
+    IDLE("Ready for Creation", 0),
+    SCRIPT_WRITING("Writing Cinematic Anime Script & Dialogues", 1),
+    STORYBOARD_GENERATION("Synthesizing Visual Storyboard & Character Poses", 2),
+    VOICE_DUBBING("Generating Character & Explainer Audio Dubbing", 3),
+    MUSIC_COMPOSITION("Composing Dynamic Lyria AI Background Score", 4),
+    RENDERING_ENCODING("Encoding Final MP4 Video at Target FPS", 5),
+    COMPLETED("Video Generation Completed", 5),
+    FAILED("Video Generation Error", 0)
+}
+
+data class GenerationTaskProgress(
+    val stage: GenerationStage = GenerationStage.IDLE,
+    val progressPercent: Float = 0f,
+    val stageDescription: String = "Standing by",
+    val activeTaskName: String = "",
+    val elapsedSeconds: Int = 0,
+    val etaSeconds: Int = 0,
+    val isGenerating: Boolean = false
 )
 
 /**
@@ -102,3 +147,4 @@ data class LyriaSoundtrack(
     val audioUrlOrPath: String = "",
     val createdAt: Long = System.currentTimeMillis()
 )
+

@@ -24,6 +24,10 @@ import com.example.data.model.AnimeVisualElement
 import com.example.data.model.CharacterProfile
 import com.example.data.model.CountryCode
 import com.example.data.model.CountryCodeProvider
+import com.example.data.model.DefaultExportPresets
+import com.example.data.model.ExportPreset
+import com.example.data.model.GenerationStage
+import com.example.data.model.GenerationTaskProgress
 import com.example.data.model.CurrencyType
 import com.example.data.model.CurrencyWallet
 import com.example.data.model.DialogueLine
@@ -71,7 +75,11 @@ enum class AppTab(val title: String, val iconName: String) {
     UPDATES("Updates", "system_update"),
     PROFILE("Profile", "account_circle"),
     SETTINGS("Settings", "settings"),
-    OWNER_DASHBOARD("Owner Dashboard", "security")
+    OWNER_DASHBOARD("Owner Dashboard", "security"),
+    PENDING_REVIEW("Pending Review", "rate_review"),
+    EXPORT_PRESETS("Export Presets", "tune"),
+    VOICE_STUDIO("Voice Studio", "record_voice_over"),
+    TREND_HORIZON("Trend Horizon", "trending_up")
 }
 
 data class AnimeStudioUiState(
@@ -254,6 +262,198 @@ class AnimeViewModel(application: Application) : AndroidViewModel(application) {
         category: String = "Animation / Film"
     ) = automationChannelMgr.addYouTubeChannel(channelName, handleOrUrl, subscribers, category)
     fun removeYouTubeChannel(channelId: String) = automationChannelMgr.removeYouTubeChannel(channelId)
+
+    // Export Presets State & Management (YouTube, Instagram, Facebook, 30-90 fps, 720p-4K)
+    private val presetPrefs = application.getSharedPreferences("anime_export_presets_prefs", Context.MODE_PRIVATE)
+
+    private val _customExportPresets = MutableStateFlow<List<ExportPreset>>(loadCustomExportPresets())
+    val customExportPresets: StateFlow<List<ExportPreset>> = _customExportPresets.asStateFlow()
+
+    private val _activeExportPreset = MutableStateFlow<ExportPreset>(loadActiveExportPreset())
+    val activeExportPreset: StateFlow<ExportPreset> = _activeExportPreset.asStateFlow()
+
+    private fun loadCustomExportPresets(): List<ExportPreset> {
+        val jsonStr = presetPrefs.getString("custom_presets_json", null) ?: return emptyList()
+        return try {
+            val array = org.json.JSONArray(jsonStr)
+            val list = mutableListOf<ExportPreset>()
+            for (i in 0 until array.length()) {
+                val obj = array.getJSONObject(i)
+                list.add(
+                    ExportPreset(
+                        id = obj.optString("id", java.util.UUID.randomUUID().toString()),
+                        name = obj.optString("name", "Custom Preset"),
+                        resolutionLabel = obj.optString("resolutionLabel", "1080p Full HD"),
+                        width = obj.optInt("width", 1920),
+                        height = obj.optInt("height", 1080),
+                        aspectRatio = obj.optString("aspectRatio", "16:9"),
+                        fps = obj.optInt("fps", 60),
+                        targetPlatform = obj.optString("targetPlatform", "YouTube"),
+                        isDefault = false,
+                        isCustom = true,
+                        bitrateMbps = obj.optInt("bitrateMbps", 16),
+                        description = obj.optString("description", "Custom export configuration")
+                    )
+                )
+            }
+            list
+        } catch (e: Exception) {
+            emptyList()
+        }
+    }
+
+    private fun persistCustomExportPresets(list: List<ExportPreset>) {
+        try {
+            val array = org.json.JSONArray()
+            for (p in list) {
+                val obj = org.json.JSONObject()
+                obj.put("id", p.id)
+                obj.put("name", p.name)
+                obj.put("resolutionLabel", p.resolutionLabel)
+                obj.put("width", p.width)
+                obj.put("height", p.height)
+                obj.put("aspectRatio", p.aspectRatio)
+                obj.put("fps", p.fps)
+                obj.put("targetPlatform", p.targetPlatform)
+                obj.put("bitrateMbps", p.bitrateMbps)
+                obj.put("description", p.description)
+                array.put(obj)
+            }
+            presetPrefs.edit().putString("custom_presets_json", array.toString()).apply()
+        } catch (e: Exception) {
+            Log.e("AnimeViewModel", "Error saving custom presets", e)
+        }
+    }
+
+    private fun loadActiveExportPreset(): ExportPreset {
+        val activeId = presetPrefs.getString("active_preset_id", null) ?: return DefaultExportPresets.presets.first()
+        val custom = loadCustomExportPresets().find { it.id == activeId }
+        val defaultOne = DefaultExportPresets.presets.find { it.id == activeId }
+        return custom ?: defaultOne ?: DefaultExportPresets.presets.first()
+    }
+
+    fun saveCustomExportPreset(preset: ExportPreset) {
+        val current = _customExportPresets.value.filter { it.id != preset.id }
+        val updated = current + preset
+        _customExportPresets.value = updated
+        _activeExportPreset.value = preset
+        persistCustomExportPresets(updated)
+        presetPrefs.edit().putString("active_preset_id", preset.id).apply()
+    }
+
+    fun selectExportPreset(preset: ExportPreset) {
+        _activeExportPreset.value = preset
+        presetPrefs.edit().putString("active_preset_id", preset.id).apply()
+    }
+
+    fun deleteCustomExportPreset(presetId: String) {
+        val updated = _customExportPresets.value.filter { it.id != presetId }
+        _customExportPresets.value = updated
+        persistCustomExportPresets(updated)
+        if (_activeExportPreset.value.id == presetId) {
+            val fallback = DefaultExportPresets.presets.first()
+            _activeExportPreset.value = fallback
+            presetPrefs.edit().putString("active_preset_id", fallback.id).apply()
+        }
+    }
+
+    // -----------------------------------------------------------------------------------------
+    // GENERATION PROGRESS TRACKING USING KOTLIN FLOW
+    // -----------------------------------------------------------------------------------------
+    private val _generationTaskProgress = MutableStateFlow(GenerationTaskProgress())
+    val generationTaskProgress: StateFlow<GenerationTaskProgress> = _generationTaskProgress.asStateFlow()
+
+    fun updateGenerationProgress(
+        stage: GenerationStage,
+        percent: Float,
+        description: String,
+        taskName: String = "",
+        etaSeconds: Int = 0,
+        isGenerating: Boolean = true
+    ) {
+        _generationTaskProgress.value = GenerationTaskProgress(
+            stage = stage,
+            progressPercent = percent,
+            stageDescription = description,
+            activeTaskName = taskName,
+            etaSeconds = etaSeconds,
+            isGenerating = isGenerating
+        )
+    }
+
+    fun resetGenerationProgress() {
+        _generationTaskProgress.value = GenerationTaskProgress()
+    }
+
+    // -----------------------------------------------------------------------------------------
+    // AUTOSAVE FEATURE FOR SCRIPT EDITOR (PERSISTS TO ROOM DATABASE EVERY 1 MINUTE)
+    // -----------------------------------------------------------------------------------------
+    private var scriptAutosaveJob: Job? = null
+    private val _lastAutosaveTime = MutableStateFlow<Long>(0L)
+    val lastAutosaveTime: StateFlow<Long> = _lastAutosaveTime.asStateFlow()
+
+    private val _isAutosaveEnabled = MutableStateFlow(true)
+    val isAutosaveEnabled: StateFlow<Boolean> = _isAutosaveEnabled.asStateFlow()
+
+    fun startScriptAutosaveLoop() {
+        scriptAutosaveJob?.cancel()
+        scriptAutosaveJob = viewModelScope.launch {
+            while (true) {
+                delay(60_000L) // 1 minute interval autosave
+                if (_isAutosaveEnabled.value) {
+                    val script = _uiState.value.currentScript
+                    if (script != null) {
+                        try {
+                            repository.saveScript(script)
+                            _lastAutosaveTime.value = System.currentTimeMillis()
+                            Log.d("AnimeViewModel", "Auto-saved script '${script.title}' to Room DB")
+                        } catch (e: Exception) {
+                            Log.e("AnimeViewModel", "Failed to autosave script to Room DB", e)
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    fun updateCurrentScriptContent(
+        updatedTitle: String? = null,
+        updatedSynopsis: String? = null,
+        updatedGenre: String? = null
+    ) {
+        val script = _uiState.value.currentScript ?: return
+        val modified = script.copy(
+            title = updatedTitle ?: script.title,
+            synopsis = updatedSynopsis ?: script.synopsis,
+            genre = updatedGenre ?: script.genre
+        )
+        _uiState.value = _uiState.value.copy(currentScript = modified)
+        viewModelScope.launch {
+            repository.saveScript(modified)
+            _lastAutosaveTime.value = System.currentTimeMillis()
+        }
+    }
+
+    fun updateSceneDialogueLine(sceneIndex: Int, dialogueIndex: Int, newText: String) {
+        val script = _uiState.value.currentScript ?: return
+        if (sceneIndex !in script.scenes.indices) return
+        val scene = script.scenes[sceneIndex]
+        if (dialogueIndex !in scene.dialogues.indices) return
+
+        val updatedDialogues = scene.dialogues.toMutableList()
+        val oldDiag = updatedDialogues[dialogueIndex]
+        updatedDialogues[dialogueIndex] = oldDiag.copy(text = newText)
+
+        val updatedScenes = script.scenes.toMutableList()
+        updatedScenes[sceneIndex] = scene.copy(dialogues = updatedDialogues)
+
+        val modified = script.copy(scenes = updatedScenes)
+        _uiState.value = _uiState.value.copy(currentScript = modified)
+        viewModelScope.launch {
+            repository.saveScript(modified)
+            _lastAutosaveTime.value = System.currentTimeMillis()
+        }
+    }
 
 
     val commandLearningEngine = com.example.data.engine.CommandLearningEngine.getInstance(application)
@@ -588,6 +788,7 @@ class AnimeViewModel(application: Application) : AndroidViewModel(application) {
 
         setAppInterfaceLanguage(initialUiLang)
         setVideoGenerationLanguage(savedVideoLang)
+        startScriptAutosaveLoop()
 
         // Initialize daily WorkManager scheduler if configured
         val creds = ytCredManager.credentials.value
@@ -931,17 +1132,41 @@ class AnimeViewModel(application: Application) : AndroidViewModel(application) {
 
         viewModelScope.launch {
             pauseVideo()
+            updateGenerationProgress(
+                stage = GenerationStage.SCRIPT_WRITING,
+                percent = 20f,
+                description = "AI analyzing $sourceType & building characters...",
+                taskName = "Script Writing",
+                etaSeconds = 8,
+                isGenerating = true
+            )
             _uiState.value = _uiState.value.copy(
                 isGenerating = true,
                 generationStep = "AI analyzing $sourceType & building characters..."
             )
             delay(500)
 
+            updateGenerationProgress(
+                stage = GenerationStage.STORYBOARD_GENERATION,
+                percent = 45f,
+                description = "Directing anime storyboard scenes with ${state.selectedArtStyle.title}...",
+                taskName = "Visual Storyboard",
+                etaSeconds = 5,
+                isGenerating = true
+            )
             _uiState.value = _uiState.value.copy(
                 generationStep = "Directing anime storyboard scenes with ${state.selectedArtStyle.title}..."
             )
             delay(400)
 
+            updateGenerationProgress(
+                stage = GenerationStage.VOICE_DUBBING,
+                percent = 70f,
+                description = "Harmonizing voice synchronization & character cadences...",
+                taskName = "Voice Dubbing",
+                etaSeconds = 3,
+                isGenerating = true
+            )
             _uiState.value = _uiState.value.copy(
                 generationStep = "Harmonizing voice synchronization & Japanese audio scores..."
             )
@@ -956,6 +1181,25 @@ class AnimeViewModel(application: Application) : AndroidViewModel(application) {
                 voiceAccent = state.selectedVoiceAccent
             )
 
+            updateGenerationProgress(
+                stage = GenerationStage.MUSIC_COMPOSITION,
+                percent = 88f,
+                description = "Composing dynamic background score & audio balance...",
+                taskName = "Music Composition",
+                etaSeconds = 2,
+                isGenerating = true
+            )
+            delay(300)
+
+            updateGenerationProgress(
+                stage = GenerationStage.RENDERING_ENCODING,
+                percent = 96f,
+                description = "Encoding MP4 video frames with motion effects...",
+                taskName = "Video Encoding",
+                etaSeconds = 1,
+                isGenerating = true
+            )
+
             if (isCommandLearningAccessibleForCurrentUser() && input.isNotBlank()) {
                 launch {
                     commandLearningEngine.learnAndImproveCommand(
@@ -968,6 +1212,16 @@ class AnimeViewModel(application: Application) : AndroidViewModel(application) {
             }
 
             repository.saveScript(script)
+            _lastAutosaveTime.value = System.currentTimeMillis()
+
+            updateGenerationProgress(
+                stage = GenerationStage.COMPLETED,
+                percent = 100f,
+                description = "Anime production completed! Playing real-time preview in Studio...",
+                taskName = "Complete",
+                etaSeconds = 0,
+                isGenerating = false
+            )
 
             _uiState.value = _uiState.value.copy(
                 isGenerating = false,

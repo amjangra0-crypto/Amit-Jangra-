@@ -30,6 +30,7 @@ import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.DarkMode
+import androidx.compose.material.icons.filled.GraphicEq
 import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.OpenInNew
@@ -40,6 +41,7 @@ import androidx.compose.material.icons.filled.Security
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Shield
 import androidx.compose.material.icons.filled.Storage
+import androidx.compose.material.icons.filled.TrendingUp
 import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -73,6 +75,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.localization.AppLocaleStrings
 import com.example.ui.AnimeViewModel
+import com.example.ui.AppTab
+import com.example.ui.components.SocialSyncSettingsPanel
 import com.example.ui.theme.AnimeCyan
 import com.example.ui.theme.AnimeCyanLight
 import com.example.ui.theme.AnimeGold
@@ -752,6 +756,101 @@ fun SettingsScreen(
                     ) {
                         Text(AppLocaleStrings.tr(lang, "Pick Theme", "थीम चुनें"), color = Color.White, fontSize = 11.sp, fontWeight = FontWeight.Bold)
                     }
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // SOCIAL SYNC PANEL: Multi-Account Auto-Upload & Draft/Public Modes
+        SocialSyncSettingsPanel(
+            lang = lang,
+            onNavigateToReviewQueue = { viewModel.setTab(AppTab.PENDING_REVIEW) },
+            modifier = Modifier.fillMaxWidth().testTag("settings_social_sync_panel")
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // STUDIO PRODUCTION MODULES CARD
+        Card(
+            modifier = Modifier.fillMaxWidth().testTag("settings_studio_modules_card"),
+            colors = CardDefaults.cardColors(containerColor = AnimeSurface),
+            shape = RoundedCornerShape(16.dp),
+            border = BorderStroke(1.dp, AnimePurple.copy(alpha = 0.5f))
+        ) {
+            Column(modifier = Modifier.padding(14.dp)) {
+                Text(
+                    text = AppLocaleStrings.tr(lang, "Studio Production Modules", "स्टूडियो प्रोडक्शन मॉड्यूल्स"),
+                    color = TextPrimary,
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.Bold
+                )
+                Spacer(modifier = Modifier.height(10.dp))
+
+                // Pending Review Screen
+                OutlinedButton(
+                    onClick = { viewModel.setTab(AppTab.PENDING_REVIEW) },
+                    shape = RoundedCornerShape(8.dp),
+                    modifier = Modifier.fillMaxWidth().testTag("settings_nav_pending_review_btn")
+                ) {
+                    Icon(Icons.Default.CheckCircle, contentDescription = null, tint = AnimeGreen, modifier = Modifier.size(16.dp))
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        AppLocaleStrings.tr(lang, "Pending Review Gate (Side-by-Side Prompts & Approvals)", "सत्यापन व रिव्यू कतार"),
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // Export Presets Screen
+                OutlinedButton(
+                    onClick = { viewModel.setTab(AppTab.EXPORT_PRESETS) },
+                    shape = RoundedCornerShape(8.dp),
+                    modifier = Modifier.fillMaxWidth().testTag("settings_nav_export_presets_btn")
+                ) {
+                    Icon(Icons.Default.Tune, contentDescription = null, tint = AnimeCyan, modifier = Modifier.size(16.dp))
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        AppLocaleStrings.tr(lang, "Export Presets (720p - 4K, 30-90 fps, YouTube/Instagram)", "एक्सपोर्ट प्रीसेट्स व FPS"),
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // Voice Studio Screen
+                OutlinedButton(
+                    onClick = { viewModel.setTab(AppTab.VOICE_STUDIO) },
+                    shape = RoundedCornerShape(8.dp),
+                    modifier = Modifier.fillMaxWidth().testTag("settings_nav_voice_studio_btn")
+                ) {
+                    Icon(Icons.Default.GraphicEq, contentDescription = null, tint = AnimePink, modifier = Modifier.size(16.dp))
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        AppLocaleStrings.tr(lang, "Voice Studio (Pitch, Speed, Gallery/Drive/Google Audio & Explainer)", "वॉइस स्टूडियो व ऑडियो"),
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // Trend Horizon Hub
+                OutlinedButton(
+                    onClick = { viewModel.setTab(AppTab.TREND_HORIZON) },
+                    shape = RoundedCornerShape(8.dp),
+                    modifier = Modifier.fillMaxWidth().testTag("settings_nav_trend_horizon_btn")
+                ) {
+                    Icon(Icons.Default.TrendingUp, contentDescription = null, tint = AnimeGold, modifier = Modifier.size(16.dp))
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        AppLocaleStrings.tr(lang, "Automation Trend Horizon Hub (Multi-Account & Access Control)", "ट्रेंड होराइजन ऑटोमेशन हब"),
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.SemiBold
+                    )
                 }
             }
         }

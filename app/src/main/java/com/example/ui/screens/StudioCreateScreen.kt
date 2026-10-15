@@ -40,6 +40,8 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.IconButton
 import com.example.localization.AppLocaleStrings
+import com.example.ui.AppTab
+import com.example.ui.components.GenerationFlowProgressBar
 import com.example.ui.components.MicVoiceInputButton
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -116,6 +118,7 @@ import com.example.ui.components.WorkflowSelectorPills
 import com.example.ui.theme.AnimeCyan
 import com.example.ui.theme.AnimeCyanLight
 import com.example.ui.theme.AnimeGold
+import com.example.ui.theme.AnimeGreen
 import com.example.ui.theme.AnimePink
 import com.example.ui.theme.AnimePurple
 import com.example.ui.theme.AnimeSurface
@@ -221,6 +224,95 @@ fun StudioCreateScreen(viewModel: AnimeViewModel) {
                     text = AppLocaleStrings.get("studio_header_subtitle", state.selectedLanguage),
                     color = TextSecondary,
                     fontSize = 13.sp
+                )
+            }
+        }
+
+        // Kotlin Flow Anime Video Generation Progress Bar
+        GenerationFlowProgressBar(
+            progressFlow = viewModel.generationTaskProgress,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 4.dp)
+        )
+
+        // Studio Quick Navigation Modules Bar
+        LazyRow(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 4.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            item {
+                FilterChip(
+                    selected = false,
+                    onClick = { viewModel.setTab(AppTab.VOICE_STUDIO) },
+                    label = { Text("🎙️ Voice Studio (Pitch, Speed & Explainer)", fontSize = 11.sp, fontWeight = FontWeight.SemiBold) },
+                    colors = FilterChipDefaults.filterChipColors(containerColor = AnimeSurface),
+                    border = BorderStroke(1.dp, AnimePink)
+                )
+            }
+            item {
+                FilterChip(
+                    selected = false,
+                    onClick = { viewModel.setTab(AppTab.TREND_HORIZON) },
+                    label = { Text("🔮 Trend Horizon Hub", fontSize = 11.sp, fontWeight = FontWeight.SemiBold) },
+                    colors = FilterChipDefaults.filterChipColors(containerColor = AnimeSurface),
+                    border = BorderStroke(1.dp, AnimeGold)
+                )
+            }
+            item {
+                FilterChip(
+                    selected = false,
+                    onClick = { viewModel.setTab(AppTab.EXPORT_PRESETS) },
+                    label = { Text("⚙️ Export Presets (30-90 fps, 4K)", fontSize = 11.sp, fontWeight = FontWeight.SemiBold) },
+                    colors = FilterChipDefaults.filterChipColors(containerColor = AnimeSurface),
+                    border = BorderStroke(1.dp, AnimeCyan)
+                )
+            }
+            item {
+                FilterChip(
+                    selected = false,
+                    onClick = { viewModel.setTab(AppTab.PENDING_REVIEW) },
+                    label = { Text("⏳ Pending Review Gate", fontSize = 11.sp, fontWeight = FontWeight.SemiBold) },
+                    colors = FilterChipDefaults.filterChipColors(containerColor = AnimeSurface),
+                    border = BorderStroke(1.dp, AnimeGreen)
+                )
+            }
+        }
+
+        // Script Editor Autosave Status Badge (Persisting to Room DB every 1 minute)
+        val lastAutosave by viewModel.lastAutosaveTime.collectAsState()
+        val isAutosaveOn by viewModel.isAutosaveEnabled.collectAsState()
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 2.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Box(
+                    modifier = Modifier
+                        .size(8.dp)
+                        .clip(CircleShape)
+                        .background(if (isAutosaveOn) AnimeGreen else TextMuted)
+                )
+                Spacer(modifier = Modifier.width(6.dp))
+                Text(
+                    text = if (isAutosaveOn) "Room DB Script Autosave: Active (every 1 min)" else "Room DB Autosave: Off",
+                    color = if (isAutosaveOn) AnimeGreen else TextMuted,
+                    fontSize = 10.sp,
+                    fontWeight = FontWeight.Medium
+                )
+            }
+            if (lastAutosave > 0L) {
+                val timeStr = java.text.SimpleDateFormat("HH:mm:ss", java.util.Locale.getDefault()).format(java.util.Date(lastAutosave))
+                Text(
+                    text = "Saved: $timeStr",
+                    color = TextMuted,
+                    fontSize = 10.sp
                 )
             }
         }

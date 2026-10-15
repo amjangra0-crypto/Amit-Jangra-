@@ -95,6 +95,10 @@ import com.example.ui.screens.StudioCreateScreen
 import com.example.ui.screens.SubscriptionAdminScreen
 import com.example.ui.screens.UpdateSettingsScreen
 import com.example.ui.screens.WalletScreen
+import com.example.ui.screens.PendingReviewScreen
+import com.example.ui.screens.ExportPresetsScreen
+import com.example.ui.screens.VoiceStudioScreen
+import com.example.ui.screens.AutomationTrendHorizonHub
 import com.example.ui.components.StudioHistoryDialog
 import com.example.ui.components.SubscriptionHistoryDialog
 import com.example.ui.components.CurrencyExchangeDialog
@@ -434,6 +438,30 @@ class MainActivity : ComponentActivity() {
                                 WalletScreen(
                                     viewModel = viewModel,
                                     onNavigateBack = { viewModel.setTab(AppTab.PROFILE) }
+                                )
+                            }
+                            AppTab.PENDING_REVIEW -> {
+                                PendingReviewScreen(
+                                    viewModel = viewModel,
+                                    onNavigateBack = { viewModel.setTab(AppTab.SETTINGS) }
+                                )
+                            }
+                            AppTab.EXPORT_PRESETS -> {
+                                ExportPresetsScreen(
+                                    viewModel = viewModel,
+                                    onNavigateBack = { viewModel.setTab(AppTab.SETTINGS) }
+                                )
+                            }
+                            AppTab.VOICE_STUDIO -> {
+                                VoiceStudioScreen(
+                                    viewModel = viewModel,
+                                    onNavigateBack = { viewModel.setTab(AppTab.STUDIO) }
+                                )
+                            }
+                            AppTab.TREND_HORIZON -> {
+                                AutomationTrendHorizonHub(
+                                    viewModel = viewModel,
+                                    onNavigateBack = { viewModel.setTab(AppTab.STUDIO) }
                                 )
                             }
                         }

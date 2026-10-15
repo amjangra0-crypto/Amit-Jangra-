@@ -50,6 +50,9 @@ class AutomationChannelManager private constructor(private val context: Context)
     private val _episodesQueue = MutableStateFlow(loadInitialQueue())
     val episodesQueue: StateFlow<List<AutomatedEpisode>> = _episodesQueue.asStateFlow()
 
+    private val _trendHorizonConfig = MutableStateFlow(loadTrendHorizonConfig())
+    val trendHorizonConfig: StateFlow<com.example.data.model.TrendHorizonConfig> = _trendHorizonConfig.asStateFlow()
+
     private val _automationStatusMessage = MutableStateFlow("ऑटोमेशन सक्रिय: मल्टीपल YouTube चैनल ऑटोमेशन तैयार है।")
     val automationStatusMessage: StateFlow<String> = _automationStatusMessage.asStateFlow()
 
@@ -244,6 +247,41 @@ class AutomationChannelManager private constructor(private val context: Context)
         )
     }
 
+    private fun loadTrendHorizonConfig(): com.example.data.model.TrendHorizonConfig {
+        val tierStr = prefs.getString("trend_horizon_access_tier", "FREE_FOR_ALL") ?: "FREE_FOR_ALL"
+        val tier = try {
+            com.example.data.model.TrendHorizonAccessTier.valueOf(tierStr)
+        } catch (_: Exception) {
+            com.example.data.model.TrendHorizonAccessTier.FREE_FOR_ALL
+        }
+        val cost = prefs.getInt("trend_horizon_credit_cost", 10)
+        return com.example.data.model.TrendHorizonConfig(accessTier = tier, creditCostPerRun = cost)
+    }
+
+    fun setTrendHorizonAccessTier(tier: com.example.data.model.TrendHorizonAccessTier, creditCost: Int = 10) {
+        prefs.edit()
+            .putString("trend_horizon_access_tier", tier.name)
+            .putInt("trend_horizon_credit_cost", creditCost)
+            .apply()
+        _trendHorizonConfig.value = _trendHorizonConfig.value.copy(
+            accessTier = tier,
+            creditCostPerRun = creditCost
+        )
+        _automationStatusMessage.value = "👑 Owner Trend Horizon Policy: ${tier.title}"
+    }
+
+    fun toggleChannelAutoUpload(channelId: String, autoUpload: Boolean) {
+        val updated = _connectedChannels.value.map { ch ->
+            if (ch.id == channelId) ch.copy(autoUploadAfterReview = autoUpload) else ch
+        }
+        _connectedChannels.value = updated
+        saveChannels(updated)
+        val target = updated.find { it.id == channelId }
+        val name = target?.channelName ?: channelId
+        val state = if (autoUpload) "Auto-Upload Enabled (चालू)" else "Auto-Upload Disabled (बंद)"
+        _automationStatusMessage.value = "🔄 $name: $state"
+    }
+
     private fun loadInitialQueue(): List<AutomatedEpisode> {
         val now = System.currentTimeMillis()
         return listOf(
@@ -257,19 +295,49 @@ class AutomationChannelManager private constructor(private val context: Context)
                 status = EpisodeReviewStatus.PENDING_REVIEW,
                 generatedAtMillis = now - 1800000L,
                 reviewDeadlineMillis = now + (2 * 60 * 60 * 1000L),
-                uploadedPlatform = ChannelPlatform.YOUTUBE
+                uploadedPlatform = ChannelPlatform.YOUTUBE,
+                uploadPrivacy = UploadPrivacyStatus.DRAFT_PRIVATE,
+                originalPrompt = "Cyberpunk samurai ren awakens mysterious plasma katana in the rainy alleys of Neo Tokyo",
+                aiDirectorEnrichedPrompt = "Cinematic 4K Makoto Shinkai style: Dynamic low-angle whip pans, glowing magenta plasma sparks reflecting on asphalt puddles, dramatic binaural thunder audio, 60fps anime action choreo",
+                viralityScore = 96,
+                fps = 60,
+                resolution = "1080p Full HD"
             ),
             AutomatedEpisode(
                 id = "ep_02",
                 seriesId = "cyber_shinobi",
                 episodeNumber = 2,
                 title = "Episode 2: Shadow Syndicate Ambush",
-                synopsis = "Aoi hacks the corporate grid as cyborg ronin swarm the rooftop shrine.",
-                durationSeconds = 60,
-                status = EpisodeReviewStatus.SCHEDULED,
+                synopsis = "Aoi hacks the corporate security grid as cyborg ronin swarm the rooftop shrine.",
+                durationSeconds = 45,
+                status = EpisodeReviewStatus.PENDING_REVIEW,
+                generatedAtMillis = now - 900000L,
+                reviewDeadlineMillis = now + (3 * 60 * 60 * 1000L),
+                uploadedPlatform = ChannelPlatform.INSTAGRAM,
+                uploadPrivacy = UploadPrivacyStatus.PUBLIC,
+                originalPrompt = "Female anime hacker Aoi fighting cyborg ninja assassins on high-rise temple roof",
+                aiDirectorEnrichedPrompt = "Neon cyberpunk aesthetic: Cybernetic UI HUD holographic overlay, high-speed 75fps combat sequence, slow-motion bullet deflection, electric shamisen synth bass drop",
+                viralityScore = 91,
+                fps = 75,
+                resolution = "1080p (9:16 Vertical Reel)"
+            ),
+            AutomatedEpisode(
+                id = "ep_03",
+                seriesId = "cyber_shinobi",
+                episodeNumber = 3,
+                title = "Episode 3: The Dragon of Shinjuku",
+                synopsis = "A colossal holographic spirit dragon descends upon the neon towers.",
+                durationSeconds = 30,
+                status = EpisodeReviewStatus.PENDING_REVIEW,
                 generatedAtMillis = now,
                 reviewDeadlineMillis = now + (4 * 60 * 60 * 1000L),
-                uploadedPlatform = ChannelPlatform.YOUTUBE
+                uploadedPlatform = ChannelPlatform.FACEBOOK,
+                uploadPrivacy = UploadPrivacyStatus.DRAFT_PRIVATE,
+                originalPrompt = "Mythological spirit dragon made of blue fire flying over modern skyscrapers",
+                aiDirectorEnrichedPrompt = "Ufotable Demon Slayer style lighting: Volumetric azure flame particles, sweeping 360-degree crane shot, emotional orchestral choir swell, 90fps hyper-fluid motion",
+                viralityScore = 88,
+                fps = 90,
+                resolution = "1080p Full HD"
             )
         )
     }
