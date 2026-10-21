@@ -67,4 +67,36 @@ interface AnimeDao {
 
     @Query("DELETE FROM exported_videos WHERE id = :id")
     suspend fun deleteExportedVideoById(id: String)
+
+    // --- Project Metadata & File Links (Script history, character configs, audio/video links) ---
+    @Query("SELECT * FROM project_metadata ORDER BY updatedAt DESC")
+    fun getAllProjectMetadata(): Flow<List<ProjectMetadataEntity>>
+
+    @Query("SELECT * FROM project_metadata ORDER BY updatedAt DESC")
+    suspend fun getAllProjectMetadataOnce(): List<ProjectMetadataEntity>
+
+    @Query("SELECT * FROM project_metadata WHERE id = :id LIMIT 1")
+    suspend fun getProjectMetadataById(id: String): ProjectMetadataEntity?
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertProjectMetadata(project: ProjectMetadataEntity)
+
+    @Query("DELETE FROM project_metadata WHERE id = :id")
+    suspend fun deleteProjectMetadataById(id: String)
+
+    @Query("UPDATE project_metadata SET videoFilePath = :videoPath, audioFilePath = :audioPath, srtSubtitlePath = :srtPath, isExported = 1, updatedAt = :updatedAt WHERE id = :id")
+    suspend fun updateProjectMediaLinks(id: String, videoPath: String, audioPath: String, srtPath: String, updatedAt: Long = System.currentTimeMillis())
+
+    // --- FAQ Support Incidents & Owner Notifications ---
+    @Query("SELECT * FROM faq_support_incidents ORDER BY timestamp DESC")
+    fun getAllFaqIncidents(): Flow<List<FaqSupportIncidentEntity>>
+
+    @Query("SELECT * FROM faq_support_incidents WHERE isBugReport = 1 ORDER BY timestamp DESC")
+    fun getBugNotificationsForOwner(): Flow<List<FaqSupportIncidentEntity>>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertFaqIncident(incident: FaqSupportIncidentEntity)
+
+    @Query("DELETE FROM faq_support_incidents WHERE id = :id")
+    suspend fun deleteFaqIncident(id: String)
 }

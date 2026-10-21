@@ -17,12 +17,17 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import android.widget.Toast
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.CloudDownload
 import androidx.compose.material.icons.filled.Key
 import androidx.compose.material.icons.filled.NewReleases
+import androidx.compose.material.icons.filled.Publish
 import androidx.compose.material.icons.filled.Security
 import androidx.compose.material.icons.filled.SystemUpdate
 import androidx.compose.material.icons.filled.VerifiedUser
@@ -32,15 +37,23 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -48,6 +61,7 @@ import androidx.compose.ui.unit.sp
 import com.example.BuildConfig
 import com.example.localization.AppLocaleStrings
 import com.example.ui.AnimeViewModel
+import com.example.ui.AppTab
 import com.example.ui.theme.AnimeCyan
 import com.example.ui.theme.AnimeCyanLight
 import com.example.ui.theme.AnimeGold
@@ -65,7 +79,13 @@ fun UpdateSettingsScreen(viewModel: AnimeViewModel) {
     val updateState by viewModel.updateState.collectAsState()
     val uiState by viewModel.uiState.collectAsState()
     val lang = uiState.selectedLanguage
+    val currentUser by viewModel.currentUser.collectAsState()
+    val context = LocalContext.current
     val scrollState = rememberScrollState()
+
+    var ownerNewVersion by remember { mutableStateOf("2.5.0") }
+    var ownerNewTitle by remember { mutableStateOf("Anime Studio AI 2.5.0 Feature Drop") }
+    var ownerNewChange by remember { mutableStateOf("New Romance & Dramatic Anime Expression Models") }
 
     Column(
         modifier = Modifier
@@ -75,6 +95,47 @@ fun UpdateSettingsScreen(viewModel: AnimeViewModel) {
             .padding(16.dp)
             .padding(bottom = 80.dp)
     ) {
+        // TOP APP BAR
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                IconButton(
+                    onClick = { viewModel.setTab(AppTab.SETTINGS) },
+                    modifier = Modifier.testTag("update_screen_back_btn")
+                ) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = "Back",
+                        tint = MaterialTheme.colorScheme.onBackground
+                    )
+                }
+                Spacer(modifier = Modifier.width(4.dp))
+                Text(
+                    text = AppLocaleStrings.tr(lang, "Update Center", "अपडेट सेंटर"),
+                    color = MaterialTheme.colorScheme.onBackground,
+                    fontSize = 17.sp,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+
+            TextButton(
+                onClick = { viewModel.setTab(AppTab.SETTINGS) },
+                modifier = Modifier.testTag("update_screen_done_btn")
+            ) {
+                Text(
+                    text = AppLocaleStrings.tr(lang, "Done", "पूर्ण"),
+                    color = MaterialTheme.colorScheme.primary,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 14.sp
+                )
+            }
+        }
+
         // Current Version & Play Store Status Card
         Card(
             modifier = Modifier.fillMaxWidth(),
@@ -120,6 +181,35 @@ fun UpdateSettingsScreen(viewModel: AnimeViewModel) {
                             fontWeight = FontWeight.Bold
                         )
                     }
+                }
+
+                Spacer(modifier = Modifier.height(14.dp))
+
+                Button(
+                    onClick = {
+                        val avail = viewModel.checkForNewUpdates()
+                        Toast.makeText(
+                            context,
+                            if (avail) "🎉 New version v${updateState.latestVersion} found!"
+                            else "✓ You're running the latest version (v${updateState.currentVersion})",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = AnimeCyan),
+                    shape = RoundedCornerShape(10.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(42.dp)
+                        .testTag("update_check_button")
+                ) {
+                    Icon(Icons.Default.CloudDownload, contentDescription = null, tint = Color.Black, modifier = Modifier.size(16.dp))
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        text = AppLocaleStrings.tr(lang, "Check for Updates Now", "अभी नए अपडेट चेक करें"),
+                        color = Color.Black,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 12.sp
+                    )
                 }
             }
         }
@@ -243,6 +333,110 @@ fun UpdateSettingsScreen(viewModel: AnimeViewModel) {
         }
 
         Spacer(modifier = Modifier.height(16.dp))
+
+        // -------------------------------------------------------------------------------------
+        // OWNER FEATURE DROP & RELEASE PUBLISHER (VISIBLE ONLY TO OWNER)
+        // -------------------------------------------------------------------------------------
+        if (currentUser.isOwner) {
+            Card(
+                modifier = Modifier.fillMaxWidth().testTag("owner_release_publisher_card"),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                shape = RoundedCornerShape(16.dp),
+                border = BorderStroke(1.dp, AnimeGold)
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Box(
+                            modifier = Modifier
+                                .size(32.dp)
+                                .clip(CircleShape)
+                                .background(AnimeGold),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(Icons.Default.Publish, contentDescription = null, tint = Color.Black, modifier = Modifier.size(16.dp))
+                        }
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Column {
+                            Text(
+                                text = "👑 Owner Feature Drop Publisher",
+                                color = AnimeGold,
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Text(
+                                text = "Publish new updates with latest features for all users",
+                                color = TextMuted,
+                                fontSize = 10.sp
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    OutlinedTextField(
+                        value = ownerNewVersion,
+                        onValueChange = { ownerNewVersion = it },
+                        label = { Text("Version Tag (e.g. 2.5.0)", fontSize = 11.sp) },
+                        modifier = Modifier.fillMaxWidth().testTag("owner_update_version_input"),
+                        singleLine = true,
+                        colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = AnimeGold)
+                    )
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    OutlinedTextField(
+                        value = ownerNewTitle,
+                        onValueChange = { ownerNewTitle = it },
+                        label = { Text("Release Title", fontSize = 11.sp) },
+                        modifier = Modifier.fillMaxWidth().testTag("owner_update_title_input"),
+                        singleLine = true,
+                        colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = AnimeGold)
+                    )
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    OutlinedTextField(
+                        value = ownerNewChange,
+                        onValueChange = { ownerNewChange = it },
+                        label = { Text("Feature / Change Summary", fontSize = 11.sp) },
+                        modifier = Modifier.fillMaxWidth().testTag("owner_update_notes_input"),
+                        singleLine = true,
+                        colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = AnimeGold)
+                    )
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    Button(
+                        onClick = {
+                            viewModel.publishOwnerAppUpdate(
+                                version = ownerNewVersion,
+                                title = ownerNewTitle,
+                                changelog = listOf(
+                                    ownerNewChange,
+                                    "Romance & Love Stories Fully Supported (Kissing, Hugs, Confessions)",
+                                    "Google Play Zero Adult Content Guardrail Active"
+                                )
+                            )
+                            Toast.makeText(context, "👑 Successfully published v$ownerNewVersion to all users!", Toast.LENGTH_SHORT).show()
+                        },
+                        colors = ButtonDefaults.buttonColors(containerColor = AnimeGold),
+                        shape = RoundedCornerShape(10.dp),
+                        modifier = Modifier.fillMaxWidth().height(42.dp).testTag("owner_publish_release_btn")
+                    ) {
+                        Icon(Icons.Default.Publish, contentDescription = null, tint = Color.Black, modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = "Publish Release to All Users",
+                            color = Color.Black,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 12.sp
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+        }
 
         // Google Play Store Compliance Checklist
         Card(

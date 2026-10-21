@@ -99,10 +99,13 @@ import com.example.ui.screens.PendingReviewScreen
 import com.example.ui.screens.ExportPresetsScreen
 import com.example.ui.screens.VoiceStudioScreen
 import com.example.ui.screens.AutomationTrendHorizonHub
+import com.example.ui.screens.ProjectSettingsScreen
+import com.example.ui.screens.LanguageSettingsScreen
 import com.example.ui.components.StudioHistoryDialog
 import com.example.ui.components.SubscriptionHistoryDialog
 import com.example.ui.components.CurrencyExchangeDialog
 import com.example.ui.components.ModifyOwnerCredentialsDialog
+import com.example.ui.components.FeatureUpdateConsentDialog
 import com.example.ui.theme.AnimeCyan
 import com.example.ui.theme.AnimeGold
 import com.example.ui.theme.AnimeGreen
@@ -464,6 +467,18 @@ class MainActivity : ComponentActivity() {
                                     onNavigateBack = { viewModel.setTab(AppTab.STUDIO) }
                                 )
                             }
+                            AppTab.PROJECT_SETTINGS -> {
+                                ProjectSettingsScreen(
+                                    viewModel = viewModel,
+                                    onNavigateBack = { viewModel.setTab(AppTab.STUDIO) }
+                                )
+                            }
+                            AppTab.LANGUAGE_SETTINGS -> {
+                                LanguageSettingsScreen(
+                                    viewModel = viewModel,
+                                    onNavigateBack = { viewModel.setTab(AppTab.SETTINGS) }
+                                )
+                            }
                         }
                     }
 
@@ -539,6 +554,17 @@ class MainActivity : ComponentActivity() {
                                 showCountryPickerSheet = false
                             },
                             onDismiss = { showCountryPickerSheet = false }
+                        )
+                    }
+
+                    // Mandatory User Consent Gate for Owner Updates & Rollouts
+                    val pendingRollout by viewModel.pendingRolloutPrompt.collectAsState()
+                    if (pendingRollout != null) {
+                        FeatureUpdateConsentDialog(
+                            rollout = pendingRollout!!,
+                            lang = state.selectedLanguage,
+                            onAcceptUpdate = { updateId -> viewModel.acceptFeatureUpdate(updateId) },
+                            onPostponeUpdate = { updateId -> viewModel.postponeFeatureUpdate(updateId) }
                         )
                     }
                 }

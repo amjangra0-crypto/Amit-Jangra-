@@ -367,6 +367,7 @@ data class SubscriptionSchemeDetails(
     val features: List<String>,
     val isActive: Boolean = true,
     val discountPercent: Int = 0,
-    val isFreeForOwner: Boolean = false
+    val isFreeForOwner: Boolean = false,
+    val isVip: Boolean = false
 )
 

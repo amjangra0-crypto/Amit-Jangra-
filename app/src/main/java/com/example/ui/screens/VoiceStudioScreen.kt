@@ -58,6 +58,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import com.example.ui.components.VoiceMoodFilterSlider
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
@@ -160,6 +161,7 @@ fun VoiceStudioScreen(
     }
 
     // 5-Second Sample Audio Preview State
+    var selectedVoiceMood by remember { mutableStateOf("Natural") }
     var isPreviewPlaying by remember { mutableStateOf(false) }
     var previewCountdown by remember { mutableIntStateOf(5) }
     var previewJob by remember { mutableStateOf<Job?>(null) }
@@ -478,6 +480,37 @@ fun VoiceStudioScreen(
 
                         Spacer(modifier = Modifier.height(14.dp))
 
+                        // Real-Time Voice Mood Filter Slider Component (Deep Bass, Natural, High Pitch, Robot)
+                        VoiceMoodFilterSlider(
+                            currentMood = selectedVoiceMood,
+                            onMoodSelected = { mood ->
+                                selectedVoiceMood = mood
+                                viewModel.setPreferredVoiceMood(mood)
+                            },
+                            onAuditionMood = { mood ->
+                                selectedVoiceMood = mood
+                                viewModel.setPreferredVoiceMood(mood)
+                                val sampleDialogue = if (isVideoExplainerMode) {
+                                    "In this scene, the secret power awakens, changing the course of their journey forever."
+                                } else {
+                                    activeCharacter.sampleDialogue.ifBlank { "私を信じて！一緒に未来を変えよう！" }
+                                }
+                                viewModel.voiceSyncEngine.speakDialogue(
+                                    characterName = activeCharacter.name,
+                                    dialogueText = sampleDialogue,
+                                    emotion = "Confidence",
+                                    voiceType = activeCharacter.voiceType,
+                                    pitch = pitchSlider,
+                                    speed = speedSlider,
+                                    voiceMood = mood
+                                )
+                            },
+                            isCurrentlyAuditioning = isPreviewPlaying,
+                            modifier = Modifier.fillMaxWidth().testTag("studio_voice_mood_filter_slider")
+                        )
+
+                        Spacer(modifier = Modifier.height(14.dp))
+
                         // 3. 5-SECOND SAMPLE AUDIO PREVIEW BUTTON & WAVEFORM
                         Box(
                             modifier = Modifier
@@ -572,7 +605,8 @@ fun VoiceStudioScreen(
                                                     emotion = "Confidence",
                                                     voiceType = activeCharacter.voiceType,
                                                     pitch = pitchSlider,
-                                                    speed = speedSlider
+                                                    speed = speedSlider,
+                                                    voiceMood = selectedVoiceMood
                                                 )
 
                                                 previewJob?.cancel()

@@ -77,17 +77,19 @@ class AuthAndWalletRepository(private val context: Context) {
         val currentOwnerEmail = getOwnerEmail()
         val isOwner = cleanEmail.equals(currentOwnerEmail, ignoreCase = true) || cleanEmail.equals(OWNER_EMAIL, ignoreCase = true)
         val defaultName = if (isOwner) getOwnerUsername() else name ?: cleanEmail.substringBefore("@").replaceFirstChar { it.uppercase() }
+        val stableUid = if (isOwner) getOwnerAdminUid() else "user_${cleanEmail.replace(Regex("[^a-zA-Z0-9]"), "_").take(24)}"
+        val savedPlan = prefs.getString("saved_sub_$stableUid", if (isOwner) "VIP OWNER LIFETIME" else "Free Explorer") ?: if (isOwner) "VIP OWNER LIFETIME" else "Free Explorer"
 
         val updated = _currentUser.value.copy(
-            userId = if (isOwner) getOwnerAdminUid() else "user_${UUID.randomUUID().toString().take(8)}",
+            userId = stableUid,
             displayName = defaultName,
             email = cleanEmail,
             phoneNumber = _currentUser.value.phoneNumber.takeIf { it?.isNotBlank() == true } ?: if (isOwner) OWNER_PHONE else null,
             avatarDrawableName = if (isOwner) "char_shonen_hero" else "char_anime_heroine",
             isOwner = isOwner,
             authProvider = AuthProvider.GMAIL,
-            subscriptionPlan = if (isOwner) "VIP OWNER LIFETIME" else "PRO CREATOR",
-            subscriptionExpiry = if (isOwner) "Lifetime Unlimited" else "1 Year Active",
+            subscriptionPlan = savedPlan,
+            subscriptionExpiry = if (isOwner) "Lifetime Unlimited" else "Active",
             isLoggedIn = true
         )
         _currentUser.value = updated
@@ -198,18 +200,20 @@ class AuthAndWalletRepository(private val context: Context) {
 
     fun loginWithMobile(phoneNumber: String, inputOtp: String): Boolean {
         val cleanPhone = phoneNumber.trim()
-        // Accept OTP verification (demo 6-digit code or default 123456)
         val isOwner = cleanPhone.contains("9876543210") || cleanPhone.contains("98765 43210")
+        val stableUid = if (isOwner) getOwnerAdminUid() else "phone_${cleanPhone.replace(Regex("[^0-9]"), "").takeLast(10)}"
+        val savedPlan = prefs.getString("saved_sub_$stableUid", if (isOwner) "VIP OWNER LIFETIME" else "Free Explorer") ?: if (isOwner) "VIP OWNER LIFETIME" else "Free Explorer"
+
         val updated = _currentUser.value.copy(
-            userId = if (isOwner) "owner_phone" else "user_${UUID.randomUUID().toString().take(8)}",
-            displayName = if (isOwner) "Aman Jangra (Owner)" else "Anime Creator (+${cleanPhone.takeLast(4)})",
+            userId = stableUid,
+            displayName = if (isOwner) getOwnerUsername() else "Anime Creator (+${cleanPhone.takeLast(4)})",
             phoneNumber = cleanPhone,
             email = if (isOwner) OWNER_EMAIL else _currentUser.value.email,
             isOwner = isOwner,
             authProvider = AuthProvider.MOBILE_OTP,
             avatarDrawableName = if (isOwner) "char_shonen_hero" else "char_lady_mentor",
-            subscriptionPlan = if (isOwner) "VIP OWNER LIFETIME" else "FREE TIER",
-            subscriptionExpiry = if (isOwner) "Lifetime Unlimited" else "Trial 30 Days",
+            subscriptionPlan = savedPlan,
+            subscriptionExpiry = if (isOwner) "Lifetime Unlimited" else "Active",
             isLoggedIn = true
         )
         _currentUser.value = updated
@@ -787,19 +791,23 @@ class AuthAndWalletRepository(private val context: Context) {
     // -----------------------------------------------------------------------------------------
 
     private fun loadUserProfile(): UserProfile {
-        val isLoggedIn = prefs.getBoolean("is_logged_in", true)
-        val isOwner = prefs.getBoolean("is_owner", true)
+        if (!prefs.contains("is_logged_in")) {
+            // Fresh install or reinstallation: initialize in clean guest creator mode
+            return UserProfile()
+        }
+        val isLoggedIn = prefs.getBoolean("is_logged_in", false)
+        val isOwner = prefs.getBoolean("is_owner", false)
         val defaultOwnerEmail = getOwnerEmail()
-        val email = prefs.getString("user_email", defaultOwnerEmail)
-        val phone = prefs.getString("user_phone", OWNER_PHONE)
-        val name = prefs.getString("user_display_name", if (isOwner) getOwnerUsername() else "Creator") ?: getOwnerUsername()
-        val avatar = prefs.getString("user_avatar", "char_shonen_hero") ?: "char_shonen_hero"
-        val bio = prefs.getString("user_bio", "Lead Director & Founder at Anime Studio AI. Building next-generation anime narratives with AI.") ?: ""
-        val specialty = prefs.getString("user_specialty", "Anime Film Director") ?: "Anime Film Director"
-        val plan = prefs.getString("user_plan", if (isOwner) "VIP OWNER LIFETIME" else "PRO CREATOR") ?: "VIP OWNER LIFETIME"
+        val email = prefs.getString("user_email", if (isOwner) defaultOwnerEmail else null)
+        val phone = prefs.getString("user_phone", if (isOwner) OWNER_PHONE else null)
+        val name = prefs.getString("user_display_name", if (isOwner) getOwnerUsername() else "Anime Creator") ?: "Anime Creator"
+        val avatar = prefs.getString("user_avatar", if (isOwner) "char_shonen_hero" else "char_chibi_mascot") ?: "char_chibi_mascot"
+        val bio = prefs.getString("user_bio", if (isOwner) "Lead Director & Founder at Anime Studio AI. Building next-generation anime narratives with AI." else "Exploring Anime Studio AI.") ?: ""
+        val specialty = prefs.getString("user_specialty", if (isOwner) "Anime Film Director" else "Anime Creator") ?: "Anime Creator"
+        val plan = prefs.getString("user_plan", if (isOwner) "VIP OWNER LIFETIME" else "Free Explorer") ?: "Free Explorer"
 
         return UserProfile(
-            userId = prefs.getString("user_id", if (isOwner) getOwnerAdminUid() else "owner_amjangra0") ?: getOwnerAdminUid(),
+            userId = prefs.getString("user_id", if (isOwner) getOwnerAdminUid() else "guest_creator") ?: "guest_creator",
             displayName = name,
             email = email,
             phoneNumber = phone,
@@ -807,13 +815,13 @@ class AuthAndWalletRepository(private val context: Context) {
             bio = bio,
             creatorSpecialty = specialty,
             isOwner = isOwner,
-            authProvider = if (email != null) AuthProvider.GMAIL else AuthProvider.MOBILE_OTP,
+            authProvider = if (email != null) AuthProvider.GMAIL else if (phone != null) AuthProvider.MOBILE_OTP else AuthProvider.GUEST,
             subscriptionPlan = plan,
-            subscriptionExpiry = if (isOwner) "Lifetime Unlimited" else "1 Year Active",
+            subscriptionExpiry = if (isOwner) "Lifetime Unlimited" else "Active",
             isLoggedIn = isLoggedIn,
-            projectsCreated = prefs.getInt("stat_projects", 18),
-            videosRendered = prefs.getInt("stat_videos", 42),
-            voiceMinutesUsed = prefs.getInt("stat_voice", 320)
+            projectsCreated = prefs.getInt("stat_projects", 0),
+            videosRendered = prefs.getInt("stat_videos", 0),
+            voiceMinutesUsed = prefs.getInt("stat_voice", 0)
         )
     }
 

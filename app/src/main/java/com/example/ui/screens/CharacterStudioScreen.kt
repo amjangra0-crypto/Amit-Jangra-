@@ -41,6 +41,9 @@ import androidx.compose.material.icons.filled.Save
 import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material.icons.filled.VolumeUp
+import androidx.compose.material.icons.filled.ViewCarousel
+import com.example.ui.components.CharacterStudioPreviewComponent
+import com.example.ui.components.D3WaveformLipSyncVisualizer
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -177,6 +180,7 @@ fun CharacterStudioScreen(viewModel: AnimeViewModel) {
                 Spacer(modifier = Modifier.height(14.dp))
 
                 // Studio Navigation Tabs
+                // Studio Navigation Tabs
                 TabRow(
                     selectedTabIndex = selectedTab,
                     containerColor = AnimeSurface,
@@ -193,9 +197,9 @@ fun CharacterStudioScreen(viewModel: AnimeViewModel) {
                         onClick = { selectedTab = 0 },
                         text = {
                             Row(verticalAlignment = Alignment.CenterVertically) {
-                                Icon(Icons.Default.Palette, contentDescription = null, modifier = Modifier.size(14.dp))
-                                Spacer(modifier = Modifier.width(4.dp))
-                                Text(AppLocaleStrings.tr(state.selectedLanguage, "Visual Design", "विजुअल डिजाइन"), fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                                Icon(Icons.Default.ViewCarousel, contentDescription = null, modifier = Modifier.size(13.dp))
+                                Spacer(modifier = Modifier.width(3.dp))
+                                Text(AppLocaleStrings.tr(state.selectedLanguage, "3D Carousel", "3D प्रिव्यू"), fontSize = 11.sp, fontWeight = FontWeight.Bold)
                             }
                         }
                     )
@@ -204,9 +208,9 @@ fun CharacterStudioScreen(viewModel: AnimeViewModel) {
                         onClick = { selectedTab = 1 },
                         text = {
                             Row(verticalAlignment = Alignment.CenterVertically) {
-                                Icon(Icons.Default.RecordVoiceOver, contentDescription = null, modifier = Modifier.size(14.dp))
-                                Spacer(modifier = Modifier.width(4.dp))
-                                Text(AppLocaleStrings.tr(state.selectedLanguage, "AI Voice & Lip-Sync", "AI वॉइस व लिप-सिंक"), fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                                Icon(Icons.Default.Palette, contentDescription = null, modifier = Modifier.size(13.dp))
+                                Spacer(modifier = Modifier.width(3.dp))
+                                Text(AppLocaleStrings.tr(state.selectedLanguage, "Visual Design", "डिजाइन"), fontSize = 11.sp, fontWeight = FontWeight.Bold)
                             }
                         }
                     )
@@ -215,7 +219,18 @@ fun CharacterStudioScreen(viewModel: AnimeViewModel) {
                         onClick = { selectedTab = 2 },
                         text = {
                             Row(verticalAlignment = Alignment.CenterVertically) {
-                                Text(AppLocaleStrings.tr(state.selectedLanguage, "Roster (${state.customCharacters.size})", "रोस्टर (${state.customCharacters.size})"), fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                                Icon(Icons.Default.RecordVoiceOver, contentDescription = null, modifier = Modifier.size(13.dp))
+                                Spacer(modifier = Modifier.width(3.dp))
+                                Text(AppLocaleStrings.tr(state.selectedLanguage, "Voice & D3 Sync", "वॉइस व D3"), fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                            }
+                        }
+                    )
+                    Tab(
+                        selected = selectedTab == 3,
+                        onClick = { selectedTab = 3 },
+                        text = {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text(AppLocaleStrings.tr(state.selectedLanguage, "Roster (${state.customCharacters.size})", "रोस्टर (${state.customCharacters.size})"), fontSize = 11.sp, fontWeight = FontWeight.Bold)
                             }
                         }
                     )
@@ -224,8 +239,21 @@ fun CharacterStudioScreen(viewModel: AnimeViewModel) {
             Spacer(modifier = Modifier.height(16.dp))
         }
 
-        // Live Character Visual Card (always visible at top of tabs 0 and 1)
-        if (selectedTab != 2) {
+        // TAB 0: 3D Character Studio Preview (3D Carousel View + Apply to Script)
+        if (selectedTab == 0) {
+            item {
+                CharacterStudioPreviewComponent(
+                    viewModel = viewModel,
+                    onCharacterAppliedToScript = {
+                        // Cast into active scene
+                    }
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+            }
+        }
+
+        // Live Character Visual Card (always visible at top of tabs 1 and 2)
+        if (selectedTab == 1 || selectedTab == 2) {
             item {
                 LiveCharacterPreviewCard(
                     character = draft,
@@ -239,8 +267,8 @@ fun CharacterStudioScreen(viewModel: AnimeViewModel) {
             }
         }
 
-        // TAB 0: Visual Attribute Designer & Text Prompt
-        if (selectedTab == 0) {
+        // TAB 1: Visual Attribute Designer & Text Prompt
+        if (selectedTab == 1) {
             item {
                 Card(
                     modifier = Modifier.fillMaxWidth(),
@@ -423,7 +451,7 @@ fun CharacterStudioScreen(viewModel: AnimeViewModel) {
                         Button(
                             onClick = {
                                 viewModel.saveDraftCharacter()
-                                selectedTab = 2
+                                selectedTab = 3
                             },
                             modifier = Modifier.fillMaxWidth().testTag("save_draft_char_btn"),
                             colors = ButtonDefaults.buttonColors(containerColor = AnimeGreen),
@@ -438,8 +466,18 @@ fun CharacterStudioScreen(viewModel: AnimeViewModel) {
             }
         }
 
-        // TAB 1: Diverse AI Voices & Dialogue Sync Station
-        if (selectedTab == 1) {
+        // TAB 2: Diverse AI Voices & D3 Waveform Lip-Sync Station
+        if (selectedTab == 2) {
+            item {
+                D3WaveformLipSyncVisualizer(
+                    isSpeaking = speakingState.isSpeaking,
+                    amplitude = speakingState.audioWaveAmplitude,
+                    mouthOpenAmount = speakingState.mouthOpenAmount,
+                    characterName = draft.name,
+                    dialogueText = draft.sampleDialogue
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+            }
             item {
                 Card(
                     modifier = Modifier.fillMaxWidth(),
@@ -688,7 +726,7 @@ fun CharacterStudioScreen(viewModel: AnimeViewModel) {
                             Button(
                                 onClick = {
                                     viewModel.saveDraftCharacter()
-                                    selectedTab = 2
+                                    selectedTab = 3
                                 },
                                 modifier = Modifier.weight(1f).testTag("save_char_dialogue_btn"),
                                 colors = ButtonDefaults.buttonColors(containerColor = AnimeGreen),
@@ -704,8 +742,8 @@ fun CharacterStudioScreen(viewModel: AnimeViewModel) {
             }
         }
 
-        // TAB 2: Character Roster
-        if (selectedTab == 2) {
+        // TAB 3: Character Roster
+        if (selectedTab == 3) {
             item {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -719,7 +757,7 @@ fun CharacterStudioScreen(viewModel: AnimeViewModel) {
                         fontWeight = FontWeight.Bold
                     )
                     Button(
-                        onClick = { selectedTab = 0 },
+                        onClick = { selectedTab = 1 },
                         colors = ButtonDefaults.buttonColors(containerColor = AnimePurple),
                         shape = RoundedCornerShape(8.dp)
                     ) {

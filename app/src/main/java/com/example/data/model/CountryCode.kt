@@ -19,17 +19,17 @@ data class CountryCode(
 
 object CountryCodeProvider {
     val defaultCountry = CountryCode(
-        isoCode = "IN",
-        name = "India",
-        dialCode = "+91",
-        flagEmoji = "🇮🇳",
-        exampleNumber = "9876543210",
+        isoCode = "US",
+        name = "United States",
+        dialCode = "+1",
+        flagEmoji = "🇺🇸",
+        exampleNumber = "2025550143",
         minDigits = 10,
         maxDigits = 10,
-        primaryLanguage = "Hindi",
-        languageCode = "hi",
-        nativeLanguageName = "हिन्दी",
-        defaultVoiceAccent = "Hindi Dub (Heroic Bollywood Anime)"
+        primaryLanguage = "English",
+        languageCode = "en",
+        nativeLanguageName = "English (US)",
+        defaultVoiceAccent = "American Heroic Action"
     )
 
     val countries: List<CountryCode> = listOf(

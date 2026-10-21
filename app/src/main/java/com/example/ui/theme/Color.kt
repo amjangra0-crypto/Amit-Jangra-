@@ -272,6 +272,112 @@ object VibrantThemePresets {
         ),
 
         // ==========================================
+        // AESTHETIC LIGHT PASTEL THEMES (User Requested)
+        // Soft, Eye-Comfort, Elegant Light Colors
+        // ==========================================
+        VibrantThemeInfo(
+            key = "LIGHT_SAKURA_PINK",
+            nameEn = "Soft Sakura (Light Pink)",
+            nameHi = "सॉफ्ट साकुरा (हल्का गुलाबी)",
+            emoji = "🌸",
+            category = "Aesthetic Light Themes",
+            primaryColor = Color(0xFFEC4899),
+            secondaryColor = Color(0xFFF472B6),
+            lightBackground = Color(0xFFFFFFFF),
+            lightSurface = Color(0xFFFFFFFF),
+            lightSurfaceVariant = Color(0xFFFDF2F8),
+            lightBorderColor = Color(0xFFFCE7F3),
+            accentPink = Color(0xFFFB7185),
+            accentGold = Color(0xFFF59E0B),
+            accentColor = Color(0xFFEC4899)
+        ),
+        VibrantThemeInfo(
+            key = "LIGHT_MINT_FRESH",
+            nameEn = "Pastel Mint (Light Green)",
+            nameHi = "पेस्टल मिंट (हल्का हरा)",
+            emoji = "🌿",
+            category = "Aesthetic Light Themes",
+            primaryColor = Color(0xFF059669),
+            secondaryColor = Color(0xFF34D399),
+            lightBackground = Color(0xFFFFFFFF),
+            lightSurface = Color(0xFFFFFFFF),
+            lightSurfaceVariant = Color(0xFFF0FDF4),
+            lightBorderColor = Color(0xFFDCFCE7),
+            accentGreen = Color(0xFF10B981),
+            accentColor = Color(0xFF059669)
+        ),
+        VibrantThemeInfo(
+            key = "LIGHT_SKY_BREEZE",
+            nameEn = "Sky Breeze (Light Cyan)",
+            nameHi = "स्काई ब्रीज (हल्का नीला)",
+            emoji = "🩵",
+            category = "Aesthetic Light Themes",
+            primaryColor = Color(0xFF0284C7),
+            secondaryColor = Color(0xFF38BDF8),
+            lightBackground = Color(0xFFFFFFFF),
+            lightSurface = Color(0xFFFFFFFF),
+            lightSurfaceVariant = Color(0xFFF0F9FF),
+            lightBorderColor = Color(0xFFE0F2FE),
+            accentColor = Color(0xFF0284C7)
+        ),
+        VibrantThemeInfo(
+            key = "LIGHT_LAVENDER_MIST",
+            nameEn = "Lavender Dream (Light Lilac)",
+            nameHi = "लैवेंडर ड्रीम (हल्का बैंगनी)",
+            emoji = "🪻",
+            category = "Aesthetic Light Themes",
+            primaryColor = Color(0xFF7C3AED),
+            secondaryColor = Color(0xFFA78BFA),
+            lightBackground = Color(0xFFFFFFFF),
+            lightSurface = Color(0xFFFFFFFF),
+            lightSurfaceVariant = Color(0xFFF5F3FF),
+            lightBorderColor = Color(0xFFEDE9FE),
+            accentColor = Color(0xFF7C3AED)
+        ),
+        VibrantThemeInfo(
+            key = "LIGHT_PEACH_APRICOT",
+            nameEn = "Warm Peach (Light Apricot)",
+            nameHi = "वॉर्म पीच (हल्का संतरी)",
+            emoji = "🍑",
+            category = "Aesthetic Light Themes",
+            primaryColor = Color(0xFFEA580C),
+            secondaryColor = Color(0xFFFB923C),
+            lightBackground = Color(0xFFFFFFFF),
+            lightSurface = Color(0xFFFFFFFF),
+            lightSurfaceVariant = Color(0xFFFFF7ED),
+            lightBorderColor = Color(0xFFFFEDD5),
+            accentColor = Color(0xFFEA580C)
+        ),
+        VibrantThemeInfo(
+            key = "LIGHT_BUTTERCUP_CREAM",
+            nameEn = "Buttercup Cream (Light Amber)",
+            nameHi = "बटरकप क्रीम (हल्का पीला)",
+            emoji = "🌼",
+            category = "Aesthetic Light Themes",
+            primaryColor = Color(0xFFCA8A04),
+            secondaryColor = Color(0xFFFACC15),
+            lightBackground = Color(0xFFFFFFFF),
+            lightSurface = Color(0xFFFFFFFF),
+            lightSurfaceVariant = Color(0xFFFEFCE8),
+            lightBorderColor = Color(0xFFFEF08A),
+            accentColor = Color(0xFFCA8A04)
+        ),
+        VibrantThemeInfo(
+            key = "LIGHT_CLOUD_SILVER",
+            nameEn = "Cloud Silver (Light Platinum)",
+            nameHi = "क्लाउड सिल्वर (हल्का सिल्वर)",
+            emoji = "☁️",
+            category = "Aesthetic Light Themes",
+            primaryColor = Color(0xFF475569),
+            secondaryColor = Color(0xFF94A3B8),
+            lightBackground = Color(0xFFFFFFFF),
+            lightSurface = Color(0xFFFFFFFF),
+            lightSurfaceVariant = Color(0xFFF8FAFC),
+            lightBorderColor = Color(0xFFE2E8F0),
+            accentColor = Color(0xFF475569)
+        ),
+
+        // ==========================================
         // DUAL / MULTICOLOUR THEMES (User Requested)
         // e.g. White & Golden, White & Black, etc.
         // ==========================================

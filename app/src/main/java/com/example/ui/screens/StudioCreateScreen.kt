@@ -280,6 +280,35 @@ fun StudioCreateScreen(viewModel: AnimeViewModel) {
                     border = BorderStroke(1.dp, AnimeGreen)
                 )
             }
+            item {
+                val currentRatio by viewModel.activeAspectRatio.collectAsState()
+                FilterChip(
+                    selected = false,
+                    onClick = { viewModel.setTab(AppTab.PROJECT_SETTINGS) },
+                    label = { Text("📐 Aspect Ratio ($currentRatio)", fontSize = 11.sp, fontWeight = FontWeight.SemiBold) },
+                    colors = FilterChipDefaults.filterChipColors(containerColor = AnimeSurface),
+                    border = BorderStroke(1.dp, AnimePurple)
+                )
+            }
+            item {
+                val currentDubbingLang by viewModel.preferredDubbingLanguage.collectAsState()
+                FilterChip(
+                    selected = false,
+                    onClick = { viewModel.setTab(AppTab.LANGUAGE_SETTINGS) },
+                    label = { Text("🌐 Dubbing ($currentDubbingLang)", fontSize = 11.sp, fontWeight = FontWeight.SemiBold) },
+                    colors = FilterChipDefaults.filterChipColors(containerColor = AnimeSurface),
+                    border = BorderStroke(1.dp, AnimeCyan)
+                )
+            }
+            item {
+                FilterChip(
+                    selected = false,
+                    onClick = { viewModel.setTab(AppTab.CHARACTERS) },
+                    label = { Text("🎭 3D Character Carousel", fontSize = 11.sp, fontWeight = FontWeight.SemiBold) },
+                    colors = FilterChipDefaults.filterChipColors(containerColor = AnimeSurface),
+                    border = BorderStroke(1.dp, AnimePink)
+                )
+            }
         }
 
         // Script Editor Autosave Status Badge (Persisting to Room DB every 1 minute)

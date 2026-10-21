@@ -20,6 +20,7 @@ data class SpeakingState(
     val activeEmotion: String = "",
     val activeVoiceType: String = "",
     val activeAccent: String = "",
+    val activeVoiceMood: String = "Natural",
     val progress: Float = 0f,
     val mouthOpenAmount: Float = 0f, // 0f to 1f for anime lip-sync
     val audioWaveAmplitude: Float = 0f // 0f to 1f for waveform visualizer
@@ -151,6 +152,7 @@ class VoiceSyncEngine(private val context: Context) {
         voiceGender: String = "",
         voicePersona: String = "",
         voiceAccent: String = "",
+        voiceMood: String = "Natural",
         onStart: (() -> Unit)? = null,
         onDone: (() -> Unit)? = null
     ) {
@@ -184,6 +186,23 @@ class VoiceSyncEngine(private val context: Context) {
             else -> 1.0f
         }
 
+        // Voice Mood Real-Time Filter Modifiers ('Deep Bass', 'High Pitch', 'Robot', 'Echo Ghost')
+        val moodPitchMultiplier = when (voiceMood.lowercase()) {
+            "deep bass" -> 0.65f
+            "high pitch" -> 1.55f
+            "robot" -> 0.96f
+            "echo ghost" -> 0.82f
+            else -> 1.0f
+        }
+
+        val moodSpeedMultiplier = when (voiceMood.lowercase()) {
+            "deep bass" -> 0.92f
+            "high pitch" -> 1.08f
+            "robot" -> 0.85f
+            "echo ghost" -> 0.88f
+            else -> 1.0f
+        }
+
         // Accent modulation
         if (voiceAccent.contains("British", ignoreCase = true)) {
             tts?.language = Locale.UK
@@ -211,16 +230,23 @@ class VoiceSyncEngine(private val context: Context) {
             tts?.language = Locale("ar", "SA")
         }
 
-        val finalPitch = (pitch * personaPitchMultiplier).coerceIn(0.5f, 2.0f)
-        val finalSpeed = (speed * personaSpeedMultiplier).coerceIn(0.6f, 1.6f)
+        val finalPitch = (pitch * personaPitchMultiplier * moodPitchMultiplier).coerceIn(0.4f, 2.0f)
+        val finalSpeed = (speed * personaSpeedMultiplier * moodSpeedMultiplier).coerceIn(0.5f, 2.0f)
+
+        val processedDialogue = if (voiceMood.equals("robot", ignoreCase = true)) {
+            dialogueText.replace(".", " ... [BEEP]. ").replace("!", " ... [SYS-ENGAGE]! ")
+        } else {
+            dialogueText
+        }
 
         _speakingState.value = SpeakingState(
             isSpeaking = true,
             activeCharacter = characterName,
-            activeDialogue = dialogueText,
+            activeDialogue = processedDialogue,
             activeEmotion = emotion,
             activeVoiceType = if (voicePersona.isNotBlank()) voicePersona else voiceType,
             activeAccent = voiceAccent,
+            activeVoiceMood = voiceMood,
             progress = 0f
         )
 

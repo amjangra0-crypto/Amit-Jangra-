@@ -15,6 +15,7 @@ import android.graphics.Typeface
 import android.net.Uri
 import android.util.Log
 import androidx.core.content.FileProvider
+import androidx.documentfile.provider.DocumentFile
 import com.example.data.db.AnimeDao
 import com.example.data.db.ExportedVideoEntity
 import com.example.data.model.AnimeArtStyle
@@ -699,6 +700,42 @@ class VideoSequenceExportManager(
         } else {
             val kb = bytes / 1024
             "$kb KB"
+        }
+    }
+
+    /**
+     * Handles the export of generated video assets to the device's public storage directory
+     * using the Android Storage Access Framework (SAF) DocumentFile API.
+     */
+    suspend fun exportVideoAssetToDocumentDirectory(
+        context: Context,
+        sourceVideoFile: File,
+        targetDirectoryUri: Uri,
+        customFileName: String? = null
+    ): Result<Uri> = withContext(Dispatchers.IO) {
+        try {
+            if (!sourceVideoFile.exists() || sourceVideoFile.length() == 0L) {
+                return@withContext Result.failure(IllegalArgumentException("Source video file does not exist or is empty"))
+            }
+
+            val docDir = DocumentFile.fromTreeUri(context, targetDirectoryUri)
+                ?: return@withContext Result.failure(IllegalStateException("Cannot access directory via DocumentFile"))
+
+            val fileName = customFileName ?: sourceVideoFile.name
+            val targetDocFile = docDir.createFile("video/mp4", fileName)
+                ?: return@withContext Result.failure(IllegalStateException("Failed to create DocumentFile in chosen directory"))
+
+            context.contentResolver.openOutputStream(targetDocFile.uri)?.use { outputStream ->
+                sourceVideoFile.inputStream().use { inputStream ->
+                    inputStream.copyTo(outputStream, bufferSize = 64 * 1024)
+                }
+            } ?: return@withContext Result.failure(IllegalStateException("Could not open output stream for DocumentFile"))
+
+            Log.i("ExportManager", "Successfully exported video to public DocumentFile: ${targetDocFile.uri}")
+            Result.success(targetDocFile.uri)
+        } catch (e: Exception) {
+            Log.e("ExportManager", "Error exporting video via DocumentFile", e)
+            Result.failure(e)
         }
     }
 }

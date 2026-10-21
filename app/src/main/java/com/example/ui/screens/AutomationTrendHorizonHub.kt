@@ -25,11 +25,15 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.AutoAwesome
+import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.CloudSync
 import androidx.compose.material.icons.filled.CreditCard
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Movie
+import androidx.compose.material.icons.filled.Psychology
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Security
 import androidx.compose.material.icons.filled.Stars
 import androidx.compose.material.icons.filled.TrendingUp
@@ -45,7 +49,12 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.ScrollableTabRow
+import androidx.compose.material3.Tab
+import androidx.compose.material3.TabRowDefaults
+import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -124,49 +133,113 @@ fun AutomationTrendHorizonHub(
             .padding(16.dp)
             .testTag("automation_trend_horizon_screen")
     ) {
-        // TOP APP BAR
+        var selectedCategoryTab by remember { mutableStateOf("ALL") }
+
+        // TOP APP BAR WITH BACK, DONE AND CLOSE (×)
         Row(
             modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            IconButton(
-                onClick = onNavigateBack,
-                modifier = Modifier.testTag("trend_horizon_back_btn")
-            ) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = "Back",
-                    tint = MaterialTheme.colorScheme.onBackground
-                )
-            }
-            Spacer(modifier = Modifier.width(6.dp))
-            Column(modifier = Modifier.weight(1f)) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                        text = AppLocaleStrings.tr(lang, "Automation Trend Horizon", "ऑटोमेशन ट्रेंड होराइजन"),
-                        color = TextPrimary,
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold
+            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
+                IconButton(
+                    onClick = onNavigateBack,
+                    modifier = Modifier.testTag("trend_horizon_back_btn")
+                ) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = "Back",
+                        tint = MaterialTheme.colorScheme.onBackground
                     )
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Box(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(6.dp))
-                            .background(AnimeGold.copy(alpha = 0.2f))
-                            .border(1.dp, AnimeGold, RoundedCornerShape(6.dp))
-                            .padding(horizontal = 6.dp, vertical = 2.dp)
-                    ) {
-                        Text("ALL-IN-ONE", color = AnimeGold, fontSize = 8.sp, fontWeight = FontWeight.Black)
-                    }
                 }
-                Text(
-                    text = AppLocaleStrings.tr(
-                        lang,
-                        "Consolidated Viral Research, Multi-Account Sync & Owner Access Control",
-                        "वायरल ट्रेंड रिसर्च, मल्टी-सोशल सिंक व ओनर मोनेटाइजेशन कंट्रोल"
-                    ),
-                    color = TextSecondary,
-                    fontSize = 11.sp
+                Spacer(modifier = Modifier.width(4.dp))
+                Column {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            text = AppLocaleStrings.tr(lang, "Trend Horizon", "ट्रेंड होराइजन"),
+                            color = TextPrimary,
+                            fontSize = 17.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(6.dp))
+                                .background(AnimeGold.copy(alpha = 0.2f))
+                                .border(1.dp, AnimeGold, RoundedCornerShape(6.dp))
+                                .padding(horizontal = 6.dp, vertical = 2.dp)
+                        ) {
+                            Text("ALL-IN-ONE", color = AnimeGold, fontSize = 8.sp, fontWeight = FontWeight.Black)
+                        }
+                    }
+                    Text(
+                        text = "Google Trends • Instagram • AI Command Learning • TrendPulse",
+                        color = TextSecondary,
+                        fontSize = 10.sp
+                    )
+                }
+            }
+
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                TextButton(
+                    onClick = onNavigateBack,
+                    modifier = Modifier.testTag("trend_horizon_done_btn")
+                ) {
+                    Text("Done", color = AnimeCyan, fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                }
+                IconButton(
+                    onClick = onNavigateBack,
+                    modifier = Modifier.testTag("trend_horizon_close_btn")
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Close,
+                        contentDescription = "Close",
+                        tint = MaterialTheme.colorScheme.onBackground
+                    )
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(10.dp))
+
+        // HORIZONTAL CATEGORY TABS (Consolidates all options into one organized list)
+        val hubCategories = listOf(
+            "ALL" to "🌟 All Options",
+            "GOOGLE" to "📈 Google Trends",
+            "INSTAGRAM" to "📸 Instagram",
+            "AI_AGENT" to "🤖 TrendPulse AI",
+            "COMMAND_AI" to "🧠 AI Commands",
+            "SYNC" to "🔄 Social Sync",
+            "OWNER" to "👑 Owner Policy"
+        )
+
+        ScrollableTabRow(
+            selectedTabIndex = hubCategories.indexOfFirst { it.first == selectedCategoryTab }.coerceAtLeast(0),
+            containerColor = MaterialTheme.colorScheme.surfaceVariant,
+            contentColor = AnimeCyan,
+            edgePadding = 8.dp,
+            indicator = { tabPositions ->
+                val idx = hubCategories.indexOfFirst { it.first == selectedCategoryTab }.coerceAtLeast(0)
+                TabRowDefaults.SecondaryIndicator(
+                    Modifier.tabIndicatorOffset(tabPositions[idx]),
+                    color = AnimeCyan
+                )
+            },
+            modifier = Modifier.clip(RoundedCornerShape(10.dp))
+        ) {
+            hubCategories.forEach { (catKey, catTitle) ->
+                Tab(
+                    selected = selectedCategoryTab == catKey,
+                    onClick = { selectedCategoryTab = catKey },
+                    text = {
+                        Text(
+                            text = catTitle,
+                            fontWeight = if (selectedCategoryTab == catKey) FontWeight.Bold else FontWeight.Medium,
+                            fontSize = 11.sp
+                        )
+                    },
+                    selectedContentColor = AnimeCyan,
+                    unselectedContentColor = TextMuted
                 )
             }
         }
@@ -177,101 +250,308 @@ fun AutomationTrendHorizonHub(
             modifier = Modifier.fillMaxWidth().weight(1f),
             verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
-            // SECTION 1: OWNER ACCESS & MONETIZATION CONTROLLER (Owner decided who used free or who pay)
-            item {
-                Card(
-                    modifier = Modifier.fillMaxWidth().testTag("owner_trend_access_controller_card"),
-                    colors = CardDefaults.cardColors(containerColor = AnimeSurface),
-                    shape = RoundedCornerShape(16.dp),
-                    border = BorderStroke(1.dp, if (isOwner) AnimeGold else AnimePurple.copy(alpha = 0.4f))
-                ) {
-                    Column(modifier = Modifier.padding(14.dp)) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
+            // GOOGLE TRENDS RADAR (Option in Trend Horizon)
+            if (selectedCategoryTab == "ALL" || selectedCategoryTab == "GOOGLE") {
+                item {
+                    Card(
+                        modifier = Modifier.fillMaxWidth().testTag("google_trends_radar_card"),
+                        colors = CardDefaults.cardColors(containerColor = AnimeSurface),
+                        shape = RoundedCornerShape(16.dp),
+                        border = BorderStroke(1.dp, AnimeCyan.copy(alpha = 0.5f))
+                    ) {
+                        Column(modifier = Modifier.padding(14.dp)) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Box(
                                     modifier = Modifier
-                                        .size(34.dp)
+                                        .size(32.dp)
                                         .clip(CircleShape)
-                                        .background(AnimeGold.copy(alpha = 0.2f)),
+                                        .background(AnimeCyan.copy(alpha = 0.2f)),
                                     contentAlignment = Alignment.Center
                                 ) {
-                                    Icon(Icons.Default.Security, contentDescription = null, tint = AnimeGold, modifier = Modifier.size(18.dp))
+                                    Icon(Icons.Default.Search, contentDescription = null, tint = AnimeCyan, modifier = Modifier.size(16.dp))
                                 }
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Column {
                                     Text(
-                                        text = if (isOwner) "👑 Owner Trend Horizon Access Controller" else "Access Policy & Tier",
-                                        color = if (isOwner) AnimeGold else TextPrimary,
-                                        fontSize = 13.sp,
+                                        text = "📈 Google Trends Global Radar",
+                                        color = TextPrimary,
+                                        fontSize = 14.sp,
                                         fontWeight = FontWeight.Bold
                                     )
                                     Text(
-                                        text = if (isOwner)
-                                            "Owner decides: Who uses for Free vs Who Pays for Trend Horizon"
-                                        else
-                                            "Policy set by App Owner",
+                                        text = "Live search queries & viral breakout keywords",
                                         color = TextMuted,
                                         fontSize = 10.sp
                                     )
                                 }
                             }
 
-                            Box(
-                                modifier = Modifier
-                                    .clip(RoundedCornerShape(6.dp))
-                                    .background(if (isAccessAllowed) AnimeGreen.copy(alpha = 0.2f) else AnimePink.copy(alpha = 0.2f))
-                                    .padding(horizontal = 8.dp, vertical = 3.dp)
-                            ) {
-                                Text(
-                                    text = if (isAccessAllowed) "ACCESS ACTIVE" else "UPGRADE REQUIRED",
-                                    color = if (isAccessAllowed) AnimeGreen else AnimePink,
-                                    fontSize = 9.sp,
-                                    fontWeight = FontWeight.Bold
-                                )
-                            }
-                        }
+                            Spacer(modifier = Modifier.height(10.dp))
 
-                        Spacer(modifier = Modifier.height(10.dp))
-
-                        if (isOwner) {
-                            Text(
-                                text = "Choose Who Can Use Automation Trending Horizon:",
-                                color = TextSecondary,
-                                fontSize = 11.sp,
-                                fontWeight = FontWeight.SemiBold
+                            val googleQueries = listOf(
+                                "Romantic Anime Confession at Sunset" to "+340% Breakout",
+                                "Shonen Power Awakening Battle" to "+280% Surge",
+                                "Emotional Heartbreak Rain Scene" to "+210% Rising"
                             )
-                            Spacer(modifier = Modifier.height(6.dp))
 
-                            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                                TrendHorizonAccessTier.entries.forEach { tier ->
-                                    val isSel = trendHorizonConfig.accessTier == tier
-                                    Row(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .clip(RoundedCornerShape(10.dp))
-                                            .background(if (isSel) AnimeGold.copy(alpha = 0.18f) else AnimeSurfaceVariant)
-                                            .border(1.dp, if (isSel) AnimeGold else Color.Transparent, RoundedCornerShape(10.dp))
-                                            .clickable {
-                                                channelManager.setTrendHorizonAccessTier(tier)
-                                                Toast.makeText(context, "👑 Policy updated to: ${tier.title}", Toast.LENGTH_SHORT).show()
-                                            }
-                                            .padding(10.dp),
-                                        horizontalArrangement = Arrangement.SpaceBetween,
-                                        verticalAlignment = Alignment.CenterVertically
+                            googleQueries.forEach { (q, stat) ->
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(vertical = 4.dp)
+                                        .clip(RoundedCornerShape(8.dp))
+                                        .background(AnimeSurfaceVariant)
+                                        .padding(horizontal = 10.dp, vertical = 7.dp),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Column(modifier = Modifier.weight(1f)) {
+                                        Text(q, color = TextPrimary, fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
+                                        Text(stat, color = AnimeGreen, fontSize = 9.sp, fontWeight = FontWeight.Bold)
+                                    }
+                                    Button(
+                                        onClick = {
+                                            viewModel.setPromptInput(q)
+                                            viewModel.setTab(AppTab.STUDIO)
+                                            Toast.makeText(context, "Loaded into Studio: $q", Toast.LENGTH_SHORT).show()
+                                        },
+                                        colors = ButtonDefaults.buttonColors(containerColor = AnimeCyan),
+                                        shape = RoundedCornerShape(6.dp),
+                                        contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 8.dp, vertical = 2.dp),
+                                        modifier = Modifier.height(28.dp)
                                     ) {
-                                        Column(modifier = Modifier.weight(1f)) {
-                                            Text(tier.title, color = if (isSel) AnimeGold else TextPrimary, fontSize = 11.sp, fontWeight = FontWeight.Bold)
-                                            Text(tier.description, color = TextMuted, fontSize = 9.sp)
-                                        }
-                                        if (isSel) {
-                                            Icon(Icons.Default.Check, contentDescription = null, tint = AnimeGold, modifier = Modifier.size(16.dp))
-                                        }
+                                        Text("Use", color = Color.Black, fontSize = 10.sp, fontWeight = FontWeight.Bold)
                                     }
                                 }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // INSTAGRAM TRENDS & REELS VIRAL RADAR (Option in Trend Horizon)
+            if (selectedCategoryTab == "ALL" || selectedCategoryTab == "INSTAGRAM") {
+                item {
+                    Card(
+                        modifier = Modifier.fillMaxWidth().testTag("instagram_trends_radar_card"),
+                        colors = CardDefaults.cardColors(containerColor = AnimeSurface),
+                        shape = RoundedCornerShape(16.dp),
+                        border = BorderStroke(1.dp, AnimePink.copy(alpha = 0.5f))
+                    ) {
+                        Column(modifier = Modifier.padding(14.dp)) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(32.dp)
+                                        .clip(CircleShape)
+                                        .background(AnimePink.copy(alpha = 0.2f)),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Icon(Icons.Default.CameraAlt, contentDescription = null, tint = AnimePink, modifier = Modifier.size(16.dp))
+                                }
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Column {
+                                    Text(
+                                        text = "📸 Instagram Reels Viral Audio & Formats",
+                                        color = TextPrimary,
+                                        fontSize = 14.sp,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                    Text(
+                                        text = "Trending audio hooks, pacing, and 9:16 vertical styling",
+                                        color = TextMuted,
+                                        fontSize = 10.sp
+                                    )
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.height(10.dp))
+
+                            val instaHooks = listOf(
+                                "Lo-Fi Romance Piano #AnimeVibes" to "2.4M Reels using this audio",
+                                "Fast Dramatic Transition Beat" to "1.8M Reels this week"
+                            )
+
+                            instaHooks.forEach { (hook, sub) ->
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(vertical = 4.dp)
+                                        .clip(RoundedCornerShape(8.dp))
+                                        .background(AnimeSurfaceVariant)
+                                        .padding(horizontal = 10.dp, vertical = 7.dp),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Column(modifier = Modifier.weight(1f)) {
+                                        Text(hook, color = TextPrimary, fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
+                                        Text(sub, color = AnimePink, fontSize = 9.sp)
+                                    }
+                                    Button(
+                                        onClick = {
+                                            viewModel.setPromptInput("Anime video synced to $hook")
+                                            viewModel.setTab(AppTab.STUDIO)
+                                            Toast.makeText(context, "Loaded: $hook", Toast.LENGTH_SHORT).show()
+                                        },
+                                        colors = ButtonDefaults.buttonColors(containerColor = AnimePink),
+                                        shape = RoundedCornerShape(6.dp),
+                                        contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 8.dp, vertical = 2.dp),
+                                        modifier = Modifier.height(28.dp)
+                                    ) {
+                                        Text("Apply", color = Color.White, fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // AI COMMAND LEARNING HUB (Option in Trend Horizon)
+            if (selectedCategoryTab == "ALL" || selectedCategoryTab == "COMMAND_AI") {
+                item {
+                    Card(
+                        modifier = Modifier.fillMaxWidth().testTag("ai_command_learning_hub_card"),
+                        colors = CardDefaults.cardColors(containerColor = AnimeSurface),
+                        shape = RoundedCornerShape(16.dp),
+                        border = BorderStroke(1.dp, AnimePurple.copy(alpha = 0.5f))
+                    ) {
+                        Column(modifier = Modifier.padding(14.dp)) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(32.dp)
+                                        .clip(CircleShape)
+                                        .background(AnimePurple.copy(alpha = 0.2f)),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Icon(Icons.Default.Psychology, contentDescription = null, tint = AnimePurple, modifier = Modifier.size(16.dp))
+                                }
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Column {
+                                    Text(
+                                        text = "🧠 AI Command Learning Engine",
+                                        color = TextPrimary,
+                                        fontSize = 14.sp,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                    Text(
+                                        text = "Continuously learns creator style and auto-suggests optimal commands",
+                                        color = TextMuted,
+                                        fontSize = 10.sp
+                                    )
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.height(10.dp))
+
+                            Text(
+                                text = "Learned Creator Preferences: High-Emotion Dialogue, Dynamic Sakura Petal Wind, Cinematic 4K Shading",
+                                color = TextSecondary,
+                                fontSize = 10.sp,
+                                lineHeight = 14.sp
+                            )
+                        }
+                    }
+                }
+            }
+
+            // SECTION: OWNER ACCESS & MONETIZATION CONTROLLER (if selected or ALL)
+            if (selectedCategoryTab == "ALL" || selectedCategoryTab == "OWNER") {
+                item {
+                    Card(
+                        modifier = Modifier.fillMaxWidth().testTag("owner_trend_access_controller_card"),
+                        colors = CardDefaults.cardColors(containerColor = AnimeSurface),
+                        shape = RoundedCornerShape(16.dp),
+                        border = BorderStroke(1.dp, if (isOwner) AnimeGold else AnimePurple.copy(alpha = 0.4f))
+                    ) {
+                        Column(modifier = Modifier.padding(14.dp)) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Box(
+                                        modifier = Modifier
+                                            .size(34.dp)
+                                            .clip(CircleShape)
+                                            .background(AnimeGold.copy(alpha = 0.2f)),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Icon(Icons.Default.Security, contentDescription = null, tint = AnimeGold, modifier = Modifier.size(18.dp))
+                                    }
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Column {
+                                        Text(
+                                            text = if (isOwner) "👑 Owner Trend Horizon Access Controller" else "Access Policy & Tier",
+                                            color = if (isOwner) AnimeGold else TextPrimary,
+                                            fontSize = 13.sp,
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                        Text(
+                                            text = if (isOwner)
+                                                "Owner decides: Who uses for Free vs Who Pays for Trend Horizon"
+                                            else
+                                                "Policy set by App Owner",
+                                            color = TextMuted,
+                                            fontSize = 10.sp
+                                        )
+                                    }
+                                }
+
+                                Box(
+                                    modifier = Modifier
+                                        .clip(RoundedCornerShape(6.dp))
+                                        .background(if (isAccessAllowed) AnimeGreen.copy(alpha = 0.2f) else AnimePink.copy(alpha = 0.2f))
+                                        .padding(horizontal = 8.dp, vertical = 3.dp)
+                                ) {
+                                    Text(
+                                        text = if (isAccessAllowed) "ACCESS ACTIVE" else "UPGRADE REQUIRED",
+                                        color = if (isAccessAllowed) AnimeGreen else AnimePink,
+                                        fontSize = 9.sp,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.height(10.dp))
+
+                            if (isOwner) {
+                                Text(
+                                    text = "Choose Who Can Use Automation Trending Horizon:",
+                                    color = TextSecondary,
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.SemiBold
+                                )
+                                Spacer(modifier = Modifier.height(6.dp))
+
+                                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                                    TrendHorizonAccessTier.entries.forEach { tier ->
+                                        val isSel = trendHorizonConfig.accessTier == tier
+                                        Row(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .clip(RoundedCornerShape(10.dp))
+                                                .background(if (isSel) AnimeGold.copy(alpha = 0.18f) else AnimeSurfaceVariant)
+                                                .border(1.dp, if (isSel) AnimeGold else Color.Transparent, RoundedCornerShape(10.dp))
+                                                .clickable {
+                                                    channelManager.setTrendHorizonAccessTier(tier)
+                                                    Toast.makeText(context, "👑 Policy updated to: ${tier.title}", Toast.LENGTH_SHORT).show()
+                                                }
+                                                .padding(10.dp),
+                                            horizontalArrangement = Arrangement.SpaceBetween,
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Column(modifier = Modifier.weight(1f)) {
+                                                Text(tier.title, color = if (isSel) AnimeGold else TextPrimary, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                                                Text(tier.description, color = TextMuted, fontSize = 9.sp)
+                                            }
+                                            if (isSel) {
+                                                Icon(Icons.Default.Check, contentDescription = null, tint = AnimeGold, modifier = Modifier.size(16.dp))
+                                            }
+                                        }
+                                    }
                             }
                         } else {
                             // User View of the Policy
@@ -495,4 +775,5 @@ fun AutomationTrendHorizonHub(
             }
         }
     }
+}
 }

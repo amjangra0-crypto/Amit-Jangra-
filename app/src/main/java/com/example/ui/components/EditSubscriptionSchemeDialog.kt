@@ -27,6 +27,7 @@ import androidx.compose.material.icons.filled.Stars
 import androidx.compose.material.icons.filled.WorkspacePremium
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -90,6 +91,9 @@ fun EditSubscriptionSchemeDialog(
     var yearlyPriceInr by remember { mutableStateOf(initialScheme.yearlyPriceInr.toString()) }
     var monthlyPriceUsd by remember { mutableStateOf(initialScheme.monthlyPriceUsd.toString()) }
     var yearlyPriceUsd by remember { mutableStateOf(initialScheme.yearlyPriceUsd.toString()) }
+    var monthlyPriceEur by remember { mutableStateOf(initialScheme.monthlyPriceEur.toString()) }
+    var monthlyPriceGbp by remember { mutableStateOf(initialScheme.monthlyPriceGbp.toString()) }
+    var monthlyPriceJpy by remember { mutableStateOf(initialScheme.monthlyPriceJpy.toString()) }
     var dailyCredits by remember { mutableStateOf(initialScheme.dailyCredits.toString()) }
     var isActive by remember { mutableStateOf(initialScheme.isActive) }
     var discountPercent by remember { mutableIntStateOf(initialScheme.discountPercent) }
@@ -363,6 +367,74 @@ fun EditSubscriptionSchemeDialog(
 
                 Spacer(modifier = Modifier.height(20.dp))
 
+                Spacer(modifier = Modifier.height(10.dp))
+
+                // Multi-Currency Pricing (EUR, GBP, JPY)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text("Monthly (EUR €):", color = TextSecondary, fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
+                        Spacer(modifier = Modifier.height(4.dp))
+                        OutlinedTextField(
+                            value = monthlyPriceEur,
+                            onValueChange = { monthlyPriceEur = it },
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                            singleLine = true,
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(10.dp)
+                        )
+                    }
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text("Monthly (GBP £):", color = TextSecondary, fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
+                        Spacer(modifier = Modifier.height(4.dp))
+                        OutlinedTextField(
+                            value = monthlyPriceGbp,
+                            onValueChange = { monthlyPriceGbp = it },
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                            singleLine = true,
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(10.dp)
+                        )
+                    }
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text("Monthly (JPY ¥):", color = TextSecondary, fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
+                        Spacer(modifier = Modifier.height(4.dp))
+                        OutlinedTextField(
+                            value = monthlyPriceJpy,
+                            onValueChange = { monthlyPriceJpy = it },
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                            singleLine = true,
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(10.dp)
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Delete Category Option (If not base free plan)
+                if (initialScheme.planId != "plan_free") {
+                    OutlinedButton(
+                        onClick = {
+                            viewModel.removeSubscriptionCategory(initialScheme.planId)
+                            Toast.makeText(context, "🗑️ Category '${initialScheme.title}' removed", Toast.LENGTH_SHORT).show()
+                            onDismiss()
+                        },
+                        border = BorderStroke(1.dp, AnimePink),
+                        shape = RoundedCornerShape(10.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(42.dp)
+                    ) {
+                        Icon(Icons.Default.Delete, contentDescription = null, tint = AnimePink, modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text("Delete / Remove This Category", color = AnimePink, fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                    }
+                    Spacer(modifier = Modifier.height(12.dp))
+                }
+
                 // Action Buttons
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -381,6 +453,9 @@ fun EditSubscriptionSchemeDialog(
                             val inrY = yearlyPriceInr.toDoubleOrNull() ?: initialScheme.yearlyPriceInr
                             val usdM = monthlyPriceUsd.toDoubleOrNull() ?: initialScheme.monthlyPriceUsd
                             val usdY = yearlyPriceUsd.toDoubleOrNull() ?: initialScheme.yearlyPriceUsd
+                            val eurM = monthlyPriceEur.toDoubleOrNull() ?: initialScheme.monthlyPriceEur
+                            val gbpM = monthlyPriceGbp.toDoubleOrNull() ?: initialScheme.monthlyPriceGbp
+                            val jpyM = monthlyPriceJpy.toDoubleOrNull() ?: initialScheme.monthlyPriceJpy
                             val credits = dailyCredits.toIntOrNull() ?: initialScheme.dailyCredits
 
                             val updated = initialScheme.copy(
@@ -390,6 +465,9 @@ fun EditSubscriptionSchemeDialog(
                                 yearlyPriceInr = inrY,
                                 monthlyPriceUsd = usdM,
                                 yearlyPriceUsd = usdY,
+                                monthlyPriceEur = eurM,
+                                monthlyPriceGbp = gbpM,
+                                monthlyPriceJpy = jpyM,
                                 dailyCredits = credits,
                                 features = featuresList.toList(),
                                 isActive = isActive,

@@ -11,9 +11,11 @@ import androidx.room.RoomDatabase
         CustomCharacterEntity::class,
         SavedVisualElementEntity::class,
         AdminAccessEntity::class,
-        ExportedVideoEntity::class
+        ExportedVideoEntity::class,
+        ProjectMetadataEntity::class,
+        FaqSupportIncidentEntity::class
     ],
-    version = 4,
+    version = 5,
     exportSchema = false
 )
 abstract class AnimeDatabase : RoomDatabase() {

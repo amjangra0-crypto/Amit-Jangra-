@@ -26,6 +26,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.AspectRatio
 import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CheckCircle
@@ -42,6 +43,7 @@ import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Shield
 import androidx.compose.material.icons.filled.Storage
 import androidx.compose.material.icons.filled.TrendingUp
+import androidx.compose.material.icons.filled.Translate
 import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -848,6 +850,40 @@ fun SettingsScreen(
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
                         AppLocaleStrings.tr(lang, "Automation Trend Horizon Hub (Multi-Account & Access Control)", "ट्रेंड होराइजन ऑटोमेशन हब"),
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // Project Settings (Aspect Ratios: 9:16, 16:9, 1:1)
+                OutlinedButton(
+                    onClick = { viewModel.setTab(AppTab.PROJECT_SETTINGS) },
+                    shape = RoundedCornerShape(8.dp),
+                    modifier = Modifier.fillMaxWidth().testTag("settings_nav_project_settings_btn")
+                ) {
+                    Icon(Icons.Default.AspectRatio, contentDescription = null, tint = AnimePurple, modifier = Modifier.size(16.dp))
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        AppLocaleStrings.tr(lang, "Project Settings (Aspect Ratio: 9:16 Shorts, 16:9 YouTube, 1:1 Feed)", "प्रोजेक्ट सेटिंग्स (आस्पेक्ट रेशियो 9:16, 16:9, 1:1)"),
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // Language Settings (Dubbing Language & DataStore Preferences)
+                OutlinedButton(
+                    onClick = { viewModel.setTab(AppTab.LANGUAGE_SETTINGS) },
+                    shape = RoundedCornerShape(8.dp),
+                    modifier = Modifier.fillMaxWidth().testTag("settings_nav_language_settings_btn")
+                ) {
+                    Icon(Icons.Default.Translate, contentDescription = null, tint = AnimeCyan, modifier = Modifier.size(16.dp))
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        AppLocaleStrings.tr(lang, "Language Settings (Dubbing: Japanese, Hindi, English, Spanish - DataStore)", "डबिंग भाषा सेटिंग्स (जापानी, हिन्दी, अंग्रेज़ी, स्पैनिश)"),
                         fontSize = 11.sp,
                         fontWeight = FontWeight.SemiBold
                     )

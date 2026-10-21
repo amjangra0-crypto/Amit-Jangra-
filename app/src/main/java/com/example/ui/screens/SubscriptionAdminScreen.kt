@@ -20,10 +20,15 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.AccountBalance
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.CreditCard
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Group
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.LockOpen
@@ -42,6 +47,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
@@ -58,6 +64,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import com.example.data.model.SubscriptionSchemeDetails
+import com.example.ui.AppTab
+import com.example.ui.components.AddNewSubscriptionCategoryDialog
+import com.example.ui.components.EditSubscriptionSchemeDialog
+import com.example.ui.components.UserSubscriptionCheckoutDialog
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -109,6 +120,11 @@ fun SubscriptionAdminScreen(viewModel: AnimeViewModel) {
     var checkoutPlan by remember { mutableStateOf<SubscriptionPlan?>(null) }
     var checkoutSuccessMessage by remember { mutableStateOf("") }
 
+    var showAddCategoryDialog by remember { mutableStateOf(false) }
+    var editingScheme by remember { mutableStateOf<SubscriptionSchemeDetails?>(null) }
+    var userCheckoutScheme by remember { mutableStateOf<SubscriptionSchemeDetails?>(null) }
+    val allSchemes by viewModel.subscriptionSchemes.collectAsState()
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -117,73 +133,125 @@ fun SubscriptionAdminScreen(viewModel: AnimeViewModel) {
             .padding(16.dp)
             .padding(bottom = 88.dp)
     ) {
-        // App Owner Master Card (Always Free for Owner)
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-            shape = RoundedCornerShape(16.dp),
-            border = BorderStroke(1.dp, AnimeGold)
+        // TOP APP BAR WITH BACK & DONE BUTTONS
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(
-                        Brush.horizontalGradient(
-                            listOf(MaterialTheme.colorScheme.primary.copy(alpha = 0.25f), AnimeGold.copy(alpha = 0.15f))
-                        )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                IconButton(
+                    onClick = { viewModel.setTab(AppTab.STUDIO) },
+                    modifier = Modifier.testTag("subscription_screen_back_btn")
+                ) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = "Back",
+                        tint = MaterialTheme.colorScheme.onBackground
                     )
-                    .padding(18.dp)
-            ) {
-                Column {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Box(
-                            modifier = Modifier
-                                .size(36.dp)
-                                .clip(CircleShape)
-                                .background(AnimeGold),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(Icons.Default.Stars, contentDescription = null, tint = Color.Black, modifier = Modifier.size(20.dp))
-                        }
-                        Spacer(modifier = Modifier.width(10.dp))
-                        Column {
-                            Text(
-                                text = AppLocaleStrings.tr(lang, "👑 App Owner VIP Access", "👑 ऐप ओनर वीआईपी एक्सेस"),
-                                color = AnimeGold,
-                                fontSize = 15.sp,
-                                fontWeight = FontWeight.Bold
-                            )
-                            Text(
-                                text = "${AppLocaleStrings.tr(lang, "Owner Email", "ओनर ईमेल")}: ${adminSettings?.ownerEmail ?: "amjangra0@gmail.com"}",
-                                color = MaterialTheme.colorScheme.onSurface,
-                                fontSize = 12.sp
-                            )
-                        }
-                    }
-                    Spacer(modifier = Modifier.height(10.dp))
-                    Box(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(8.dp))
-                            .background(AnimeGreen.copy(alpha = 0.2f))
-                            .border(1.dp, AnimeGreen.copy(alpha = 0.4f), RoundedCornerShape(8.dp))
-                            .padding(horizontal = 10.dp, vertical = 6.dp)
-                    ) {
-                        Text(
-                            text = AppLocaleStrings.tr(
-                                lang,
-                                "✓ Lifetime 100% Free Owner License for You",
-                                "✓ आपके लिए यह ऐप आजीवन 100% फ्री है (Lifetime Free Owner License)"
-                            ),
-                            color = AnimeGreen,
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.SemiBold
-                        )
-                    }
                 }
+                Spacer(modifier = Modifier.width(4.dp))
+                Column {
+                    Text(
+                        text = if (currentUser.isOwner) AppLocaleStrings.tr(lang, "👑 Subscription & VIP Admin", "👑 सब्सक्रिप्शन व VIP एडमिन")
+                               else AppLocaleStrings.tr(lang, "💎 Studio Subscription Plans", "💎 स्टूडियो सब्सक्रिप्शन प्लान"),
+                        color = MaterialTheme.colorScheme.onBackground,
+                        fontSize = 17.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Text(
+                        text = if (currentUser.isOwner) "Full Owner Privileges & Direct Multi-Currency Wallet"
+                               else "Unlimited AI Generation • Real-Time Voice Dubbing",
+                        color = TextSecondary,
+                        fontSize = 11.sp
+                    )
+                }
+            }
+
+            TextButton(
+                onClick = { viewModel.setTab(AppTab.STUDIO) },
+                modifier = Modifier.testTag("subscription_screen_done_btn")
+            ) {
+                Text(
+                    text = AppLocaleStrings.tr(lang, "Done", "पूर्ण"),
+                    color = MaterialTheme.colorScheme.primary,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 14.sp
+                )
             }
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
+        // App Owner Master Card (STRICTLY FOR OWNER ONLY - COMPLETELY HIDDEN FOR REGULAR USERS)
+        if (currentUser.isOwner) {
+            Card(
+                modifier = Modifier.fillMaxWidth().testTag("owner_vip_access_master_card"),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                shape = RoundedCornerShape(16.dp),
+                border = BorderStroke(1.dp, AnimeGold)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(
+                            Brush.horizontalGradient(
+                                listOf(MaterialTheme.colorScheme.primary.copy(alpha = 0.25f), AnimeGold.copy(alpha = 0.15f))
+                            )
+                        )
+                        .padding(18.dp)
+                ) {
+                    Column {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Box(
+                                modifier = Modifier
+                                    .size(36.dp)
+                                    .clip(CircleShape)
+                                    .background(AnimeGold),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(Icons.Default.Stars, contentDescription = null, tint = Color.Black, modifier = Modifier.size(20.dp))
+                            }
+                            Spacer(modifier = Modifier.width(10.dp))
+                            Column {
+                                Text(
+                                    text = AppLocaleStrings.tr(lang, "👑 App Owner VIP Access", "👑 ऐप ओनर वीआईपी एक्सेस"),
+                                    color = AnimeGold,
+                                    fontSize = 15.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                                Text(
+                                    text = "${AppLocaleStrings.tr(lang, "Owner Email", "ओनर ईमेल")}: ${adminSettings?.ownerEmail ?: "amjangra0@gmail.com"}",
+                                    color = MaterialTheme.colorScheme.onSurface,
+                                    fontSize = 12.sp
+                                )
+                            }
+                        }
+                        Spacer(modifier = Modifier.height(10.dp))
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(AnimeGreen.copy(alpha = 0.2f))
+                                .border(1.dp, AnimeGreen.copy(alpha = 0.4f), RoundedCornerShape(8.dp))
+                                .padding(horizontal = 10.dp, vertical = 6.dp)
+                        ) {
+                            Text(
+                                text = AppLocaleStrings.tr(
+                                    lang,
+                                    "✓ Lifetime 100% Free Owner License for You",
+                                    "✓ आपके लिए यह ऐप आजीवन 100% फ्री है (Lifetime Free Owner License)"
+                                ),
+                                color = AnimeGreen,
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                        }
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+        }
 
         // -------------------------------------------------------------------------------------
         // STRICT OWNER WALLET SYSTEM (ONLY VISIBLE IN OWNER'S ID!)
@@ -347,20 +415,21 @@ fun SubscriptionAdminScreen(viewModel: AnimeViewModel) {
             Spacer(modifier = Modifier.height(16.dp))
         }
 
-        // Multi-Currency Selection for Subscription Purchase
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = AppLocaleStrings.tr(lang, "Select Currency for Plans:", "मुद्रा चुनें (Select Currency for Plans):"),
-                color = MaterialTheme.colorScheme.onSurface,
-                fontSize = 13.sp,
-                fontWeight = FontWeight.Bold
-            )
+        // Multi-Currency Selection for Subscription Purchase (STRICTLY VISIBLE ONLY TO OWNER!)
+        // Non-owner users select their payment currency inside the dedicated Checkout dialog!
+        if (currentUser.isOwner) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = AppLocaleStrings.tr(lang, "👑 Owner Currency View for Schemes:", "👑 योजनाओं के लिए मुद्रा (Owner Currency View):"),
+                    color = AnimeGold,
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.Bold
+                )
 
-            if (currentUser.isOwner) {
                 TextButton(
                     onClick = { showPricingEditor = true },
                     modifier = Modifier.testTag("owner_quick_pricing_edit_link")
@@ -375,87 +444,291 @@ fun SubscriptionAdminScreen(viewModel: AnimeViewModel) {
                     )
                 }
             }
-        }
 
-        Spacer(modifier = Modifier.height(6.dp))
+            Spacer(modifier = Modifier.height(6.dp))
 
-        TabRow(
-            selectedTabIndex = selectedCurrency.ordinal,
-            containerColor = MaterialTheme.colorScheme.surfaceVariant,
-            indicator = { tabPositions ->
-                TabRowDefaults.SecondaryIndicator(
-                    Modifier.tabIndicatorOffset(tabPositions[selectedCurrency.ordinal]),
-                    color = when (selectedCurrency) {
-                        CurrencyType.INR -> AnimeGreen
-                        CurrencyType.USD -> AnimeCyan
-                        CurrencyType.EUR -> AnimePink
-                        CurrencyType.GBP -> AnimeGold
-                        CurrencyType.JPY -> AnimePurple
-                    }
-                )
-            },
-            modifier = Modifier.clip(RoundedCornerShape(12.dp))
-        ) {
-            CurrencyType.values().forEach { c ->
-                Tab(
-                    selected = selectedCurrency == c,
-                    onClick = { selectedCurrency = c },
-                    text = {
-                        Text(
-                            text = "${c.symbol} ${c.title}",
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 12.sp
-                        )
-                    },
-                    selectedContentColor = when (c) {
-                        CurrencyType.INR -> AnimeGreen
-                        CurrencyType.USD -> AnimeCyan
-                        CurrencyType.EUR -> AnimePink
-                        CurrencyType.GBP -> AnimeGold
-                        CurrencyType.JPY -> AnimePurple
-                    },
-                    unselectedContentColor = TextMuted
+            TabRow(
+                selectedTabIndex = selectedCurrency.ordinal,
+                containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                indicator = { tabPositions ->
+                    TabRowDefaults.SecondaryIndicator(
+                        Modifier.tabIndicatorOffset(tabPositions[selectedCurrency.ordinal]),
+                        color = when (selectedCurrency) {
+                            CurrencyType.INR -> AnimeGreen
+                            CurrencyType.USD -> AnimeCyan
+                            CurrencyType.EUR -> AnimePink
+                            CurrencyType.GBP -> AnimeGold
+                            CurrencyType.JPY -> AnimePurple
+                        }
+                    )
+                },
+                modifier = Modifier.clip(RoundedCornerShape(12.dp))
+            ) {
+                CurrencyType.values().forEach { c ->
+                    Tab(
+                        selected = selectedCurrency == c,
+                        onClick = { selectedCurrency = c },
+                        text = {
+                            Text(
+                                text = "${c.symbol} ${c.title}",
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 12.sp
+                            )
+                        },
+                        selectedContentColor = when (c) {
+                            CurrencyType.INR -> AnimeGreen
+                            CurrencyType.USD -> AnimeCyan
+                            CurrencyType.EUR -> AnimePink
+                            CurrencyType.GBP -> AnimeGold
+                            CurrencyType.JPY -> AnimePurple
+                        },
+                        unselectedContentColor = TextMuted
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(14.dp))
+
+            // Owner Action: Add New Subscription / VIP Category Button
+            Button(
+                onClick = { showAddCategoryDialog = true },
+                colors = ButtonDefaults.buttonColors(containerColor = AnimeGold),
+                shape = RoundedCornerShape(12.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(44.dp)
+                    .testTag("owner_add_new_category_btn")
+            ) {
+                Icon(Icons.Default.Add, contentDescription = null, tint = Color.Black, modifier = Modifier.size(18.dp))
+                Spacer(modifier = Modifier.width(6.dp))
+                Text(
+                    text = "+ Add New Subscription / VIP Category",
+                    color = Color.Black,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 13.sp
                 )
             }
+
+            Spacer(modifier = Modifier.height(14.dp))
         }
 
-        Spacer(modifier = Modifier.height(14.dp))
-
-        // Subscription Plans List
+        // Section Title
         Text(
-            text = AppLocaleStrings.tr(
-                lang,
-                "💎 Subscription Plans (${selectedCurrency.code} ${selectedCurrency.symbol}):",
-                "💎 सब्सक्रिप्शन योजनाएं (${selectedCurrency.code} ${selectedCurrency.symbol}):"
-            ),
+            text = if (currentUser.isOwner)
+                "👑 Active Subscription Schemes (${selectedCurrency.code} ${selectedCurrency.symbol}):"
+            else
+                "💎 Choose Your Subscription Plan:",
             color = MaterialTheme.colorScheme.onSurface,
             fontSize = 15.sp,
             fontWeight = FontWeight.Bold
         )
         Text(
-            text = AppLocaleStrings.tr(
-                lang,
-                "All payments deposit directly into verified Owner Wallet",
-                "सब्सक्रिप्शन लेने पर राशि सीधे ओनर के सुरक्षित वॉलेट में जमा होती है"
-            ),
+            text = if (currentUser.isOwner)
+                "Owner can change daily generation limits, edit prices across currencies & customize features"
+            else
+                "Select a plan and choose your local currency at checkout (INR, USD, EUR, GBP, JPY with real-time barcode)",
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             fontSize = 11.sp
         )
 
-        Spacer(modifier = Modifier.height(10.dp))
+        Spacer(modifier = Modifier.height(12.dp))
 
-        SubscriptionPlan.values().forEach { plan ->
-            val priceStr = viewModel.formatPlanPrice(plan, selectedCurrency, lang)
-            PlanCardWithAction(
-                plan = plan,
-                priceString = priceStr,
-                currency = selectedCurrency,
-                language = lang,
-                onSubscribeClick = {
-                    checkoutPlan = plan
-                    showCheckoutDialog = true
+        // Render Dynamic Schemes
+        val visibleSchemes = if (currentUser.isOwner) {
+            allSchemes.values.toList()
+        } else {
+            allSchemes.values.filter { it.planId != "owner_vip" && it.planId != "studio_owner" }
+        }
+
+        visibleSchemes.forEach { scheme ->
+            val isCurrentPlan = currentUser.subscriptionPlan.equals(scheme.title, ignoreCase = true) ||
+                (scheme.planId == "free" && currentUser.subscriptionPlan.contains("Free", ignoreCase = true))
+
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag("subscription_scheme_card_${scheme.planId}"),
+                colors = CardDefaults.cardColors(
+                    containerColor = if (scheme.isVip) MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
+                                     else MaterialTheme.colorScheme.surface
+                ),
+                shape = RoundedCornerShape(16.dp),
+                border = BorderStroke(
+                    1.dp,
+                    if (scheme.isVip) AnimeGold else MaterialTheme.colorScheme.surfaceVariant
+                )
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text(
+                                    text = scheme.title,
+                                    color = if (scheme.isVip) AnimeGold else MaterialTheme.colorScheme.onSurface,
+                                    fontSize = 16.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Box(
+                                    modifier = Modifier
+                                        .clip(RoundedCornerShape(6.dp))
+                                        .background(if (scheme.isVip) AnimeGold.copy(alpha = 0.2f) else AnimeCyan.copy(alpha = 0.2f))
+                                        .padding(horizontal = 6.dp, vertical = 2.dp)
+                                ) {
+                                    Text(
+                                        text = scheme.badge,
+                                        color = if (scheme.isVip) AnimeGold else AnimeCyan,
+                                        fontSize = 9.sp,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.height(4.dp))
+                            // Daily Generation Limit Badge (Customizable by Owner!)
+                            Text(
+                                text = "🎬 Daily Generation: ${scheme.dailyCredits} videos/day",
+                                color = AnimeGreen,
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                        }
+
+                        // Pricing Display
+                        if (currentUser.isOwner) {
+                            val priceVal = when (selectedCurrency) {
+                                CurrencyType.INR -> scheme.monthlyPriceInr
+                                CurrencyType.USD -> scheme.monthlyPriceUsd
+                                CurrencyType.EUR -> scheme.monthlyPriceEur
+                                CurrencyType.GBP -> scheme.monthlyPriceGbp
+                                CurrencyType.JPY -> scheme.monthlyPriceJpy
+                            }
+                            Column(horizontalAlignment = Alignment.End) {
+                                Text(
+                                    text = if (scheme.planId == "free") "FREE" else "${selectedCurrency.symbol}${String.format("%,.0f", priceVal)}",
+                                    color = AnimeCyan,
+                                    fontSize = 17.sp,
+                                    fontWeight = FontWeight.Black
+                                )
+                                Text(
+                                    text = "/month",
+                                    color = TextMuted,
+                                    fontSize = 10.sp
+                                )
+                            }
+                        } else {
+                            if (scheme.planId == "free") {
+                                Text(
+                                    text = "FREE",
+                                    color = AnimeGreen,
+                                    fontSize = 16.sp,
+                                    fontWeight = FontWeight.Black
+                                )
+                            } else {
+                                Text(
+                                    text = "$${String.format("%,.2f", scheme.monthlyPriceUsd)} / ₹${String.format("%,.0f", scheme.monthlyPriceInr)}",
+                                    color = AnimeCyan,
+                                    fontSize = 13.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    // Features list
+                    scheme.features.forEach { feat ->
+                        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(vertical = 2.dp)) {
+                            Icon(Icons.Default.Check, contentDescription = null, tint = AnimeGreen, modifier = Modifier.size(14.dp))
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(text = feat, color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 11.sp)
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    // Action Buttons
+                    if (currentUser.isOwner) {
+                        // Owner action buttons: Edit Scheme and optional Delete Category
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Button(
+                                onClick = { editingScheme = scheme },
+                                colors = ButtonDefaults.buttonColors(containerColor = AnimeGold),
+                                shape = RoundedCornerShape(8.dp),
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .height(38.dp)
+                                    .testTag("owner_edit_scheme_${scheme.planId}")
+                            ) {
+                                Icon(Icons.Default.Edit, contentDescription = null, tint = Color.Black, modifier = Modifier.size(14.dp))
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text("Edit Scheme & Limits", color = Color.Black, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                            }
+
+                            if (scheme.planId != "free" && scheme.planId != "pro" && scheme.planId != "vip") {
+                                OutlinedButton(
+                                    onClick = { viewModel.removeSubscriptionCategory(scheme.planId) },
+                                    border = BorderStroke(1.dp, AnimePink),
+                                    shape = RoundedCornerShape(8.dp),
+                                    modifier = Modifier
+                                        .height(38.dp)
+                                        .testTag("owner_delete_scheme_${scheme.planId}")
+                                ) {
+                                    Icon(Icons.Default.Delete, contentDescription = "Delete", tint = AnimePink, modifier = Modifier.size(14.dp))
+                                }
+                            }
+                        }
+                    } else {
+                        // Regular user action: Subscribe or Current Active
+                        if (scheme.planId == "free") {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .background(AnimeGreen.copy(alpha = 0.15f))
+                                    .padding(vertical = 8.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = if (isCurrentPlan) "✓ Active Free Plan" else "Included Free",
+                                    color = AnimeGreen,
+                                    fontSize = 12.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                        } else {
+                            Button(
+                                onClick = { userCheckoutScheme = scheme },
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = if (scheme.isVip) AnimeGold else AnimeCyan
+                                ),
+                                shape = RoundedCornerShape(8.dp),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(42.dp)
+                                    .testTag("user_subscribe_btn_${scheme.planId}")
+                            ) {
+                                Icon(Icons.Default.CreditCard, contentDescription = null, tint = Color.Black, modifier = Modifier.size(16.dp))
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text(
+                                    text = "Choose Currency & Subscribe",
+                                    color = Color.Black,
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 12.sp
+                                )
+                            }
+                        }
+                    }
                 }
-            )
+            }
             Spacer(modifier = Modifier.height(10.dp))
         }
 
@@ -654,6 +927,36 @@ fun SubscriptionAdminScreen(viewModel: AnimeViewModel) {
                 showCheckoutDialog = false
             },
             onDismiss = { showCheckoutDialog = false }
+        )
+    }
+
+    // Dialog: Owner Add New Subscription / VIP Category
+    if (showAddCategoryDialog && currentUser.isOwner) {
+        AddNewSubscriptionCategoryDialog(
+            viewModel = viewModel,
+            onDismiss = { showAddCategoryDialog = false },
+            onCreated = { showAddCategoryDialog = false }
+        )
+    }
+
+    // Dialog: Owner Edit Subscription Scheme Details & Daily Limits
+    if (editingScheme != null && currentUser.isOwner) {
+        EditSubscriptionSchemeDialog(
+            initialScheme = editingScheme!!,
+            viewModel = viewModel,
+            onDismiss = { editingScheme = null },
+            onSaved = { editingScheme = null }
+        )
+    }
+
+    // Dialog: User Multi-Currency Subscription Checkout with Dedicated Vector Barcode
+    if (userCheckoutScheme != null) {
+        UserSubscriptionCheckoutDialog(
+            scheme = userCheckoutScheme!!,
+            viewModel = viewModel,
+            lang = lang,
+            onDismiss = { userCheckoutScheme = null },
+            onSuccess = { userCheckoutScheme = null }
         )
     }
 }

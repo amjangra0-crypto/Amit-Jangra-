@@ -33,6 +33,7 @@ import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.Movie
 import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.TrendingUp
 import androidx.compose.material.icons.filled.VideoLibrary
 import androidx.compose.material.icons.filled.Wallet
 import androidx.compose.material.icons.filled.WorkspacePremium
@@ -670,12 +671,28 @@ fun ProfileScreen(
             iconTint = AnimeGold,
             title = AppLocaleStrings.tr(lang, "Subscription Plans & VIP Hub", "सब्सक्रिप्शन व VIP हब"),
             subtitle = if (currentUser.isOwner) {
-                AppLocaleStrings.tr(lang, "Owner License: Lifetime Free Access Active", "ओनर लाइसेंस: आजीवन फ्री एक्सेस सक्रिय")
+                AppLocaleStrings.tr(lang, "Owner VIP Administration & Wallet", "ओनर VIP एडमिनिस्ट्रेशन व वॉलेट")
             } else {
-                AppLocaleStrings.tr(lang, "Upgrade plans via UPI, Card, PayPal", "UPI / कार्ड / PayPal से प्लान अपग्रेड करें")
+                AppLocaleStrings.tr(lang, "Choose currency & subscribe via UPI, Card, SEPA, PayPay", "मुद्रा चुनें व UPI, कार्ड, SEPA, PayPay से सब्सक्राइब करें")
             },
             onClick = { viewModel.setTab(AppTab.SUBSCRIPTION) },
             testTag = "menu_subscription"
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        // 4. Automation Trend Horizon All-in-One Hub Option
+        ProfileOptionItem(
+            icon = Icons.Default.TrendingUp,
+            iconTint = AnimeCyan,
+            title = AppLocaleStrings.tr(lang, "Trend Horizon All-in-One Hub", "ट्रेंड होराइजन ऑल-इन-वन हब"),
+            subtitle = AppLocaleStrings.tr(
+                lang,
+                "Google Trends, Instagram Viral Radar, AI Command Learning & TrendPulse Agent",
+                "गूगल ट्रेंड्स, इंस्टाग्राम वायरल रडार, AI कमांड लर्निंग व ट्रेंडपल्स एजेंट"
+            ),
+            onClick = { viewModel.setTab(AppTab.TREND_HORIZON) },
+            testTag = "menu_trend_horizon_hub"
         )
 
         Spacer(modifier = Modifier.height(8.dp))

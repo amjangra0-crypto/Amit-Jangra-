@@ -78,7 +78,8 @@ data class AdminAccessEntity(
     val authorizedFreeEmails: String = "amjangra0@gmail.com,friend@creator.com",
     val activePromoCodes: String = "ANIME2026,VIPFREE,STUDIOFREE",
     val currentTier: String = "plan_vip",
-    val remainingCredits: Int = 999999
+    val remainingCredits: Int = 999999,
+    val isFaqAgentEnabledForUsers: Boolean = true
 )
 
 @Entity(tableName = "exported_videos")
@@ -98,3 +99,48 @@ data class ExportedVideoEntity(
     val createdAt: Long = System.currentTimeMillis()
 )
 
+/**
+ * Room Entity storing project metadata:
+ * - Script history and dialogue drafts
+ * - Character configurations (avatars, hair, outfit, voice)
+ * - Links to generated audio, video, and subtitle files
+ */
+@Entity(tableName = "project_metadata")
+data class ProjectMetadataEntity(
+    @PrimaryKey val id: String,
+    val title: String,
+    val synopsis: String = "",
+    val genre: String = "Action / Shonen",
+    val artStyle: String = "Modern Shonen Anime",
+    val aspectRatio: String = "16:9",
+    val dubbingLanguage: String = "Japanese",
+    val voiceMood: String = "Natural",
+    val scriptHistoryJson: String,
+    val characterConfigsJson: String,
+    val audioFilePath: String = "",
+    val videoFilePath: String = "",
+    val srtSubtitlePath: String = "",
+    val thumbnailUri: String = "",
+    val durationSeconds: Int = 30,
+    val sceneCount: Int = 4,
+    val isExported: Boolean = false,
+    val exportStoragePath: String = "",
+    val updatedAt: Long = System.currentTimeMillis(),
+    val createdAt: Long = System.currentTimeMillis()
+)
+
+/**
+ * Room Entity storing AI FAQ incident notifications and bug reports for the Owner.
+ */
+@Entity(tableName = "faq_support_incidents")
+data class FaqSupportIncidentEntity(
+    @PrimaryKey val id: String,
+    val userEmailOrId: String = "user@animeapp.io",
+    val category: String, // "SUBSCRIPTION", "BILLING", "PLAYBACK", "BUG_REPORT", "GENERAL"
+    val userQuery: String,
+    val aiResolution: String,
+    val suggestedAutoFix: String = "",
+    val isBugReport: Boolean = false,
+    val isOwnerNotified: Boolean = true,
+    val timestamp: Long = System.currentTimeMillis()
+)

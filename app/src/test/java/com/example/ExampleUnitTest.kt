@@ -38,7 +38,7 @@ class ExampleUnitTest {
     assertTrue("Should have over 40 global countries", countries.size >= 40)
 
     // Test finding default country
-    assertEquals("+91", com.example.data.model.CountryCodeProvider.defaultCountry.dialCode)
+    assertEquals("+1", com.example.data.model.CountryCodeProvider.defaultCountry.dialCode)
 
     // Test finding by dial code
     val us = com.example.data.model.CountryCodeProvider.findByDialCode("+1")

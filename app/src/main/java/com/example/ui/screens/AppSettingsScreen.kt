@@ -7,6 +7,7 @@ import android.content.pm.PackageManager
 import android.net.Uri
 import android.provider.Settings
 import android.widget.Toast
+import com.example.ui.AppTab
 import androidx.core.content.ContextCompat
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -34,6 +35,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.CleaningServices
 import androidx.compose.material.icons.filled.Cloud
 import androidx.compose.material.icons.filled.DarkMode
@@ -66,6 +68,7 @@ import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -231,24 +234,51 @@ fun AppSettingsScreen(
         // Navigation Header
         Row(
             modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            IconButton(onClick = onNavigateBack, modifier = Modifier.testTag("app_settings_back_btn")) {
-                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = AnimePurple)
+            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
+                IconButton(onClick = onNavigateBack, modifier = Modifier.testTag("app_settings_back_btn")) {
+                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = AnimePurple)
+                }
+                Spacer(modifier = Modifier.width(6.dp))
+                Column {
+                    Text(
+                        text = AppLocaleStrings.get("settings_title", lang),
+                        color = TextPrimary,
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.ExtraBold
+                    )
+                    Text(
+                        text = AppLocaleStrings.get("settings_subtitle", lang),
+                        color = TextSecondary,
+                        fontSize = 12.sp
+                    )
+                }
             }
-            Spacer(modifier = Modifier.width(6.dp))
-            Column {
-                Text(
-                    text = AppLocaleStrings.get("settings_title", lang),
-                    color = TextPrimary,
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.ExtraBold
-                )
-                Text(
-                    text = AppLocaleStrings.get("settings_subtitle", lang),
-                    color = TextSecondary,
-                    fontSize = 12.sp
-                )
+
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                TextButton(
+                    onClick = onNavigateBack,
+                    modifier = Modifier.testTag("app_settings_done_btn")
+                ) {
+                    Text(
+                        text = AppLocaleStrings.tr(lang, "Done", "पूर्ण"),
+                        color = MaterialTheme.colorScheme.primary,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 13.sp
+                    )
+                }
+                IconButton(
+                    onClick = onNavigateBack,
+                    modifier = Modifier.testTag("app_settings_close_btn")
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Close,
+                        contentDescription = "Close",
+                        tint = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f)
+                    )
+                }
             }
         }
 
@@ -729,6 +759,78 @@ fun AppSettingsScreen(
                         colors = SwitchDefaults.colors(checkedThumbColor = AnimeGold, checkedTrackColor = AnimeGold.copy(alpha = 0.3f)),
                         modifier = Modifier.testTag("settings_theme_switch")
                     )
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // AESTHETIC SOFT LIGHT THEMES (All Light Colors)
+                Text(
+                    text = "🌸 " + AppLocaleStrings.tr(
+                        lang,
+                        "Aesthetic Soft Light Themes (Soft Pastels & Clean White):",
+                        "सॉफ्ट लाइट थीम्स (हल्के पेस्टल व साफ सफेद रंग):"
+                    ),
+                    color = AnimeCyan,
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Bold
+                )
+                Text(
+                    text = AppLocaleStrings.tr(
+                        lang,
+                        "Eye-comfort soothing light palettes designed for all screens",
+                        "आंखों के लिए आरामदायक व सुंदर हल्के रंग"
+                    ),
+                    color = TextMuted,
+                    fontSize = 10.sp
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                val lightPresets = VibrantThemePresets.all.filter { it.category == "Aesthetic Light Themes" }
+                FlowRow(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    lightPresets.forEach { preset ->
+                        val isSelected = state.vibrantTheme.equals(preset.key, ignoreCase = true)
+                        val themeName = if (AppLocaleStrings.isHindi(lang)) preset.nameHi else preset.nameEn
+
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(10.dp))
+                                .background(if (isSelected) preset.primaryColor.copy(alpha = 0.2f) else AnimeSurfaceVariant)
+                                .border(
+                                    1.5.dp,
+                                    if (isSelected) preset.primaryColor else Color.Transparent,
+                                    RoundedCornerShape(10.dp)
+                                )
+                                .clickable {
+                                    viewModel.setVibrantTheme(preset.key)
+                                    Toast.makeText(context, "🌸 Light Theme: ${preset.nameEn}", Toast.LENGTH_SHORT).show()
+                                }
+                                .padding(horizontal = 10.dp, vertical = 7.dp)
+                                .testTag("settings_light_${preset.key.lowercase()}")
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text(text = preset.emoji, fontSize = 14.sp)
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text(
+                                    text = themeName,
+                                    color = if (isSelected) preset.primaryColor else TextPrimary,
+                                    fontWeight = if (isSelected) FontWeight.ExtraBold else FontWeight.Medium,
+                                    fontSize = 11.sp
+                                )
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Box(
+                                    modifier = Modifier
+                                        .size(10.dp)
+                                        .clip(CircleShape)
+                                        .background(preset.primaryColor)
+                                )
+                            }
+                        }
+                    }
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
@@ -1356,6 +1458,198 @@ fun AppSettingsScreen(
                 } else {
                     Text(AppLocaleStrings.tr(lang, "Studio Architecture: Enterprise AI Creative Suite", "स्टूडियो आर्किटेक्चर: एंटरप्राइज एआई क्रिएटिव सुइट"), color = TextMuted, fontSize = 12.sp)
                     Text(AppLocaleStrings.tr(lang, "License Status: Active Creator License", "लाइसेंस स्थिति: सक्रिय क्रिएटर लाइसेंस"), color = AnimeCyan, fontSize = 11.sp)
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // System Updates & Feature Drops (Owner Published Only - User Controlled)
+        Card(
+            modifier = Modifier.fillMaxWidth().testTag("app_settings_update_card"),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+            shape = RoundedCornerShape(16.dp),
+            border = BorderStroke(1.dp, AnimeCyan.copy(alpha = 0.5f))
+        ) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Default.Sync, contentDescription = null, tint = AnimeCyan)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Column {
+                        Text(
+                            text = AppLocaleStrings.tr(lang, "App Updates & Feature Drops", "ऐप अपडेट एवं नए फीचर्स"),
+                            color = TextPrimary,
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Text(
+                            text = AppLocaleStrings.tr(
+                                lang,
+                                "Current: v2.4.0 • Updates only appear when published by Owner",
+                                "वर्तमान: v2.4.0 • अपडेट केवल ओनर द्वारा पब्लिश करने पर ही आएगा"
+                            ),
+                            color = TextMuted,
+                            fontSize = 11.sp
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(10.dp))
+
+                Text(
+                    text = AppLocaleStrings.tr(
+                        lang,
+                        "Your settings and customized options are permanently preserved. No unexpected update popups appear until new features are officially released by the owner.",
+                        "आपकी सभी सेटिंग्स सुरक्षित रहेंगी। जब तक ओनर द्वारा नए फीचर्स पब्लिश नहीं किए जाते, कोई अनावश्यक अपडेट पॉपअप नहीं आएगा।"
+                    ),
+                    color = TextSecondary,
+                    fontSize = 11.sp,
+                    lineHeight = 16.sp
+                )
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Button(
+                        onClick = {
+                            val avail = viewModel.checkForNewUpdates()
+                            Toast.makeText(
+                                context,
+                                if (avail) "🎉 New feature drop available!" else "✓ You have the latest version (v2.4.0)",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        },
+                        colors = ButtonDefaults.buttonColors(containerColor = AnimeCyan),
+                        shape = RoundedCornerShape(10.dp),
+                        modifier = Modifier.weight(1f).height(40.dp).testTag("settings_check_update_btn")
+                    ) {
+                        Icon(Icons.Default.Check, contentDescription = null, tint = Color.Black, modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = AppLocaleStrings.tr(lang, "Check for Updates", "अपडेट चेक करें"),
+                            color = Color.Black,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 11.sp
+                        )
+                    }
+
+                    OutlinedButton(
+                        onClick = { viewModel.setTab(AppTab.UPDATES) },
+                        border = BorderStroke(1.dp, AnimeCyan),
+                        shape = RoundedCornerShape(10.dp),
+                        modifier = Modifier.weight(1f).height(40.dp).testTag("settings_open_update_screen_btn")
+                    ) {
+                        Text(
+                            text = AppLocaleStrings.tr(lang, "Update Center", "अपडेट सेंटर"),
+                            color = AnimeCyan,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 11.sp
+                        )
+                    }
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Google Play Store Policy & Creative Content Compliance
+        Card(
+            modifier = Modifier.fillMaxWidth().testTag("app_settings_compliance_card"),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+            shape = RoundedCornerShape(16.dp),
+            border = BorderStroke(1.dp, AnimeGreen.copy(alpha = 0.5f))
+        ) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Default.Security, contentDescription = null, tint = AnimeGreen)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = AppLocaleStrings.tr(lang, "Google Play Store & Content Rules", "गूगल प्ले स्टोर व सामग्री नियम"),
+                        color = TextPrimary,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(10.dp))
+
+                // Romance / Love permitted
+                Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.Top) {
+                    Text("💕", fontSize = 14.sp)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Column {
+                        Text(
+                            text = AppLocaleStrings.tr(lang, "Romance & Love Stories Fully Supported", "रोमांस व प्रेम कहानियां पूरी तरह समर्थित"),
+                            color = AnimeGreen,
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Text(
+                            text = AppLocaleStrings.tr(
+                                lang,
+                                "Romantic anime, confessions, kissing scenes, emotional heartbreak, action drama, and fantasy are 100% permitted.",
+                                "रोमांटिक एनिमे, प्रेम इज़हार, आलिंगन/किस, ड्रामा, एक्शन व फैंटेसी पूरी तरह समर्थित हैं।"
+                            ),
+                            color = TextSecondary,
+                            fontSize = 11.sp,
+                            lineHeight = 15.sp
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // Adult / Sexual blocked
+                Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.Top) {
+                    Text("🛡️", fontSize = 14.sp)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Column {
+                        Text(
+                            text = AppLocaleStrings.tr(lang, "Strict Adult / NSFW Safety Guardrail", "सख्त एडल्ट / अश्लील सामग्री सुरक्षा"),
+                            color = AnimePink,
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Text(
+                            text = AppLocaleStrings.tr(
+                                lang,
+                                "Sexually explicit, pornographic, and NSFW nudity content is strictly blocked for Google Play Store safety compliance worldwide.",
+                                "गूगल प्ले स्टोर नियमों के तहत केवल अश्लील, सेक्शुअल या पोर्नोग्राफ़िक सामग्री ब्लॉक की गई है।"
+                            ),
+                            color = TextSecondary,
+                            fontSize = 11.sp,
+                            lineHeight = 15.sp
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // Multi-Country global compliance
+                Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.Top) {
+                    Text("🌍", fontSize = 14.sp)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Column {
+                        Text(
+                            text = AppLocaleStrings.tr(lang, "Multi-Country Global Regulations", "बहु-देशीय अंतरराष्ट्रीय नियम"),
+                            color = AnimeCyan,
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Text(
+                            text = AppLocaleStrings.tr(
+                                lang,
+                                "Designed and localized for compliance across United States, Europe (GDPR), India, Japan, UK and international regions.",
+                                "अमेरिका, यूरोप, भारत, जापान, यूके एवं अन्य सभी देशों के डिजिटल नियमों के अनुरूप तैयार।"
+                            ),
+                            color = TextSecondary,
+                            fontSize = 11.sp,
+                            lineHeight = 15.sp
+                        )
+                    }
                 }
             }
         }

@@ -5,6 +5,8 @@ import android.content.Intent
 import com.example.data.db.AdminAccessEntity
 import com.example.data.db.AnimeDao
 import com.example.data.db.CustomCharacterEntity
+import com.example.data.db.FaqSupportIncidentEntity
+import com.example.data.db.ProjectMetadataEntity
 import com.example.data.db.SavedScriptEntity
 import com.example.data.model.AnimeArtStyle
 import com.example.data.model.AnimeScene
@@ -25,21 +27,21 @@ import java.util.Date
 import java.util.Locale
 
 data class UpdateInfo(
-    val currentVersion: String = "1.0.0",
-    val latestVersion: String = "1.1.0",
-    val isUpdateAvailable: Boolean = true,
-    val releaseDate: String = "Sept 2026",
-    val updateTitle: String = "Anime Studio AI 1.1.0 Feature Drop",
+    val currentVersion: String = "2.4.0",
+    val latestVersion: String = "2.4.0",
+    val isUpdateAvailable: Boolean = false,
+    val releaseDate: String = "Oct 2026",
+    val updateTitle: String = "Anime Studio AI v2.4.0 Official",
     val changeLogs: List<String> = listOf(
         "✨ Ultra HD 4K Japanese Anime Render Engine",
-        "🎙️ Real-time Japanese/English LipSync AI with Vocal Emotion",
-        "🎵 10 New Cinematic Anime Background Soundtracks",
-        "📱 Multi-character Duet and Shonen Dialogue Modes",
-        "⚡ Faster Gemini 3.5 Flash Inference Pipeline"
+        "🎙️ Real-time LipSync AI with Vocal Emotion",
+        "🎵 Cinematic Anime Background Soundtracks",
+        "📱 Automation Trend Horizon All-in-One Hub",
+        "⚡ Multi-Currency Real-Time Direct Wallet Deposits"
     ),
     val isDownloading: Boolean = false,
     val downloadProgress: Float = 0f,
-    val isInstalled: Boolean = false
+    val isInstalled: Boolean = true
 )
 
 class AnimeRepository(
@@ -582,6 +584,16 @@ class AnimeRepository(
         )
     }
 
+    fun publishOwnerUpdate(version: String, title: String, changelog: List<String>) {
+        _updateState.value = _updateState.value.copy(
+            latestVersion = version,
+            updateTitle = title,
+            changeLogs = changelog,
+            isUpdateAvailable = true,
+            isInstalled = false
+        )
+    }
+
     fun serializeScript(script: AnimeScript): String {
         val root = JSONObject()
         root.put("id", script.id)
@@ -935,5 +947,32 @@ class AnimeRepository(
 
     fun createShareIntent(script: AnimeScript): Intent {
         return createSocialShareIntent(script, "ALL", "DETAILS_AND_LINK")
+    }
+
+    // --- Project Metadata Management (Script History, Character Configs, Media Links) ---
+    val allProjectMetadata: Flow<List<ProjectMetadataEntity>> = dao.getAllProjectMetadata()
+
+    suspend fun saveProjectMetadata(project: ProjectMetadataEntity) {
+        dao.insertProjectMetadata(project)
+    }
+
+    suspend fun getProjectMetadata(id: String): ProjectMetadataEntity? {
+        return dao.getProjectMetadataById(id)
+    }
+
+    suspend fun deleteProjectMetadata(id: String) {
+        dao.deleteProjectMetadataById(id)
+    }
+
+    suspend fun updateProjectMediaLinks(id: String, videoPath: String, audioPath: String, srtPath: String) {
+        dao.updateProjectMediaLinks(id, videoPath, audioPath, srtPath)
+    }
+
+    // --- FAQ Support Incidents & Owner Notifications ---
+    val allFaqIncidents: Flow<List<FaqSupportIncidentEntity>> = dao.getAllFaqIncidents()
+    val bugNotificationsForOwner: Flow<List<FaqSupportIncidentEntity>> = dao.getBugNotificationsForOwner()
+
+    suspend fun logFaqIncident(incident: FaqSupportIncidentEntity) {
+        dao.insertFaqIncident(incident)
     }
 }
