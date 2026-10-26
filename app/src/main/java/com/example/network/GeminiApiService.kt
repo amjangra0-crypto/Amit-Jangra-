@@ -111,7 +111,8 @@ class GeminiApiService {
         isSeriesContinuity: Boolean = false,
         linkedScript: AnimeScript? = null,
         linkedEpisodeNumber: Int = 1,
-        excludedCharacterNames: Set<String> = emptySet()
+        excludedCharacterNames: Set<String> = emptySet(),
+        isOffline: Boolean = false
     ): AnimeScript = withContext(Dispatchers.Default) {
         val targetSceneCount = productionFormat.sceneCount
         val sourceIntel = SourceIntelligenceEngine.analyzeSource(input, sourcePlatform)
@@ -119,6 +120,24 @@ class GeminiApiService {
         val effectiveEpisode = if (shouldLinkContinuity) {
             if (sourceIntel.detectedEpisodeHint > 1) sourceIntel.detectedEpisodeHint else linkedEpisodeNumber.coerceAtLeast(2)
         } else 1
+
+        if (isOffline) {
+            return@withContext createRichFallbackScript(
+                input = input,
+                sourceType = sourceType,
+                artStyle = artStyle,
+                language = language,
+                availableCharacters = availableCharacters,
+                productionFormat = productionFormat,
+                motionEffect = motionEffect,
+                voiceAccent = voiceAccent,
+                sourcePlatform = sourcePlatform,
+                isSeriesContinuity = shouldLinkContinuity,
+                linkedScript = linkedScript,
+                linkedEpisodeNumber = effectiveEpisode,
+                excludedCharacterNames = excludedCharacterNames
+            )
+        }
 
         val continuityInstructions = if (shouldLinkContinuity && linkedScript != null) {
             """

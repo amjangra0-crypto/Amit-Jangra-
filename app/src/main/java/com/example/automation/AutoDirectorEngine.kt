@@ -334,7 +334,11 @@ object AutoDirectorEngine {
             }
         """.trimIndent()
 
-        onProgressUpdate("🎬 ${command.calculatedSceneCount} दृश्यों की स्टोरीबोर्ड स्क्रिप्ट तैयार हो रही है (${command.requestedDurationSeconds}s)...", 0.35f)
+        onProgressUpdate(
+            if (isHindi) "🎬 ${command.calculatedSceneCount} दृश्यों की स्टोरीबोर्ड स्क्रिप्ट तैयार हो रही है (${command.requestedDurationSeconds}s)..."
+            else "🎬 Generating storyboard script for ${command.calculatedSceneCount} scenes (${command.requestedDurationSeconds}s)...",
+            0.35f
+        )
 
         var aiResponse = ""
         try {
@@ -459,7 +463,11 @@ object AutoDirectorEngine {
         }
 
         // Procedural Autonomous Engine (Guarantees exact duration & scene count calculation)
-        onProgressUpdate("⚡ जनरेटिव ऑटोनॉमस इंजन: ${command.calculatedSceneCount} सीन्स व मोशन इफेक्ट्स रेंडर हो रहे हैं...", 0.85f)
+        onProgressUpdate(
+            if (isHindi) "⚡ जनरेटिव ऑटोनॉमस इंजन: ${command.calculatedSceneCount} सीन्स व मोशन इफेक्ट्स रेंडर हो रहे हैं..."
+            else "⚡ Generative Autonomous Engine: Rendering ${command.calculatedSceneCount} scenes and motion effects...",
+            0.85f
+        )
         val script = generateProceduralAutonomousScript(command)
         onProgressUpdate(if (isHindi) "🎬 ऑटोमैटिक वीडियो तैयार! प्लेयर लॉन्च हो रहा है..." else "🎬 Automated video ready! Launching player...", 1.0f)
         return@withContext script

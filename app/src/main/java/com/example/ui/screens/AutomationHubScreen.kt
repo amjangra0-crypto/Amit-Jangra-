@@ -836,7 +836,7 @@ private fun MultiPlatformChannelConnectionCard(
                     ) {
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
-                                text = "Default Upload Mode (पब्लिश मोड):",
+                                text = "Default Upload Mode:",
                                 color = TextPrimary,
                                 fontSize = 12.sp,
                                 fontWeight = FontWeight.Bold
@@ -1383,7 +1383,7 @@ private fun ReviewAndGreenSignalCard(
             Spacer(modifier = Modifier.height(8.dp))
 
             Text(
-                text = "जब तक आप 'ग्रीन सिग्नल / OK' नहीं बोलेंगे, वीडियो अपलोड नहीं होगा (या निर्धारित शेड्यूल टाइम खत्म होने पर स्वतः अपलोड होगा)।",
+                text = "Videos will not be uploaded until you give the 'Green Signal / OK' (or will auto-upload when the scheduled timer expires).",
                 color = TextSecondary,
                 fontSize = 11.sp
             )
@@ -1490,7 +1490,7 @@ private fun EpisodeReviewItemCard(
                 ) {
                     Icon(Icons.Default.Check, contentDescription = null, tint = AnimeGreen, modifier = Modifier.size(14.dp))
                     Spacer(modifier = Modifier.width(6.dp))
-                    Text("YouTube पर लाइव: ${episode.uploadedUrl}", color = AnimeGreen, fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                    Text("Live on YouTube: ${episode.uploadedUrl}", color = AnimeGreen, fontSize = 10.sp, fontWeight = FontWeight.Bold)
                 }
                 Spacer(modifier = Modifier.height(10.dp))
             }
@@ -1572,7 +1572,7 @@ private fun LyriaMusicGeneratorCard(
             Spacer(modifier = Modifier.height(10.dp))
 
             Text(
-                text = "प्रॉम्प्ट्स या सीन इमेज से कस्टम बैकग्राउंड म्यूजिक, बैटल थीम, जिंगल्स और जापानी ऑर्केस्ट्रा तैयार करें।",
+                text = "Generate custom background music, battle themes, jingles, and Japanese orchestral scores from prompts or scene images.",
                 color = TextSecondary,
                 fontSize = 11.sp
             )

@@ -107,9 +107,12 @@ fun CountryCodeSelectorChip(
 @Composable
 fun CountryCodePickerBottomSheet(
     selectedCountry: CountryCode,
+    currentLanguage: String = "English",
     onCountrySelected: (CountryCode) -> Unit,
+    onLanguageSelected: ((String) -> Unit)? = null,
     onDismiss: () -> Unit
 ) {
+    val isHi = com.example.localization.AppLocaleStrings.isHindi(currentLanguage)
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     var activeTab by remember { mutableStateOf(0) } // 0: Countries, 1: Direct Languages
     var searchQuery by remember { mutableStateOf("") }
@@ -170,13 +173,21 @@ fun CountryCodePickerBottomSheet(
                     Spacer(modifier = Modifier.width(10.dp))
                     Column {
                         Text(
-                            text = if (activeTab == 0) "देश व डायलिंग कोड चुनें" else "ऐप की मुख्य भाषा चुनें",
+                            text = if (isHi) {
+                                if (activeTab == 0) "देश व डायलिंग कोड चुनें" else "ऐप की मुख्य भाषा चुनें"
+                            } else {
+                                if (activeTab == 0) "Select Country & Dialing Code" else "Select Global App Language"
+                            },
                             color = TextPrimary,
                             fontSize = 16.sp,
                             fontWeight = FontWeight.Bold
                         )
                         Text(
-                            text = if (activeTab == 0) "Global Country Codes (${CountryCodeProvider.countries.size} Countries)" else "12 Supported Worldwide Languages",
+                            text = if (isHi) {
+                                if (activeTab == 0) "ग्लोबल देश कोड (${CountryCodeProvider.countries.size} देश)" else "12 समर्थित वैश्विक भाषाएं"
+                            } else {
+                                if (activeTab == 0) "Global Country Codes (${CountryCodeProvider.countries.size} Countries)" else "12 Supported Worldwide Languages"
+                            },
                             color = TextMuted,
                             fontSize = 11.sp
                         )
@@ -207,7 +218,7 @@ fun CountryCodePickerBottomSheet(
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = "🌍 देश कोड (${CountryCodeProvider.countries.size})",
+                        text = if (isHi) "🌍 देश कोड (${CountryCodeProvider.countries.size})" else "🌍 Country Codes (${CountryCodeProvider.countries.size})",
                         color = if (activeTab == 0) Color.Black else TextSecondary,
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Bold
@@ -224,7 +235,7 @@ fun CountryCodePickerBottomSheet(
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = "🗣️ भाषा प्रणाली (12 Languages)",
+                        text = if (isHi) "🗣️ भाषा प्रणाली (12 Languages)" else "🗣️ Language System (12 Languages)",
                         color = if (activeTab == 1) Color.Black else TextSecondary,
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Bold
@@ -239,7 +250,14 @@ fun CountryCodePickerBottomSheet(
                 OutlinedTextField(
                     value = searchQuery,
                     onValueChange = { searchQuery = it },
-                    placeholder = { Text("देश का नाम या कोड खोजें (Search e.g. USA, +1, India)...", color = TextMuted, fontSize = 12.sp) },
+                    placeholder = {
+                        Text(
+                            text = if (isHi) "देश का नाम या कोड खोजें (उदा. USA, +1, भारत)..."
+                                   else "Search country name or code (e.g. USA, +1, Japan)...",
+                            color = TextMuted,
+                            fontSize = 12.sp
+                        )
+                    },
                     leadingIcon = {
                         Icon(Icons.Default.Search, contentDescription = null, tint = AnimeCyan, modifier = Modifier.size(20.dp))
                     },
@@ -279,7 +297,7 @@ fun CountryCodePickerBottomSheet(
                                 contentAlignment = Alignment.Center
                             ) {
                                 Text(
-                                    text = "कोई देश नहीं मिला (No matching country found)",
+                                    text = if (isHi) "कोई देश नहीं मिला" else "No matching country found",
                                     color = TextMuted,
                                     fontSize = 13.sp
                                 )
@@ -291,6 +309,7 @@ fun CountryCodePickerBottomSheet(
                             CountryListItem(
                                 country = country,
                                 isSelected = isSelected,
+                                isHi = isHi,
                                 onClick = {
                                     onCountrySelected(country)
                                     onDismiss()
@@ -321,6 +340,7 @@ fun CountryCodePickerBottomSheet(
                                 )
                                 .clickable {
                                     val matched = CountryCodeProvider.findByLanguage(langKey) ?: selectedCountry.copy(primaryLanguage = langKey)
+                                    onLanguageSelected?.invoke(langKey)
                                     onCountrySelected(matched)
                                     onDismiss()
                                 }
@@ -340,7 +360,7 @@ fun CountryCodePickerBottomSheet(
                                         fontWeight = FontWeight.Bold
                                     )
                                     Text(
-                                        text = "भाषा: $langKey",
+                                        text = if (isHi) "भाषा: $langKey" else "Language: $langKey",
                                         color = TextMuted,
                                         fontSize = 11.sp
                                     )
@@ -370,6 +390,7 @@ fun CountryCodePickerBottomSheet(
 private fun CountryListItem(
     country: CountryCode,
     isSelected: Boolean,
+    isHi: Boolean = false,
     onClick: () -> Unit
 ) {
     Row(
@@ -410,7 +431,8 @@ private fun CountryListItem(
                 }
             }
             Text(
-                text = "भाषा: ${country.primaryLanguage} • ISO: ${country.isoCode} • Sample: ${country.exampleNumber}",
+                text = if (isHi) "भाषा: ${country.primaryLanguage} • ISO: ${country.isoCode} • Sample: ${country.exampleNumber}"
+                       else "Language: ${country.primaryLanguage} • ISO: ${country.isoCode} • Sample: ${country.exampleNumber}",
                 color = TextMuted,
                 fontSize = 10.sp
             )

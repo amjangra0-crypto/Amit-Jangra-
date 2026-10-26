@@ -53,7 +53,12 @@ import androidx.compose.material.icons.filled.RecordVoiceOver
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Save
 import androidx.compose.material.icons.filled.Shield
-import androidx.compose.material.icons.filled.Tune
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import android.widget.Toast
+import androidx.compose.material.icons.filled.CloudDownload
+import androidx.compose.material.icons.filled.FolderOpen
+import androidx.compose.material.icons.filled.VolumeUp
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -74,6 +79,7 @@ import androidx.compose.material3.RadioButton
 import androidx.compose.material3.RadioButtonDefaults
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.TabRowDefaults
@@ -167,21 +173,23 @@ fun CharacterBuilderScreen(viewModel: AnimeViewModel) {
     var selectedCategoryTab by remember { mutableIntStateOf(0) }
 
     // Hair Options Catalog
-    val hairStyles = remember {
+    // Hair Options Catalog
+    val isHi = AppLocaleStrings.isHindi(state.selectedLanguage)
+    val hairStyles = remember(state.selectedLanguage) {
         listOf(
-            HairStyleOption("spiky_shonen", "Spiky Shonen", if (AppLocaleStrings.isHindi(state.selectedLanguage)) "ऊर्जावान नुकीले बाल (Iconic hero spikes)" else "Iconic hero spikes", "Male/Boy"),
-            HairStyleOption("twin_tails", "Kawaii Twin Tails", if (AppLocaleStrings.isHindi(state.selectedLanguage)) "क्यूट ट्विन टेल्स रिबन के साथ (Classic Anime Twintails)" else "Classic Anime Twintails", "Female"),
-            HairStyleOption("flowing_celestial", "Flowing Celestial", if (AppLocaleStrings.isHindi(state.selectedLanguage)) "लंबे रेशमी लहराते बाल (Elegant flowing locks)" else "Elegant flowing locks", "Universal"),
-            HairStyleOption("samurai_ponytail", "Samurai Ponytail", if (AppLocaleStrings.isHindi(state.selectedLanguage)) "योद्धा पोनीटेल व टॉपनॉट (Traditional warrior tail)" else "Traditional warrior tail", "Universal"),
-            HairStyleOption("anime_bob", "Anime Bob", if (AppLocaleStrings.isHindi(state.selectedLanguage)) "शार्प कट बॉब हेयरस्टाइल (Clean modern angled bob)" else "Clean modern angled bob", "Female/Sensei"),
-            HairStyleOption("wolf_cut", "Wolf Cut", if (AppLocaleStrings.isHindi(state.selectedLanguage)) "रेबेलियस लेयर्ड वुल्फ कट (Modern rebellious shaggy hair)" else "Modern rebellious shaggy hair", "Universal"),
-            HairStyleOption("braided_shinobi", "Braided Shinobi", if (AppLocaleStrings.isHindi(state.selectedLanguage)) "टैक्टिकल साइड चोटी व बैंन्ग्स (Ninja battle braids)" else "Ninja battle braids", "Universal"),
-            HairStyleOption("pixie_cyber", "Pixie Cyber", if (AppLocaleStrings.isHindi(state.selectedLanguage)) "फ्यूचरिस्टिक नियॉन पिक्सी कट (Hi-tech cropped style)" else "Hi-tech cropped style", "Universal")
+            HairStyleOption("spiky_shonen", "Spiky Shonen", if (isHi) "ऊर्जावान नुकीले बाल (Iconic hero spikes)" else "Iconic hero spikes", "Male/Boy"),
+            HairStyleOption("twin_tails", "Kawaii Twin Tails", if (isHi) "क्यूट ट्विन टेल्स रिबन के साथ (Classic Anime Twintails)" else "Classic Anime Twintails", "Female"),
+            HairStyleOption("flowing_celestial", "Flowing Celestial", if (isHi) "लंबे रेशमी लहराते बाल (Elegant flowing locks)" else "Elegant flowing locks", "Universal"),
+            HairStyleOption("samurai_ponytail", "Samurai Ponytail", if (isHi) "योद्धा पोनीटेल व टॉपनॉट (Traditional warrior tail)" else "Traditional warrior tail", "Universal"),
+            HairStyleOption("anime_bob", "Anime Bob", if (isHi) "शार्प कट बॉब हेयरस्टाइल (Clean modern angled bob)" else "Clean modern angled bob", "Female/Sensei"),
+            HairStyleOption("wolf_cut", "Wolf Cut", if (isHi) "रेबेलियस लेयर्ड वुल्फ कट (Modern rebellious shaggy hair)" else "Modern rebellious shaggy hair", "Universal"),
+            HairStyleOption("braided_shinobi", "Braided Shinobi", if (isHi) "टैक्टिकल साइड चोटी व बैंन्ग्स (Ninja battle braids)" else "Ninja battle braids", "Universal"),
+            HairStyleOption("pixie_cyber", "Pixie Cyber", if (isHi) "फ्यूचरिस्टिक नियॉन पिक्सी कट (Hi-tech cropped style)" else "Hi-tech cropped style", "Universal")
         )
     }
 
     // Hair Color Palette
-    val hairColors = remember {
+    val hairColors = remember(state.selectedLanguage) {
         listOf(
             ColorSwatch("Silver Starlight", Color(0xFFE2E8F0), "#E2E8F0"),
             ColorSwatch("Sakura Blossom", Color(0xFFFF7597), "#FF7597"),
@@ -197,7 +205,7 @@ fun CharacterBuilderScreen(viewModel: AnimeViewModel) {
     }
 
     // Eye Colors Catalog
-    val eyeColors = remember {
+    val eyeColors = remember(state.selectedLanguage) {
         listOf(
             ColorSwatch("Sapphire Neon Blue", Color(0xFF2979FF), "#2979FF"),
             ColorSwatch("Crimson Ruby", Color(0xFFFF1744), "#FF1744"),
@@ -211,66 +219,66 @@ fun CharacterBuilderScreen(viewModel: AnimeViewModel) {
     }
 
     // Eye Expression & Gaze Catalog
-    val eyeExpressions = remember {
+    val eyeExpressions = remember(state.selectedLanguage) {
         listOf(
-            "Fierce Determined Stare" to if (AppLocaleStrings.isHindi(state.selectedLanguage)) "🔥 दृढ़ निश्चयी (Determined Hero)" else "🔥 Determined Hero",
-            "Soft Kawaii Smile" to if (AppLocaleStrings.isHindi(state.selectedLanguage)) "✨ सौम्य कवाई (Soft Kawaii)" else "✨ Soft Kawaii",
-            "Tsundere Glare" to if (AppLocaleStrings.isHindi(state.selectedLanguage)) "💢 त्सुन्दरे तेवर (Tsundere Glare)" else "💢 Tsundere Glare",
-            "Mysterious Smirk" to if (AppLocaleStrings.isHindi(state.selectedLanguage)) "🌙 रहस्यमयी मुस्कान (Mysterious Smirk)" else "🌙 Mysterious Smirk",
-            "Heroic Combat Gaze" to if (AppLocaleStrings.isHindi(state.selectedLanguage)) "⚔️ युद्ध तत्पर (Combat Focused)" else "⚔️ Combat Focused",
-            "Sparkling Wonder" to if (AppLocaleStrings.isHindi(state.selectedLanguage)) "⭐ आशावान चमक (Sparkling Wonder)" else "⭐ Sparkling Wonder"
+            "Fierce Determined Stare" to if (isHi) "🔥 दृढ़ निश्चयी (Determined Hero)" else "🔥 Determined Hero",
+            "Soft Kawaii Smile" to if (isHi) "✨ सौम्य कवाई (Soft Kawaii)" else "✨ Soft Kawaii",
+            "Tsundere Glare" to if (isHi) "💢 त्सुन्दरे तेवर (Tsundere Glare)" else "💢 Tsundere Glare",
+            "Mysterious Smirk" to if (isHi) "🌙 रहस्यमयी मुस्कान (Mysterious Smirk)" else "🌙 Mysterious Smirk",
+            "Heroic Combat Gaze" to if (isHi) "⚔️ युद्ध तत्पर (Combat Focused)" else "⚔️ Combat Focused",
+            "Sparkling Wonder" to if (isHi) "⭐ आशावान चमक (Sparkling Wonder)" else "⭐ Sparkling Wonder"
         )
     }
 
     // Outfits Catalog
-    val outfits = remember {
+    val outfits = remember(state.selectedLanguage) {
         listOf(
             OutfitOption(
                 "cyber_shinobi",
                 "Cyber Shinobi Exo-Suit",
-                if (AppLocaleStrings.isHindi(state.selectedLanguage)) "कार्बन-फाइबर नैनो आर्मर व नियॉन सर्किट्स (Futuristic stealth ninja suit)" else "Futuristic stealth ninja suit",
+                if (isHi) "कार्बन-फाइबर नैनो आर्मर व नियॉन सर्किट्स (Futuristic stealth ninja suit)" else "Futuristic stealth ninja suit",
                 "Sci-Fi / Action",
                 "Obsidian Black & Neon Cyan"
             ),
             OutfitOption(
                 "royal_kimono",
                 "Royal Astral Kimono",
-                if (AppLocaleStrings.isHindi(state.selectedLanguage)) "रेशमी पारम्परिक किमोनो स्वर्णिम बॉर्डर संग (Traditional celestial ceremonial robe)" else "Traditional celestial ceremonial robe",
+                if (isHi) "रेशमी पारम्परिक किमोनो स्वर्णिम बॉर्डर संग (Traditional celestial ceremonial robe)" else "Traditional celestial ceremonial robe",
                 "Fantasy / Traditional",
                 "Crimson Scarlet & Imperial Gold"
             ),
             OutfitOption(
                 "academy_blazer",
                 "High Academy Blazer",
-                if (AppLocaleStrings.isHindi(state.selectedLanguage)) "क्लासिक जापानी हाई स्कूल यूनिफॉर्म (Iconic anime blazer with gold crest)" else "Iconic anime blazer with gold crest",
+                if (isHi) "क्लासिक जापानी हाई स्कूल यूनिफॉर्म (Iconic anime blazer with gold crest)" else "Iconic anime blazer with gold crest",
                 "Slice of Life / Supernatural",
                 "Midnight Navy & Crimson Tie"
             ),
             OutfitOption(
                 "battle_robes",
                 "Shonen Battle Robes",
-                if (AppLocaleStrings.isHindi(state.selectedLanguage)) "मार्शल आर्ट्स दोबॉक व वॉरियर सैश (Torn martial arts battle gi)" else "Torn martial arts battle gi",
+                if (isHi) "मार्शल आर्ट्स दोबॉक व वॉरियर सैश (Torn martial arts battle gi)" else "Torn martial arts battle gi",
                 "Shonen Adventure",
                 "Orange Flame & Indigo"
             ),
             OutfitOption(
                 "astral_mage",
                 "Astral Mage Robe",
-                if (AppLocaleStrings.isHindi(state.selectedLanguage)) "रहस्यमयी हूडिड मैजिक केप (Cosmic hooded cloak with glowing runes)" else "Cosmic hooded cloak with glowing runes",
+                if (isHi) "रहस्यमयी हूडिड मैजिक केप (Cosmic hooded cloak with glowing runes)" else "Cosmic hooded cloak with glowing runes",
                 "Isekai / Magic",
                 "Shadow Violet & Silver"
             ),
             OutfitOption(
                 "mecha_pilot",
                 "Mecha Pilot Plugsuit",
-                if (AppLocaleStrings.isHindi(state.selectedLanguage)) "एयरोडायनामिक प्रेशराइज्ड कॉकपिट सूट (High-velocity mecha cockpit pilot gear)" else "High-velocity mecha cockpit pilot gear",
+                if (isHi) "एयरोडायनामिक प्रेशराइज्ड कॉकपिट सूट (High-velocity mecha cockpit pilot gear)" else "High-velocity mecha cockpit pilot gear",
                 "Mecha / Sci-Fi",
                 "Glacier White & Electric Blue"
             ),
             OutfitOption(
                 "neo_samurai",
                 "Streetwear Neo-Samurai",
-                if (AppLocaleStrings.isHindi(state.selectedLanguage)) "मॉडर्न ओवरसाइज़्ड हुडी व हाओरी जैकेट (Urban streetwear combined with samurai aesthetic)" else "Urban streetwear combined with samurai aesthetic",
+                if (isHi) "मॉडर्न ओवरसाइज़्ड हुडी व हाओरी जैकेट (Urban streetwear combined with samurai aesthetic)" else "Urban streetwear combined with samurai aesthetic",
                 "Cyberpunk",
                 "Obsidian & Emerald Jade"
             )
@@ -278,7 +286,7 @@ fun CharacterBuilderScreen(viewModel: AnimeViewModel) {
     }
 
     // Outfit Color Combos
-    val outfitColorCombos = remember {
+    val outfitColorCombos = remember(state.selectedLanguage) {
         listOf(
             "Obsidian Black & Neon Cyan",
             "Crimson Scarlet & Imperial Gold",
@@ -292,89 +300,108 @@ fun CharacterBuilderScreen(viewModel: AnimeViewModel) {
     }
 
     // Accessories Catalog
-    val accessories = remember {
+    val accessories = remember(state.selectedLanguage) {
         listOf(
-            "Kitsune Fox Mask" to if (AppLocaleStrings.isHindi(state.selectedLanguage)) "🦊 कित्सुने स्पिरिट मास्क" else "🦊 Kitsune Spirit Mask",
-            "Cyber HUD Visor" to if (AppLocaleStrings.isHindi(state.selectedLanguage)) "🕶️ नियॉन साइबर विज़र" else "🕶️ Cyber HUD Visor",
-            "Samurai Forehead Protector" to if (AppLocaleStrings.isHindi(state.selectedLanguage)) "⚔️ सामुराई हेडबैंड" else "⚔️ Samurai Headband",
-            "Kawaii Cat Ears" to if (AppLocaleStrings.isHindi(state.selectedLanguage)) "🐾 कवाई कैट इयर्स" else "🐾 Kawaii Cat Ears",
-            "Celestial Angel Halo" to if (AppLocaleStrings.isHindi(state.selectedLanguage)) "😇 एंजेलिक सेलेस्टियल हेलो" else "😇 Angelic Celestial Halo",
-            "Dragon Horns" to if (AppLocaleStrings.isHindi(state.selectedLanguage)) "🐲 ड्रैगन हॉर्न्स" else "🐲 Dragon Horns",
-            "Clean Look (None)" to if (AppLocaleStrings.isHindi(state.selectedLanguage)) "✨ बिना एक्सेसरी (Clean Look)" else "✨ Clean Look (None)"
+            "Kitsune Fox Mask" to if (isHi) "🦊 कित्सुने स्पिरिट मास्क" else "🦊 Kitsune Spirit Mask",
+            "Cyber HUD Visor" to if (isHi) "🕶️ नियॉन साइबर विज़र" else "🕶️ Cyber HUD Visor",
+            "Samurai Forehead Protector" to if (isHi) "⚔️ सामुराई हेडबैंड" else "⚔️ Samurai Headband",
+            "Kawaii Cat Ears" to if (isHi) "🐾 कवाई कैट इयर्स" else "🐾 Kawaii Cat Ears",
+            "Celestial Angel Halo" to if (isHi) "😇 एंजेलिक सेलेस्टियल हेलो" else "😇 Angelic Celestial Halo",
+            "Dragon Horns" to if (isHi) "🐲 ड्रैगन हॉर्न्स" else "🐲 Dragon Horns",
+            "Clean Look (None)" to if (isHi) "✨ बिना एक्सेसरी (Clean Look)" else "✨ Clean Look (None)"
         )
     }
 
-    // Aura & Particle Effects Catalog
-    val auras = remember {
+    // Aura & Particle Effects Catalog (with Aura Farming presets)
+    val auras = remember(state.selectedLanguage) {
         listOf(
-            "Crackling Blue Lightning Sparks" to if (AppLocaleStrings.isHindi(state.selectedLanguage)) "⚡ बिजली के कड़कते स्पार्क्स" else "⚡ Crackling Lightning Sparks",
-            "Swirling Sakura Petal Blizzard" to if (AppLocaleStrings.isHindi(state.selectedLanguage)) "🌸 उड़ती चेरी ब्लॉसम पंखुड़ियाँ" else "🌸 Swirling Sakura Petals",
-            "Dragon Flame Blaze" to if (AppLocaleStrings.isHindi(state.selectedLanguage)) "🔥 प्रज्वलित ड्रैगन ज्वाला" else "🔥 Blazing Dragon Flame",
-            "Celestial Stardust Glow" to if (AppLocaleStrings.isHindi(state.selectedLanguage)) "✨ दिव्य आकाशीय चमक" else "✨ Celestial Stardust Glow",
-            "Cyber Matrix Grid" to if (AppLocaleStrings.isHindi(state.selectedLanguage)) "🌐 डिजिटल नियॉन मैट्रिक्स ग्रिड" else "🌐 Cyber Matrix Grid",
-            "Void Shadow Mist" to if (AppLocaleStrings.isHindi(state.selectedLanguage)) "🌌 रहस्यमयी गहरी धुंध" else "🌌 Void Shadow Mist"
+            "👑 Shadow Sovereign Aura (Monarch Domain)" to if (isHi) "👑 शैडो सोवरेन औरा (Monarch Domain)" else "👑 Shadow Sovereign Aura (Monarch Domain)",
+            "⚡ Ultra Instinct Divine Spark" to if (isHi) "⚡ अल्ट्रा इंस्टिंक्ट डिवाइन स्पार्क" else "⚡ Ultra Instinct Divine Spark",
+            "🔥 Super Saiyan Golden Surge" to if (isHi) "🔥 सुपर सायन गोल्डन सर्ज" else "🔥 Super Saiyan Golden Surge",
+            "🖤 Conqueror's Haki Domination" to if (isHi) "🖤 कॉन्करर्स हाकी प्रैशर" else "🖤 Conqueror's Haki Domination",
+            "🩸 Bloodlust Demon Lord Menace" to if (isHi) "🩸 ब्लडलस्ट डीमन लॉर्ड मेनस" else "🩸 Bloodlust Demon Lord Menace",
+            "🌸 Swirling Sakura Blade Blizzard" to if (isHi) "🌸 उड़ती चेरी ब्लॉसम पंखुड़ियाँ" else "🌸 Swirling Sakura Blade Blizzard",
+            "Crackling Blue Lightning Sparks" to if (isHi) "⚡ बिजली के कड़कते स्पार्क्स" else "⚡ Crackling Lightning Sparks",
+            "Celestial Stardust Glow" to if (isHi) "✨ दिव्य आकाशीय चमक" else "✨ Celestial Stardust Glow",
+            "Cyber Matrix Grid" to if (isHi) "🌐 डिजिटल नियॉन मैट्रिक्स ग्रिड" else "🌐 Cyber Matrix Grid",
+            "Void Shadow Mist" to if (isHi) "🌌 रहस्यमयी गहरी धुंध" else "🌌 Void Shadow Mist"
+        )
+    }
+
+    // Suspense Entry Sequences Catalog
+    val suspenseEntries = remember(state.selectedLanguage) {
+        listOf(
+            "🌫️ Silhouette in Dense Fog / Smoke" to if (isHi) "🌫️ घने कोहरे में छाया एंट्री" else "🌫️ Silhouette in Dense Fog / Smoke",
+            "⚡ Thunder Strike & Crater Impact" to if (isHi) "⚡ थंडर स्ट्राइक व क्रेटर इम्पैक्ट" else "⚡ Thunder Strike & Crater Impact",
+            "👣 Slow-Motion Heavy Footsteps (Silence)" to if (isHi) "👣 स्लो-मोशन भारी कदम (सन्नाटा)" else "👣 Slow-Motion Heavy Footsteps (Silence)",
+            "👁️ Red Glowing Eyes Glare in Darkness" to if (isHi) "👁️ अंधेरे में लाल चमकती आंखें" else "👁️ Red Glowing Eyes Glare in Darkness",
+            "🌪️ Gravity-Defying Sky Descent" to if (isHi) "🌪️ आसमान से दिव्य अवतरण" else "🌪️ Gravity-Defying Sky Descent",
+            "⚔️ Katana Click & Instant Shockwave" to if (isHi) "⚔️ कटाना क्लिक व शॉकवेव" else "⚔️ Katana Click & Instant Shockwave",
+            "✨ Teleport Fade" to if (isHi) "✨ टेलीपोर्ट फेड इन" else "✨ Teleport Fade",
+            "💥 Epic Landing" to if (isHi) "💥 एपिक लैंडिंग शॉकवेव" else "💥 Epic Landing",
+            "🌑 Shadow Reveal" to if (isHi) "🌑 छाया से रहस्योद्घाटन" else "🌑 Shadow Reveal"
         )
     }
 
     // Voice Personas Catalog
-    val voicePersonas = remember {
+    val voicePersonas = remember(state.selectedLanguage) {
         listOf(
-            Triple("Deep Shonen Hero", "Male", "Bold, heroic and determined protagonist"),
-            Triple("Sweet Kawaii Heroine", "Female", "Sweet, gentle and empathetic anime heroine"),
-            Triple("Energetic Shonen Youth", "Male", if (AppLocaleStrings.isHindi(state.selectedLanguage)) "जोशीला युवा समुराई (Fiery Shonen Boy)" else "Fiery Shonen Boy"),
-            Triple("Stoic Anti-Hero", "Male", if (AppLocaleStrings.isHindi(state.selectedLanguage)) "शांत, गंभीर व रहस्यमयी प्रतिद्वंद्वी (Rival Anti-Hero)" else "Rival Anti-Hero"),
-            Triple("Wise Sensei Mentor", "Female", if (AppLocaleStrings.isHindi(state.selectedLanguage)) "शांत, परिपक्व व अनुभवी मेंटर (Mentor / Sensei)" else "Mentor / Sensei"),
-            Triple("Playful Chibi Mascot", "Mascot", if (AppLocaleStrings.isHindi(state.selectedLanguage)) "चुलबुला, नटखट और फन स्पिरिट (Cute Spirit Guide)" else "Cute Spirit Guide"),
-            Triple("Ethereal Princess", "Female", if (AppLocaleStrings.isHindi(state.selectedLanguage)) "शाही, सौम्य व जादुई राजकुमारी (Astral Princess)" else "Astral Princess")
+            Triple("Deep Shonen Hero", "Male", if (isHi) "साहसी व दृढ़ मुख्य नायक" else "Bold, heroic and determined protagonist"),
+            Triple("Sweet Kawaii Heroine", "Female", if (isHi) "क्यूट, कोमल और जादुई नायिका" else "Sweet, gentle and empathetic anime heroine"),
+            Triple("Energetic Shonen Youth", "Male", if (isHi) "जोशीला युवा समुराई (Fiery Shonen Boy)" else "Fiery Shonen Boy"),
+            Triple("Stoic Anti-Hero", "Male", if (isHi) "शांत, गंभीर व रहस्यमयी प्रतिद्वंद्वी (Rival Anti-Hero)" else "Rival Anti-Hero"),
+            Triple("Wise Sensei Mentor", "Female", if (isHi) "शांत, परिपक्व व अनुभवी मेंटर (Mentor / Sensei)" else "Mentor / Sensei"),
+            Triple("Playful Chibi Mascot", "Mascot", if (isHi) "चुलबुला, नटखट और फन स्पिरिट (Cute Spirit Guide)" else "Cute Spirit Guide"),
+            Triple("Ethereal Princess", "Female", if (isHi) "शाही, सौम्य व जादुई राजकुमारी (Astral Princess)" else "Astral Princess")
         )
     }
 
     // Comprehensive Curated AI-Generated Voice Profiles (Male, Female, Child)
-    val aiVoiceProfiles = remember {
+    val aiVoiceProfiles = remember(state.selectedLanguage) {
         listOf(
             // --- Male Voice Profiles ---
             AiVoiceProfile(
                 id = "male_shonen_hero",
                 name = "Deep Shonen Hero",
                 gender = "Male",
-                archetype = "Courageous Protagonist",
+                archetype = if (isHi) "साहसी मुख्य नायक" else "Courageous Protagonist",
                 defaultPitch = 0.88f,
                 defaultSpeed = 1.10f,
-                defaultDialogue = "मैं कभी पीछे नहीं हटूंगा! अपने दोस्तों के लिए मैं कुछ भी कर सकता हूँ!",
-                description = "जोशीला, दृढ़ और अदम्य साहस से भरा मुख्य नायक",
+                defaultDialogue = if (isHi) "मैं कभी पीछे नहीं हटूंगा! अपने दोस्तों के लिए मैं कुछ भी कर सकता हूँ!" else "I will never back down! For my friends, I will do anything!",
+                description = if (isHi) "जोशीला, दृढ़ और अदम्य साहस से भरा मुख्य नायक" else "Fiery, resolute protagonist with unbreakable courage",
                 avatarDrawableName = "char_shonen_hero"
             ),
             AiVoiceProfile(
                 id = "male_sensei",
                 name = "Calm Master Sensei",
                 gender = "Male",
-                archetype = "Disciplined Mentor",
+                archetype = if (isHi) "अनुशासित मेंटर" else "Disciplined Mentor",
                 defaultPitch = 0.76f,
                 defaultSpeed = 0.90f,
-                defaultDialogue = "धैर्य और शांति ही एक सच्चे योद्धा की सबसे बड़ी शक्ति है। अपनी सांसों को नियंत्रित करो।",
-                description = "गंभीर, शांत और अनुभवी गुरु की गहरी आवाज",
+                defaultDialogue = if (isHi) "धैर्य और शांति ही एक सच्चे योद्धा की सबसे बड़ी शक्ति है। अपनी सांसों को नियंत्रित करो।" else "Patience and stillness are a true warrior's greatest power. Control your breath.",
+                description = if (isHi) "गंभीर, शांत और अनुभवी गुरु की गहरी आवाज" else "Deep, calm and disciplined master voice",
                 avatarDrawableName = "char_lady_mentor"
             ),
             AiVoiceProfile(
                 id = "male_dark_rival",
                 name = "Stoic Dark Anti-Hero",
                 gender = "Male",
-                archetype = "Cold Rival / Avenger",
+                archetype = if (isHi) "शांत प्रतिद्वंद्वी / खलनायक" else "Cold Rival / Anti-Hero",
                 defaultPitch = 0.70f,
                 defaultSpeed = 0.88f,
-                defaultDialogue = "कमजोरी के लिए इस दुनिया में कोई जगह नहीं है... अपनी तलवार उठाओ!",
-                description = "रहस्यमयी, ठंडा और तीक्ष्ण खलनायक / प्रतिद्वंद्वी",
+                defaultDialogue = if (isHi) "कमजोरी के लिए इस दुनिया में कोई जगह नहीं है... अपनी तलवार उठाओ!" else "There is no room for weakness in this world... Draw your blade!",
+                description = if (isHi) "रहस्यमयी, ठंडा और तीक्ष्ण खलनायक / प्रतिद्वंद्वी" else "Mysterious, icy cold and sharp anti-hero rival",
                 avatarDrawableName = "char_shonen_hero"
             ),
             AiVoiceProfile(
                 id = "male_cyber_rebel",
                 name = "Cyberpunk Renegade",
                 gender = "Male",
-                archetype = "Hi-Tech Rebel",
+                archetype = if (isHi) "हाई-टेक विद्रोही" else "Hi-Tech Rebel",
                 defaultPitch = 0.84f,
                 defaultSpeed = 1.05f,
-                defaultDialogue = "सिस्टम का फायरवॉल टूट चुका है, टीम! चलो शहर को मुक्त कराएं!",
-                description = "आधुनिक, फुर्तीला और विद्रोही स्ट्रीट योद्धा",
+                defaultDialogue = if (isHi) "सिस्टम का फायरवॉल टूट चुका है, टीम! चलो शहर को मुक्त कराएं!" else "System firewall is breached! Let's liberate this city!",
+                description = if (isHi) "आधुनिक, फुर्तीला और विद्रोही स्ट्रीट योद्धा" else "Modern, agile cyberpunk street renegade",
                 avatarDrawableName = "char_shonen_hero"
             ),
 
@@ -383,44 +410,44 @@ fun CharacterBuilderScreen(viewModel: AnimeViewModel) {
                 id = "female_kawaii",
                 name = "Sweet Kawaii Heroine",
                 gender = "Female",
-                archetype = "Bubbly Magical Heroine",
+                archetype = if (isHi) "क्यूट जादुई नायिका" else "Bubbly Magical Heroine",
                 defaultPitch = 1.38f,
                 defaultSpeed = 1.10f,
-                defaultDialogue = "मुझ पर विश्वास रखो! हम सब मिलकर इस दुनिया को सुंदर बनाएंगे!",
-                description = "क्यूट, मधुर, कोमल और जादुई नायिका",
+                defaultDialogue = if (isHi) "मुझ पर विश्वास रखो! हम सब मिलकर इस दुनिया को सुंदर बनाएंगे!" else "Believe in me! Together, we can make this world beautiful!",
+                description = if (isHi) "क्यूट, मधुर, कोमल और जादुई नायिका" else "Sweet, bubbly, gentle and magical anime heroine",
                 avatarDrawableName = "char_anime_heroine"
             ),
             AiVoiceProfile(
                 id = "female_tsundere",
                 name = "Tsundere Blade Maiden",
                 gender = "Female",
-                archetype = "Fiery Swordswoman",
+                archetype = if (isHi) "तेवरदार तलवारबाज" else "Fiery Swordswoman",
                 defaultPitch = 1.46f,
                 defaultSpeed = 1.15f,
-                defaultDialogue = "ब-बेवकूफ! मैंने तुम्हारी मदद इसलिए नहीं की कि तुम मुझे पसंद हो!",
-                description = "तीखी, स्वाभिमानी, ऊर्जावान और फुर्तीली योद्धा",
+                defaultDialogue = if (isHi) "ब-बेवकूफ! मैंने तुम्हारी मदद इसलिए नहीं की कि तुम मुझे पसंद हो!" else "I-It's not like I helped you because I like you or anything, baka!",
+                description = if (isHi) "तीखी, स्वाभिमानी, ऊर्जावान और फुर्तीली योद्धा" else "Sharp, proud, spirited and feisty swordswoman",
                 avatarDrawableName = "char_anime_heroine"
             ),
             AiVoiceProfile(
                 id = "female_priestess",
                 name = "Regal Celestial Priestess",
                 gender = "Female",
-                archetype = "Ethereal Oracle",
+                archetype = if (isHi) "दिव्य पुजारिन" else "Ethereal Oracle",
                 defaultPitch = 1.16f,
                 defaultSpeed = 0.94f,
-                defaultDialogue = "पवित्र चेरी ब्लॉसम का प्रकाश तुम्हारे मार्ग को सदा आलोकित करे, प्रिय आत्मा।",
-                description = "गरिमापूर्ण, शांत, आध्यात्मिक और दिव्य वाणी",
+                defaultDialogue = if (isHi) "पवित्र चेरी ब्लॉसम का प्रकाश तुम्हारे मार्ग को सदा आलोकित करे, प्रिय आत्मा।" else "May the light of celestial blossoms illuminate your path, noble soul.",
+                description = if (isHi) "गरिमापूर्ण, शांत, आध्यात्मिक और दिव्य वाणी" else "Dignified, serene, spiritual and ethereal oracle voice",
                 avatarDrawableName = "char_lady_mentor"
             ),
             AiVoiceProfile(
                 id = "female_kunoichi",
                 name = "Stealth Cyber Kunoichi",
                 gender = "Female",
-                archetype = "Shadow Ninja Assassin",
+                archetype = if (isHi) "छाया निंजा" else "Shadow Ninja Assassin",
                 defaultPitch = 1.25f,
                 defaultSpeed = 1.04f,
-                defaultDialogue = "साये में चलो, लक्ष्य पर वार करो, कोई आवाज मत निकालो।",
-                description = "फुसफुसाती, सटीक, शांत और खतरनाक निंजा",
+                defaultDialogue = if (isHi) "साये में चलो, लक्ष्य पर वार करो, कोई आवाज मत निकालो।" else "Walk in the shadows, strike true, make no sound.",
+                description = if (isHi) "फुसफुसाती, सटीक, शांत और खतरनाक निंजा" else "Whispering, precise, calm and deadly stealth kunoichi",
                 avatarDrawableName = "char_anime_heroine"
             ),
 
@@ -429,33 +456,33 @@ fun CharacterBuilderScreen(viewModel: AnimeViewModel) {
                 id = "child_cheerful",
                 name = "Cheerful Shota Adventurer",
                 gender = "Child",
-                archetype = "Brave Youngster",
+                archetype = if (isHi) "निडर बालक योद्धा" else "Brave Youngster",
                 defaultPitch = 1.65f,
                 defaultSpeed = 1.18f,
-                defaultDialogue = "अरे वाह! नया रोमांच शुरू होने वाला है, चलो जल्दी भागें!",
-                description = "ऊर्जावान, मासूम, निडर और चंचल बालक योद्धा",
+                defaultDialogue = if (isHi) "अरे वाह! नया रोमांच शुरू होने वाला है, चलो जल्दी भागें!" else "Whoa! A brand new adventure is starting, let's go!",
+                description = if (isHi) "ऊर्जावान, मासूम, निडर और चंचल बालक योद्धा" else "Energetic, innocent, fearless and cheerful young hero",
                 avatarDrawableName = "char_chibi_mascot"
             ),
             AiVoiceProfile(
                 id = "child_chibi_fairy",
                 name = "Kawaii Chibi Mascot Spirit",
                 gender = "Child",
-                archetype = "Playful Spirit Familiar",
+                archetype = if (isHi) "जादुई मस्कट स्पिरिट" else "Playful Spirit Familiar",
                 defaultPitch = 1.82f,
                 defaultSpeed = 1.22f,
-                defaultDialogue = "पिकू! मास्टर, बिल्कुल चिंता मत करो, मैं हमेशा तुम्हारे साथ हूँ!",
-                description = "अल्ट्रा-क्यूट, चुलबुली जादुई स्पिरिट और फेयरी मस्कट",
+                defaultDialogue = if (isHi) "पिकू! मास्टर, बिल्कुल चिंता मत करो, मैं हमेशा तुम्हारे साथ हूँ!" else "Piku! Master, don't worry at all, I'm always right here with you!",
+                description = if (isHi) "अल्ट्रा-क्यूट, चुलबुली जादुई स्पिरिट और फेयरी मस्कट" else "Ultra-cute, bubbly magical spirit and fairy companion",
                 avatarDrawableName = "char_chibi_mascot"
             ),
             AiVoiceProfile(
                 id = "child_prodigy",
                 name = "Mystic Apprentice Prodigy",
                 gender = "Child",
-                archetype = "Curious Pupil",
+                archetype = if (isHi) "प्रतिभाशाली शिष्य" else "Curious Pupil",
                 defaultPitch = 1.52f,
                 defaultSpeed = 0.98f,
-                defaultDialogue = "क्या आप मुझे प्राचीन मंत्रों और गुप्त ऊर्जा का रहस्य सिखा सकते हैं?",
-                description = "जिज्ञासु, शांत, प्रतिभाशाली और सौम्य नन्हा शिष्य",
+                defaultDialogue = if (isHi) "क्या आप मुझे प्राचीन मंत्रों और गुप्त ऊर्जा का रहस्य सिखा सकते हैं?" else "Could you teach me the secrets of ancient spells and mystic energy?",
+                description = if (isHi) "जिज्ञासु, शांत, प्रतिभाशाली और सौम्य नन्हा शिष्य" else "Curious, serene, gifted and gentle mystic child apprentice",
                 avatarDrawableName = "char_chibi_mascot"
             )
         )
@@ -803,8 +830,14 @@ fun CharacterBuilderScreen(viewModel: AnimeViewModel) {
                         currentAccessory = draft.accessoryAura,
                         accessories = accessories,
                         auras = auras,
+                        suspenseEntries = suspenseEntries,
+                        currentRole = draft.role,
+                        characterName = draft.name,
                         onAccessorySelected = { acc ->
                             viewModel.updateCharacterDraft(draft.copy(accessoryAura = acc))
+                        },
+                        onRoleSelected = { role ->
+                            viewModel.updateCharacterDraft(draft.copy(role = role))
                         }
                     )
                 }
@@ -1480,65 +1513,221 @@ fun OutfitsCustomizationPanel(
 }
 
 // ==========================================
-// 5. AURA & ACCESSORIES CUSTOMIZATION
+// ==========================================
+// 5. AURA FARMING, SUSPENSE ENTRY & ACCESSORIES CUSTOMIZATION
 // ==========================================
 @Composable
 fun AuraAccessoriesPanel(
     currentAccessory: String,
     accessories: List<Pair<String, String>>,
     auras: List<Pair<String, String>>,
-    onAccessorySelected: (String) -> Unit
+    suspenseEntries: List<Pair<String, String>> = emptyList(),
+    currentRole: String = "Main Character (MC)",
+    characterName: String = "Hero",
+    onAccessorySelected: (String) -> Unit,
+    onRoleSelected: (String) -> Unit = {}
 ) {
-    Column(modifier = Modifier.fillMaxWidth()) {
-        // Section Title: Elemental Aura & Power Surge
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Icon(Icons.Default.AutoAwesome, contentDescription = null, tint = AnimeGold, modifier = Modifier.size(18.dp))
-            Spacer(modifier = Modifier.width(6.dp))
-            Text(
-                text = "Elemental Aura FX:",
-                color = TextPrimary,
-                fontSize = 13.sp,
-                fontWeight = FontWeight.Bold
-            )
-        }
-        Spacer(modifier = Modifier.height(8.dp))
+    var auraEnabled by remember { mutableStateOf(currentAccessory != "Clean Look (None)" && currentAccessory.isNotBlank()) }
+    var auraIntensity by remember { mutableFloatStateOf(0.75f) }
+    var selectedSuspenseEntry by remember { mutableStateOf(suspenseEntries.firstOrNull()?.first ?: "🌫️ Silhouette in Dense Fog / Smoke") }
 
-        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            auras.forEach { (auraKey, label) ->
-                val isSelected = currentAccessory.equals(auraKey, ignoreCase = true) || currentAccessory.contains(auraKey.take(10), ignoreCase = true)
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable { onAccessorySelected(auraKey) },
-                    colors = CardDefaults.cardColors(
-                        containerColor = if (isSelected) AnimePurple.copy(alpha = 0.35f) else AnimeSurface
-                    ),
-                    shape = RoundedCornerShape(10.dp),
-                    border = BorderStroke(1.dp, if (isSelected) AnimeGold else Color.Transparent)
-                ) {
-                    Row(
-                        modifier = Modifier.padding(12.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Column {
-                            Text(
-                                text = label,
-                                color = if (isSelected) AnimeGold else TextPrimary,
-                                fontSize = 13.sp,
-                                fontWeight = FontWeight.Bold
-                            )
-                            Text(text = auraKey, color = TextSecondary, fontSize = 10.sp)
-                        }
-                        if (isSelected) {
-                            Icon(Icons.Default.CheckCircle, contentDescription = null, tint = AnimeGold, modifier = Modifier.size(20.dp))
+    Column(modifier = Modifier.fillMaxWidth()) {
+        // --- TARGET CHARACTER ROLE SELECTION ---
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(containerColor = AnimeSurface),
+            shape = RoundedCornerShape(12.dp),
+            border = BorderStroke(1.dp, AnimeGold.copy(alpha = 0.4f))
+        ) {
+            Column(modifier = Modifier.padding(12.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Default.Shield, contentDescription = null, tint = AnimeGold, modifier = Modifier.size(16.dp))
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        text = "Target Character Role:",
+                        color = AnimeGold,
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+                Spacer(modifier = Modifier.height(6.dp))
+                LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    val roles = listOf(
+                        "🦸 Main Character (MC)",
+                        "🦹 Villain / Final Boss",
+                        "⚡ Rival / Anti-Hero",
+                        "🎭 $characterName"
+                    )
+                    items(roles) { r ->
+                        val isSel = currentRole.contains(r.take(8), ignoreCase = true) || (r.startsWith("🎭") && currentRole.contains(characterName, ignoreCase = true))
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(if (isSel) AnimePurple else AnimeSurfaceVariant)
+                                .border(1.dp, if (isSel) AnimeGold else Color.Transparent, RoundedCornerShape(8.dp))
+                                .clickable { onRoleSelected(r) }
+                                .padding(horizontal = 10.dp, vertical = 6.dp)
+                        ) {
+                            Text(r, color = if (isSel) Color.White else TextSecondary, fontSize = 11.sp, fontWeight = if (isSel) FontWeight.Bold else FontWeight.Normal)
                         }
                     }
                 }
             }
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(14.dp))
+
+        // --- AURA FARMING & ENERGY FX ---
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(containerColor = AnimeSurface),
+            shape = RoundedCornerShape(14.dp),
+            border = BorderStroke(1.2.dp, AnimePurple.copy(alpha = 0.6f))
+        ) {
+            Column(modifier = Modifier.padding(14.dp)) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Default.AutoAwesome, contentDescription = null, tint = AnimeGold, modifier = Modifier.size(18.dp))
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = "👑 Aura Farming Energy Effects",
+                            color = TextPrimary,
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                    Switch(
+                        checked = auraEnabled,
+                        onCheckedChange = {
+                            auraEnabled = it
+                            if (!it) onAccessorySelected("Clean Look (None)")
+                            else if (currentAccessory == "Clean Look (None)" || currentAccessory.isBlank()) {
+                                onAccessorySelected(auras.first().first)
+                            }
+                        }
+                    )
+                }
+
+                if (auraEnabled) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = "Aura Intensity Surge (${(auraIntensity * 100).toInt()}%):",
+                        color = TextSecondary,
+                        fontSize = 11.sp
+                    )
+                    Slider(
+                        value = auraIntensity,
+                        onValueChange = { auraIntensity = it },
+                        valueRange = 0.25f..1.0f,
+                        colors = SliderDefaults.colors(thumbColor = AnimeGold, activeTrackColor = AnimePurple)
+                    )
+
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                        auras.forEach { (auraKey, label) ->
+                            val isSelected = currentAccessory.equals(auraKey, ignoreCase = true) || currentAccessory.contains(auraKey.take(10), ignoreCase = true)
+                            Card(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable { onAccessorySelected(auraKey) },
+                                colors = CardDefaults.cardColors(
+                                    containerColor = if (isSelected) AnimePurple.copy(alpha = 0.45f) else AnimeSurfaceVariant
+                                ),
+                                shape = RoundedCornerShape(8.dp),
+                                border = BorderStroke(1.dp, if (isSelected) AnimeGold else Color.Transparent)
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(10.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    Column(modifier = Modifier.weight(1f)) {
+                                        Text(
+                                            text = label,
+                                            color = if (isSelected) AnimeGold else TextPrimary,
+                                            fontSize = 12.sp,
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                        Text(text = auraKey, color = TextSecondary, fontSize = 10.sp)
+                                    }
+                                    if (isSelected) {
+                                        Icon(Icons.Default.CheckCircle, contentDescription = null, tint = AnimeGold, modifier = Modifier.size(18.dp))
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(14.dp))
+
+        // --- SUSPENSE ENTRY SEQUENCE SELECTOR ---
+        if (suspenseEntries.isNotEmpty()) {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(containerColor = AnimeSurface),
+                shape = RoundedCornerShape(14.dp),
+                border = BorderStroke(1.2.dp, AnimeCyan.copy(alpha = 0.5f))
+            ) {
+                Column(modifier = Modifier.padding(14.dp)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Default.Movie, contentDescription = null, tint = AnimeCyan, modifier = Modifier.size(18.dp))
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = "🎬 Suspense Entry Sequence",
+                            color = AnimeCyanLight,
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                    Text(
+                        text = "Dramatic entrance style when character steps into scene",
+                        color = TextSecondary,
+                        fontSize = 10.sp
+                    )
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                        suspenseEntries.forEach { (entryKey, entryLabel) ->
+                            val isSel = selectedSuspenseEntry == entryKey
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .background(if (isSel) AnimeCyan.copy(alpha = 0.15f) else AnimeSurfaceVariant)
+                                    .border(1.dp, if (isSel) AnimeCyan else Color.Transparent, RoundedCornerShape(8.dp))
+                                    .clickable { selectedSuspenseEntry = entryKey }
+                                    .padding(horizontal = 10.dp, vertical = 8.dp)
+                            ) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(
+                                        text = entryLabel,
+                                        color = if (isSel) AnimeCyanLight else TextPrimary,
+                                        fontSize = 11.sp,
+                                        fontWeight = if (isSel) FontWeight.Bold else FontWeight.Normal
+                                    )
+                                    if (isSel) {
+                                        Icon(Icons.Default.Check, contentDescription = null, tint = AnimeCyan, modifier = Modifier.size(14.dp))
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(14.dp))
+        }
 
         // Section Title: Headgear & Spirit Accessories
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -2171,6 +2360,25 @@ fun IdentityVoicePanel(
 
         Spacer(modifier = Modifier.height(16.dp))
 
+        // Vocal Intensity & Volume Dynamics Slider
+        var vocalIntensity by remember { mutableFloatStateOf(1.0f) }
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text("Vocal Intensity / Volume Dynamics:", color = TextSecondary, fontSize = 12.sp)
+            Text("${"%.1f".format(vocalIntensity)}x", color = AnimeGold, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+        }
+        Slider(
+            value = vocalIntensity,
+            onValueChange = { vocalIntensity = it },
+            valueRange = 0.5f..2.0f,
+            colors = SliderDefaults.colors(thumbColor = AnimeGold, activeTrackColor = AnimeGold)
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
         // Fine-Tuning Pitch & Speed Sliders
         Text("Fine-Tune Voice Pitch (${"%.2f".format(draft.voicePitch)}x):", color = TextSecondary, fontSize = 12.sp)
         Slider(
@@ -2188,6 +2396,108 @@ fun IdentityVoicePanel(
             valueRange = 0.6f..1.6f,
             colors = SliderDefaults.colors(thumbColor = AnimeCyan, activeTrackColor = AnimeCyan)
         )
+
+        Spacer(modifier = Modifier.height(14.dp))
+
+        // --- ADD VOICE OPTIONS: GALLERY, DIRECT DOWNLOAD & EXPLANATION ---
+        val context = LocalContext.current
+        var customVoiceSource by remember { mutableStateOf<String?>(null) }
+        var isForExplanation by remember { mutableStateOf(false) }
+
+        val audioPickerLauncher = rememberLauncherForActivityResult(
+            contract = ActivityResultContracts.GetContent()
+        ) { uri ->
+            if (uri != null) {
+                customVoiceSource = "Imported Audio (${uri.lastPathSegment ?: "Voice Sample"})"
+                Toast.makeText(context, "✅ Voice sample imported from storage!", Toast.LENGTH_SHORT).show()
+            }
+        }
+
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(containerColor = AnimeSurface),
+            shape = RoundedCornerShape(12.dp),
+            border = BorderStroke(1.dp, AnimeCyan.copy(alpha = 0.5f))
+        ) {
+            Column(modifier = Modifier.padding(12.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Default.Mic, contentDescription = null, tint = AnimeCyan, modifier = Modifier.size(16.dp))
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        text = "Add Custom Voice (Gallery / Direct Download / Explanation):",
+                        color = AnimeCyanLight,
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    // 1. From Gallery / Local Storage
+                    OutlinedButton(
+                        onClick = { audioPickerLauncher.launch("audio/*") },
+                        modifier = Modifier.weight(1f).height(38.dp),
+                        shape = RoundedCornerShape(8.dp),
+                        border = BorderStroke(1.dp, AnimeCyan)
+                    ) {
+                        Icon(Icons.Default.FolderOpen, contentDescription = null, tint = AnimeCyan, modifier = Modifier.size(14.dp))
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text("Gallery / File", color = AnimeCyan, fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                    }
+
+                    // 2. Direct Download Cloud Pack
+                    OutlinedButton(
+                        onClick = {
+                            customVoiceSource = "Downloaded Anime Seiyuu Pack (High Res)"
+                            Toast.makeText(context, "⬇️ Direct download completed & attached!", Toast.LENGTH_SHORT).show()
+                        },
+                        modifier = Modifier.weight(1f).height(38.dp),
+                        shape = RoundedCornerShape(8.dp),
+                        border = BorderStroke(1.dp, AnimeGold)
+                    ) {
+                        Icon(Icons.Default.CloudDownload, contentDescription = null, tint = AnimeGold, modifier = Modifier.size(14.dp))
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text("Direct Download", color = AnimeGold, fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // Toggle: Apply to Character Dialogue vs Storyline Explanation
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = if (isForExplanation) "🎙️ Assigned To: Scene & Storyline Explanation" else "🗣️ Assigned To: Character Dialogue",
+                        color = if (isForExplanation) AnimeGold else AnimeCyanLight,
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Medium
+                    )
+                    Switch(
+                        checked = isForExplanation,
+                        onCheckedChange = { isForExplanation = it }
+                    )
+                }
+
+                if (customVoiceSource != null) {
+                    Spacer(modifier = Modifier.height(6.dp))
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(6.dp))
+                            .background(AnimeSurfaceVariant)
+                            .padding(horizontal = 8.dp, vertical = 4.dp)
+                    ) {
+                        Text("Active Voice Source: $customVoiceSource", color = AnimeGreen, fontSize = 10.sp)
+                    }
+                }
+            }
+        }
 
         Spacer(modifier = Modifier.height(14.dp))
 

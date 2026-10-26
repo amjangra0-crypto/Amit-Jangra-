@@ -114,7 +114,9 @@ import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Psychology
 import com.example.ui.components.WorkflowInputBox
 import com.example.ui.components.WorkflowInteractiveDialog
-import com.example.ui.components.WorkflowSelectorPills
+import com.example.export.VideoExportStatus
+import com.example.ui.components.RecentExportsStudioPanel
+import com.example.ui.components.VideoExportProgressBarComponent
 import com.example.ui.theme.AnimeCyan
 import com.example.ui.theme.AnimeCyanLight
 import com.example.ui.theme.AnimeGold
@@ -851,7 +853,7 @@ fun StudioCreateScreen(viewModel: AnimeViewModel) {
         // Creative Capabilities
         Column(modifier = Modifier.padding(horizontal = 16.dp)) {
             Text(
-                text = AppLocaleStrings.tr(state.selectedLanguage, "⚡ Creative Capabilities:", "⚡ निर्माण क्षमताएं (Capabilities):"),
+                text = AppLocaleStrings.tr(state.selectedLanguage, "⚡ Creative Capabilities:", "⚡ निर्माण क्षमताएं:"),
                 color = TextSecondary,
                 fontSize = 13.sp,
                 fontWeight = FontWeight.SemiBold
@@ -860,12 +862,12 @@ fun StudioCreateScreen(viewModel: AnimeViewModel) {
             LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 val capabilities = if (AppLocaleStrings.isHindi(state.selectedLanguage)) {
                     listOf(
-                        "🎬 वीडियो जनरेट (Video Generate)",
-                        "🎙️ वॉयस जनरेट (Voice Generate)",
-                        "🖼️ विजुअल कंटेंट (Visual Content)",
-                        "🌐 ट्रांसलेशन (Translation)",
-                        "⚡ एक्शन एनिमेशन (Action Animation)",
-                        "🎼 बीजीएम व साउंडट्रैक (Soundtrack)"
+                        "🎬 वीडियो निर्माण",
+                        "🎙️ आवाज निर्माण",
+                        "🖼️ दृश्य सामग्री",
+                        "🌐 भाषा अनुवाद",
+                        "⚡ एक्शन एनिमेशन",
+                        "🎼 पृष्ठभूमि संगीत"
                     )
                 } else {
                     listOf(
@@ -1029,7 +1031,7 @@ fun StudioCreateScreen(viewModel: AnimeViewModel) {
                 Icon(Icons.Default.AutoAwesome, contentDescription = null, tint = AnimeCyan, modifier = Modifier.size(18.dp))
                 Spacer(modifier = Modifier.width(6.dp))
                 Text(
-                    text = AppLocaleStrings.tr(state.selectedLanguage, "⚡ Anime Motion Effects:", "⚡ एनिमे मोशन इफेक्ट्स (Motion Effects):"),
+                    text = AppLocaleStrings.tr(state.selectedLanguage, "⚡ Anime Motion Effects:", "⚡ एनिमे मोशन प्रभाव:"),
                     color = TextPrimary,
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Bold
@@ -1070,7 +1072,7 @@ fun StudioCreateScreen(viewModel: AnimeViewModel) {
                 Icon(Icons.Default.Translate, contentDescription = null, tint = AnimeCyan, modifier = Modifier.size(18.dp))
                 Spacer(modifier = Modifier.width(6.dp))
                 Text(
-                    text = AppLocaleStrings.tr(state.selectedLanguage, "🌐 Multi-Language Video Studio:", "🌐 बहुभाषी वीडियो निर्माण (Multi-Language Studio):"),
+                    text = AppLocaleStrings.tr(state.selectedLanguage, "🌐 Multi-Language Video Studio:", "🌐 बहुभाषी वीडियो निर्माण:"),
                     color = TextPrimary,
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Bold
@@ -1078,7 +1080,7 @@ fun StudioCreateScreen(viewModel: AnimeViewModel) {
             }
             Spacer(modifier = Modifier.height(4.dp))
             Text(
-                text = AppLocaleStrings.tr(state.selectedLanguage, "Choose language for script & voiceover (English, Japanese, Hindi etc.):", "स्क्रिप्ट और वॉइसओवर के लिए भाषा चुनें (Japanese, English, Chinese, Hindi etc.):"),
+                text = AppLocaleStrings.tr(state.selectedLanguage, "Choose language for script & voiceover (English, Japanese, Hindi etc.):", "स्क्रिप्ट और वॉइसओवर के लिए भाषा चुनें (जापानी, अंग्रेजी, हिंदी इत्यादि):"),
                 color = TextSecondary,
                 fontSize = 11.sp
             )
@@ -1086,7 +1088,7 @@ fun StudioCreateScreen(viewModel: AnimeViewModel) {
             LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 items(SupportedLanguage.values()) { lang ->
                     val isSelected = state.voiceoverLanguage.equals(lang.displayName, ignoreCase = true)
-                    val langLabel = if (AppLocaleStrings.isHindi(state.selectedLanguage)) "${lang.nativeName} (${lang.displayName})" else lang.displayName
+                    val langLabel = if (AppLocaleStrings.isHindi(state.selectedLanguage)) lang.nativeName else lang.displayName
                     FilterChip(
                         selected = isSelected,
                         onClick = { viewModel.setVoiceoverLanguage(lang.displayName) },
@@ -1109,7 +1111,7 @@ fun StudioCreateScreen(viewModel: AnimeViewModel) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(Icons.Default.Subtitles, contentDescription = null, tint = AnimeGold, modifier = Modifier.size(16.dp))
                 Spacer(modifier = Modifier.width(6.dp))
-                Text(AppLocaleStrings.tr(state.selectedLanguage, "Subtitle Display Mode:", "सबटाइटल डिस्प्ले मोड (Subtitle Mode):"), color = TextSecondary, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                Text(AppLocaleStrings.tr(state.selectedLanguage, "Subtitle Display Mode:", "सबटाइटल प्रदर्शन मोड:"), color = TextSecondary, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
             }
             Spacer(modifier = Modifier.height(6.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -1120,9 +1122,9 @@ fun StudioCreateScreen(viewModel: AnimeViewModel) {
                         onClick = { viewModel.setSubtitleMode(mode) },
                         label = {
                             val labelText = when (mode) {
-                                SubtitleMode.TRANSLATED_ONLY -> AppLocaleStrings.tr(state.selectedLanguage, "🌐 Translated Only", "🌐 केवल अनुवाद (Translated Only)")
-                                SubtitleMode.BILINGUAL_DUAL -> AppLocaleStrings.tr(state.selectedLanguage, "🎌+🌐 Bilingual Dual", "🎌+🌐 द्विभाषी (Bilingual Dual)")
-                                SubtitleMode.ORIGINAL_ONLY -> AppLocaleStrings.tr(state.selectedLanguage, "🎌 Original Only", "🎌 मूल भाषा (Original)")
+                                SubtitleMode.TRANSLATED_ONLY -> AppLocaleStrings.tr(state.selectedLanguage, "🌐 Translated Only", "🌐 केवल अनुवाद")
+                                SubtitleMode.BILINGUAL_DUAL -> AppLocaleStrings.tr(state.selectedLanguage, "🎌+🌐 Bilingual Dual", "🎌+🌐 द्विभाषी")
+                                SubtitleMode.ORIGINAL_ONLY -> AppLocaleStrings.tr(state.selectedLanguage, "🎌 Original Only", "🎌 मूल भाषा")
                             }
                             Text(labelText, fontSize = 11.sp)
                         },
@@ -1140,19 +1142,31 @@ fun StudioCreateScreen(viewModel: AnimeViewModel) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(Icons.Default.GraphicEq, contentDescription = null, tint = AnimePink, modifier = Modifier.size(16.dp))
                 Spacer(modifier = Modifier.width(6.dp))
-                Text(AppLocaleStrings.tr(state.selectedLanguage, "Voice Accent & Dubbing Cadence:", "डबिंग लहज़ा व एक्सेंट (Voice Accent & Dubbing):"), color = TextSecondary, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                Text(AppLocaleStrings.tr(state.selectedLanguage, "Voice Accent & Dubbing Cadence:", "डबिंग लहज़ा व गति:"), color = TextSecondary, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
             }
             Spacer(modifier = Modifier.height(6.dp))
             LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                val accents = listOf(
-                    "Hindi Dub (Heroic Bollywood Anime)",
-                    "Korean Dramatic (Manhwa Style)",
-                    "Tokyo Standard Anime (Japanese Cadence)",
-                    "American Heroic Action",
-                    "British Aristocrat / Royal",
-                    "Spanish Passionate Dub",
-                    "French Sophisticated Anime"
-                )
+                val accents = if (AppLocaleStrings.isHindi(state.selectedLanguage)) {
+                    listOf(
+                        "हिंदी डब (वीरतापूर्ण)",
+                        "कोरियन ड्रामाटिक (मन्हवा शैली)",
+                        "टोक्यो मानक एनिमे (जापानी लहज़ा)",
+                        "अमेरिकी एक्शन डब",
+                        "ब्रिटिश शाही लहज़ा",
+                        "स्पैनिश भावुक डब",
+                        "फ्रेंच एनिमे शैली"
+                    )
+                } else {
+                    listOf(
+                        "Hindi Dub (Heroic Bollywood Anime)",
+                        "Korean Dramatic (Manhwa Style)",
+                        "Tokyo Standard Anime (Japanese Cadence)",
+                        "American Heroic Action",
+                        "British Aristocrat / Royal",
+                        "Spanish Passionate Dub",
+                        "French Sophisticated Anime"
+                    )
+                }
                 items(accents) { accent ->
                     val isSel = state.selectedVoiceAccent.equals(accent, ignoreCase = true)
                     FilterChip(
@@ -1304,7 +1318,7 @@ fun StudioCreateScreen(viewModel: AnimeViewModel) {
                                 Spacer(modifier = Modifier.height(6.dp))
                                 Text(visual.promptDescription, color = TextSecondary, fontSize = 11.sp, maxLines = 2)
 
-                                Spacer(modifier = Modifier.height(10.dp))
+                                 Spacer(modifier = Modifier.height(10.dp))
                                 Button(
                                     onClick = { viewModel.applyVisualToActiveScene(visual) },
                                     colors = ButtonDefaults.buttonColors(containerColor = AnimePurple),
@@ -1313,7 +1327,7 @@ fun StudioCreateScreen(viewModel: AnimeViewModel) {
                                 ) {
                                     Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(14.dp))
                                     Spacer(modifier = Modifier.width(6.dp))
-                                    Text(AppLocaleStrings.tr(state.selectedLanguage, "Apply to Current Anime Scene", "सक्रिय एनिमे सीन में लागू करें (Apply to Current Scene)"), fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                                    Text(AppLocaleStrings.tr(state.selectedLanguage, "Apply to Current Anime Scene", "सक्रिय एनिमे दृश्य में लागू करें"), fontSize = 11.sp, fontWeight = FontWeight.Bold)
                                 }
                             }
                         }
@@ -1379,7 +1393,7 @@ fun StudioCreateScreen(viewModel: AnimeViewModel) {
                         Icon(Icons.Default.Videocam, contentDescription = null, tint = AnimeGold, modifier = Modifier.size(18.dp))
                         Spacer(modifier = Modifier.width(6.dp))
                         Text(
-                            text = "Video Generation Mode Settings",
+                            text = AppLocaleStrings.tr(state.selectedLanguage, "Video Generation Mode Settings", "वीडियो निर्माण मोड सेटिंग्स"),
                             color = TextPrimary,
                             fontSize = 13.sp,
                             fontWeight = FontWeight.Bold
@@ -1393,7 +1407,7 @@ fun StudioCreateScreen(viewModel: AnimeViewModel) {
                             .padding(horizontal = 6.dp, vertical = 2.dp)
                     ) {
                         Text(
-                            text = if (isExplainerActive) "Narrative Driven" else "Character Lip-Sync",
+                            text = if (isExplainerActive) AppLocaleStrings.tr(state.selectedLanguage, "Narrative Driven", "कथा आधारित") else AppLocaleStrings.tr(state.selectedLanguage, "Character Lip-Sync", "पात्र लिप-सिंक"),
                             color = if (isExplainerActive) AnimeCyan else AnimeGold,
                             fontSize = 9.sp,
                             fontWeight = FontWeight.Bold
@@ -1507,7 +1521,7 @@ fun StudioCreateScreen(viewModel: AnimeViewModel) {
                     )
                     Spacer(modifier = Modifier.width(6.dp))
                     Text(
-                        text = if (state.isPlayingVideo) "Pause" else "Preview",
+                        text = if (state.isPlayingVideo) AppLocaleStrings.tr(state.selectedLanguage, "Pause", "विराम") else AppLocaleStrings.tr(state.selectedLanguage, "Preview", "पूर्वावलोकन"),
                         color = if (state.isPlayingVideo) AnimePink else AnimeCyan,
                         fontWeight = FontWeight.Bold,
                         fontSize = 13.sp
@@ -1515,6 +1529,27 @@ fun StudioCreateScreen(viewModel: AnimeViewModel) {
                 }
             }
         }
+
+        // Real-Time Video Export Progress Component (Encoding, Audio Mix, Finalizing)
+        val exportProgress by viewModel.videoExportProgress.collectAsState()
+        if (exportProgress.status != VideoExportStatus.IDLE) {
+            Spacer(modifier = Modifier.height(14.dp))
+            VideoExportProgressBarComponent(
+                progress = exportProgress,
+                lang = state.selectedLanguage,
+                onCancel = { viewModel.cancelExport() },
+                modifier = Modifier.padding(horizontal = 16.dp)
+            )
+        }
+
+        Spacer(modifier = Modifier.height(14.dp))
+
+        // Recent Exports Panel in Studio Tab
+        RecentExportsStudioPanel(
+            viewModel = viewModel,
+            lang = state.selectedLanguage,
+            modifier = Modifier.padding(horizontal = 16.dp)
+        )
 
         Spacer(modifier = Modifier.height(16.dp))
 

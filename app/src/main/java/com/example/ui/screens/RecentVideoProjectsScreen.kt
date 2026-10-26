@@ -101,6 +101,8 @@ import com.example.data.db.SavedScriptEntity
 import com.example.data.model.AnimeScript
 import com.example.ui.AnimeViewModel
 import com.example.ui.AppTab
+import com.example.export.VideoExportStatus
+import com.example.ui.components.ExportCircularProgressThumbnailOverlay
 import com.example.ui.components.ProjectQuickVideoPreviewModal
 import com.example.ui.components.ProjectThumbnailVideoPreview
 import com.example.ui.components.ResourceHelpers
@@ -397,6 +399,7 @@ fun RecentVideoProjectsScreen(viewModel: AnimeViewModel) {
                     script = script,
                     statusInfo = statusInfo,
                     viewModel = viewModel,
+                    lang = state.selectedLanguage,
                     onPlayVideo = {
                         viewModel.loadSavedScript(entity)
                         viewModel.setTab(AppTab.PLAYER)
@@ -681,6 +684,7 @@ private fun RecentVideoProjectCard(
     script: AnimeScript?,
     statusInfo: ProjectStatusInfo,
     viewModel: AnimeViewModel,
+    lang: String = "English",
     onPlayVideo: () -> Unit,
     onEditDetails: () -> Unit = {},
     onEditInStudio: () -> Unit,
@@ -703,6 +707,14 @@ private fun RecentVideoProjectCard(
             "Recently"
         }
     }
+
+    val exportProgress by viewModel.videoExportProgress.collectAsState()
+    val isExportingThisProject = exportProgress.scriptId == entity.id &&
+        (exportProgress.status == VideoExportStatus.PREPARING ||
+         exportProgress.status == VideoExportStatus.RENDERING_SCENES ||
+         exportProgress.status == VideoExportStatus.ENCODING_VIDEO ||
+         exportProgress.status == VideoExportStatus.PROCESSING_AUDIO ||
+         exportProgress.status == VideoExportStatus.SAVING_FILE)
 
     Card(
         modifier = Modifier
@@ -727,6 +739,13 @@ private fun RecentVideoProjectCard(
                     onOpenFullPreview = onQuickPreview
                 )
 
+                // Real-time circular progress indicator overlay during active video export/render
+                ExportCircularProgressThumbnailOverlay(
+                    isExporting = isExportingThisProject,
+                    progressPercent = exportProgress.progressPercent,
+                    modifier = Modifier.fillMaxSize()
+                )
+
                 // Top Left: Project Status Pill (Glowing)
                 Box(
                     modifier = Modifier
@@ -746,7 +765,7 @@ private fun RecentVideoProjectCard(
                         )
                         Spacer(modifier = Modifier.width(6.dp))
                         Text(
-                            text = statusInfo.labelHindi,
+                            text = if (AppLocaleStrings.isHindi(lang)) statusInfo.labelHindi else statusInfo.labelEnglish,
                             color = Color.White,
                             fontSize = 10.sp,
                             fontWeight = FontWeight.Bold

@@ -91,6 +91,7 @@ import com.example.ui.AppTab
 import com.example.ui.components.CurrencyExchangeDialog
 import com.example.ui.components.OwnerBarcodeScannerDialog
 import com.example.ui.components.OwnerWalletBarcodeCard
+import com.example.ui.components.OwnerMiniBankDialog
 import com.example.ui.theme.AnimeCyan
 import com.example.ui.theme.AnimeGold
 import com.example.ui.theme.AnimeGreen
@@ -126,6 +127,7 @@ fun WalletScreen(
     var selectedCurrency by remember { mutableStateOf(CurrencyType.INR) }
     var showExchangeDialog by remember { mutableStateOf(false) }
     var showBarcodeScanner by remember { mutableStateOf(false) }
+    var showOwnerMiniBankDialog by remember { mutableStateOf(false) }
 
     // Withdrawal Form State
     var selectedWithdrawMode by remember { mutableStateOf("UPI") } // "UPI", "BANK_RTGS", "BANK_NEFT", "PAYTM", "PAYPAL"
@@ -272,6 +274,25 @@ fun WalletScreen(
                     isOwnerSelfView = true,
                     modifier = Modifier.fillMaxWidth()
                 )
+
+                if (currentUser.isOwner) {
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Button(
+                        onClick = { showOwnerMiniBankDialog = true },
+                        colors = ButtonDefaults.buttonColors(containerColor = AnimeCyan),
+                        shape = RoundedCornerShape(10.dp),
+                        modifier = Modifier.fillMaxWidth().height(42.dp).testTag("wallet_open_mini_bank_btn")
+                    ) {
+                        Icon(Icons.Default.AccountBalance, contentDescription = null, tint = Color.Black, modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = "👑 Open Owner Mini Bank (All Currencies & AI Agent)",
+                            color = Color.Black,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 11.sp
+                        )
+                    }
+                }
 
                 Spacer(modifier = Modifier.height(18.dp))
 
@@ -699,6 +720,14 @@ fun WalletScreen(
                 showBarcodeScanner = false
             },
             onDismiss = { showBarcodeScanner = false }
+        )
+    }
+
+    if (showOwnerMiniBankDialog && currentUser.isOwner) {
+        OwnerMiniBankDialog(
+            viewModel = viewModel,
+            lang = uiState.selectedLanguage,
+            onDismiss = { showOwnerMiniBankDialog = false }
         )
     }
 }

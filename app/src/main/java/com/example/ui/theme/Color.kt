@@ -91,6 +91,37 @@ object AppThemeController {
         persist(context)
     }
 
+    fun setThemeMode(mode: String, context: Context? = null) {
+        when (mode.uppercase()) {
+            "LIGHT" -> {
+                isDarkMode = false
+                currentThemeKey = "WHITE_MINIMAL"
+                customAccentColor = null
+                isFollowSystemTheme = false
+            }
+            "DARK" -> {
+                isDarkMode = true
+                currentThemeKey = "WHITE_MINIMAL"
+                customAccentColor = null
+                isFollowSystemTheme = false
+            }
+            "NEON_ANIME" -> {
+                isDarkMode = true
+                currentThemeKey = "NEON_ANIME"
+                customAccentColor = null
+                isFollowSystemTheme = false
+            }
+        }
+        persist(context)
+    }
+
+    val themeMode: String
+        get() = when {
+            currentThemeKey == "NEON_ANIME" -> "NEON_ANIME"
+            isDarkMode -> "DARK"
+            else -> "LIGHT"
+        }
+
     private fun persist(context: Context?) {
         if (context == null) return
         try {
@@ -269,6 +300,26 @@ object VibrantThemePresets {
             mutedColor = Color(0xFFF1F5F9),
             mutedForeground = Color(0xFF64748B),
             accentColor = Color(0xFF4F46E5)
+        ),
+        VibrantThemeInfo(
+            key = "NEON_ANIME",
+            nameEn = "Neon Anime",
+            nameHi = "नियॉन एनीमे",
+            emoji = "⚡",
+            category = "Anime Themes",
+            primaryColor = Color(0xFF8B5CF6),
+            secondaryColor = Color(0xFF06B6D4),
+            darkBackground = Color(0xFF0D0A1A),
+            darkSurface = Color(0xFF17122A),
+            darkSurfaceVariant = Color(0xFF241B42),
+            lightBackground = Color(0xFFFAF5FF),
+            lightSurface = Color(0xFFFFFFFF),
+            lightSurfaceVariant = Color(0xFFF3E8FF),
+            lightBorderColor = Color(0xFFE9D5FF),
+            accentPink = Color(0xFFFF2A85),
+            accentGold = Color(0xFFFFD700),
+            accentGreen = Color(0xFF00FF9D),
+            accentColor = Color(0xFF8B5CF6)
         ),
 
         // ==========================================

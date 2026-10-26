@@ -69,6 +69,8 @@ data class VideoExportProgress(
     val totalFrames: Int = 0,
     val fps: Int = 30,
     val statusMessage: String = "",
+    val currentStep: String = "Encoding", // "Encoding", "Audio Mix", "Finalizing"
+    val estimatedSecondsRemaining: Int = 0,
     val outputFilePath: String = "",
     val fileSizeBytes: Long = 0L,
     val durationSeconds: Int = 0,
@@ -136,14 +138,24 @@ class VideoSequenceExportManager(
                 Log.i(TAG, "Export cancelled by user")
                 _exportProgress.value = _exportProgress.value.copy(
                     status = VideoExportStatus.CANCELLED,
-                    statusMessage = "एक्सपोर्ट रद्द कर दिया गया।"
+                    statusMessage = com.example.localization.AppLocaleStrings.tr(
+                        targetLanguage,
+                        "Export was cancelled by user.",
+                        "एक्सपोर्ट उपयोगकर्ता द्वारा रद्द कर दिया गया।"
+                    ),
+                    estimatedSecondsRemaining = 0
                 )
             } catch (e: Exception) {
                 Log.e(TAG, "Export error: ${e.message}", e)
                 _exportProgress.value = _exportProgress.value.copy(
                     status = VideoExportStatus.FAILED,
-                    statusMessage = "एक्सपोर्ट में त्रुटि: ${e.localizedMessage ?: "Unknown Error"}",
-                    errorMessage = e.message
+                    statusMessage = com.example.localization.AppLocaleStrings.tr(
+                        targetLanguage,
+                        "Export error: ${e.localizedMessage ?: "Unknown Error"}",
+                        "एक्सपोर्ट में त्रुटि: ${e.localizedMessage ?: "Unknown Error"}"
+                    ),
+                    errorMessage = e.message,
+                    estimatedSecondsRemaining = 0
                 )
             }
         }
@@ -158,7 +170,8 @@ class VideoSequenceExportManager(
         activeExportJob?.cancel()
         _exportProgress.value = _exportProgress.value.copy(
             status = VideoExportStatus.CANCELLED,
-            statusMessage = "एक्सपोर्ट रद्द कर दिया गया।"
+            statusMessage = "Export cancelled.",
+            estimatedSecondsRemaining = 0
         )
     }
 
@@ -185,7 +198,13 @@ class VideoSequenceExportManager(
             framesRendered = 0,
             totalFrames = totalFrames,
             fps = VIDEO_FPS,
-            statusMessage = "🎬 वीडियो सीक्वेंसर और लोकल स्टोरेज डायरेक्टरी तैयार की जा रही है...",
+            statusMessage = com.example.localization.AppLocaleStrings.tr(
+                targetLanguage,
+                "🎬 Initializing video sequencer and storage...",
+                "🎬 वीडियो सीक्वेंसर और लोकल स्टोरेज तैयार हो रही है..."
+            ),
+            currentStep = "Encoding",
+            estimatedSecondsRemaining = 12,
             durationSeconds = durationSec,
             resolution = resolutionLabel
         )
@@ -205,7 +224,13 @@ class VideoSequenceExportManager(
         _exportProgress.value = _exportProgress.value.copy(
             status = VideoExportStatus.RENDERING_SCENES,
             progressPercent = 0.15f,
-            statusMessage = "⚡ करैक्टर एनिमेशन, विजुअल्स व डायलॉग सबटाइटल्स रेंडर हो रहे हैं..."
+            statusMessage = com.example.localization.AppLocaleStrings.tr(
+                targetLanguage,
+                "⚡ Rendering character animations and keyframes...",
+                "⚡ करैक्टर एनिमेशन, विजुअल्स व सबटाइटल्स रेंडर हो रहे हैं..."
+            ),
+            currentStep = "Encoding",
+            estimatedSecondsRemaining = 10
         )
 
         val keyframeBitmaps = mutableListOf<Bitmap>()
@@ -347,11 +372,18 @@ class VideoSequenceExportManager(
                 renderedFramesCount += (framesPerScene / 2)
 
                 val prog = 0.15f + (0.50f * (renderedFramesCount.toFloat() / totalFrames.toFloat()).coerceIn(0f, 1f))
+                val remainingSec = ((1.0f - prog) * 14).toInt().coerceAtLeast(1)
                 _exportProgress.value = _exportProgress.value.copy(
                     progressPercent = prog,
                     currentScene = sceneNumber,
                     framesRendered = renderedFramesCount,
-                    statusMessage = "⚡ दृश्य $sceneNumber/$totalScenes रेंडर हो रहा है (${(prog * 100).toInt()}%)..."
+                    statusMessage = com.example.localization.AppLocaleStrings.tr(
+                        targetLanguage,
+                        "⚡ Rendering scene $sceneNumber/$totalScenes (${(prog * 100).toInt()}%)...",
+                        "⚡ दृश्य $sceneNumber/$totalScenes रेंडर हो रहा है (${(prog * 100).toInt()}%)..."
+                    ),
+                    currentStep = "Encoding",
+                    estimatedSecondsRemaining = remainingSec
                 )
 
                 delay(30)
@@ -362,14 +394,26 @@ class VideoSequenceExportManager(
         _exportProgress.value = _exportProgress.value.copy(
             status = VideoExportStatus.ENCODING_VIDEO,
             progressPercent = 0.70f,
-            statusMessage = "🎥 H.264 MP4 वीडियो स्ट्रीम एनकोड हो रही है..."
+            statusMessage = com.example.localization.AppLocaleStrings.tr(
+                targetLanguage,
+                "🎥 Encoding H.264 MP4 video stream...",
+                "🎥 H.264 MP4 वीडियो स्ट्रीम एनकोड हो रही है..."
+            ),
+            currentStep = "Encoding",
+            estimatedSecondsRemaining = 6
         )
         delay(150)
 
         _exportProgress.value = _exportProgress.value.copy(
             status = VideoExportStatus.PROCESSING_AUDIO,
             progressPercent = 0.85f,
-            statusMessage = "🎵 बैकग्राउंड म्यूजिक व वॉइस ट्रैक्स को MP4 कंटेनर में मक्स किया जा रहा है..."
+            statusMessage = com.example.localization.AppLocaleStrings.tr(
+                targetLanguage,
+                "🎵 Mixing BGM score and dialogue audio tracks...",
+                "🎵 बैकग्राउंड म्यूजिक व वॉइस ट्रैक्स को मक्स किया जा रहा है..."
+            ),
+            currentStep = "Audio Mix",
+            estimatedSecondsRemaining = 3
         )
         delay(150)
 
@@ -377,7 +421,13 @@ class VideoSequenceExportManager(
         _exportProgress.value = _exportProgress.value.copy(
             status = VideoExportStatus.SAVING_FILE,
             progressPercent = 0.92f,
-            statusMessage = "💾 लोकल स्टोरेज में MP4 फाइल राइट की जा रही है..."
+            statusMessage = com.example.localization.AppLocaleStrings.tr(
+                targetLanguage,
+                "💾 Finalizing MP4 container into storage...",
+                "💾 स्टोरेज में MP4 फाइल राइट की जा रही है..."
+            ),
+            currentStep = "Finalizing",
+            estimatedSecondsRemaining = 1
         )
 
         // Write a compliant MP4 ISO BMFF container with valid AVC1 video track and AAC sound track
@@ -427,7 +477,9 @@ class VideoSequenceExportManager(
             progressPercent = 1.0f,
             statusMessage = "✅ ${exportResult.displayMessage} (${formatFileSize(finalSizeBytes)})",
             outputFilePath = if (exportResult.targetPathOrUri.isNotBlank()) exportResult.targetPathOrUri else mp4File.absolutePath,
-            fileSizeBytes = finalSizeBytes
+            fileSizeBytes = finalSizeBytes,
+            currentStep = "Finalizing",
+            estimatedSecondsRemaining = 0
         )
     }
 

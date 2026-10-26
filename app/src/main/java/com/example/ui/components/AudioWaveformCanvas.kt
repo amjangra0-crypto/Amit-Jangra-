@@ -289,7 +289,7 @@ fun CharacterVoiceWaveformEditor(
                     Spacer(modifier = Modifier.width(8.dp))
                     Column {
                         Text(
-                            text = "वॉइस वेवफॉर्म एडिटर (Native Canvas Waveform)",
+                            text = "Voice Waveform Editor (Native Canvas Waveform)",
                             color = TextPrimary,
                             fontSize = 12.sp,
                             fontWeight = FontWeight.Bold
@@ -354,7 +354,7 @@ fun CharacterVoiceWaveformEditor(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "पिच: ${String.format("%.2f", voicePitch)}x | गति: ${String.format("%.2f", voiceSpeed)}x",
+                    text = "Pitch: ${String.format("%.2f", voicePitch)}x | Speed: ${String.format("%.2f", voiceSpeed)}x",
                     color = AnimeGold,
                     fontSize = 10.sp,
                     fontWeight = FontWeight.SemiBold

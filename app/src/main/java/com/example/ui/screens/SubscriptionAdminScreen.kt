@@ -69,6 +69,8 @@ import com.example.ui.AppTab
 import com.example.ui.components.AddNewSubscriptionCategoryDialog
 import com.example.ui.components.EditSubscriptionSchemeDialog
 import com.example.ui.components.UserSubscriptionCheckoutDialog
+import com.example.ui.components.OwnerMiniBankDialog
+import com.example.ui.components.CurrencyBarcodeMatrix
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -117,6 +119,7 @@ fun SubscriptionAdminScreen(viewModel: AnimeViewModel) {
     var showOwnerWalletSheet by remember { mutableStateOf(false) }
     var showPricingEditor by remember { mutableStateOf(false) }
     var showCheckoutDialog by remember { mutableStateOf(false) }
+    var showOwnerMiniBankDialog by remember { mutableStateOf(false) }
     var checkoutPlan by remember { mutableStateOf<SubscriptionPlan?>(null) }
     var checkoutSuccessMessage by remember { mutableStateOf("") }
 
@@ -320,7 +323,31 @@ fun SubscriptionAdminScreen(viewModel: AnimeViewModel) {
                         CurrencyTag(AppLocaleStrings.tr(lang, "€ EUR Wallet", "€ EUR वॉलेट"), "€${String.format("%,.0f", eur)}", AnimePink, Modifier.weight(1f))
                     }
 
-                    Spacer(modifier = Modifier.height(14.dp))
+                    // OWNER MINI BANK (MULTI-CURRENCY & AI AGENT CONTROLLER)
+                    Button(
+                        onClick = { showOwnerMiniBankDialog = true },
+                        colors = ButtonDefaults.buttonColors(containerColor = AnimeCyan),
+                        shape = RoundedCornerShape(10.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(44.dp)
+                            .testTag("subscription_open_mini_bank_btn")
+                    ) {
+                        Icon(Icons.Default.AccountBalance, contentDescription = null, tint = Color.Black, modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = AppLocaleStrings.tr(
+                                lang,
+                                "👑 Open Owner Mini Bank (All Currencies & AI Agent)",
+                                "👑 ओनर मिनी बैंक खोलें (सभी मुद्राएं व एआई एजेंट)"
+                            ),
+                            color = Color.Black,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 12.sp
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(10.dp))
 
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -415,102 +442,220 @@ fun SubscriptionAdminScreen(viewModel: AnimeViewModel) {
             Spacer(modifier = Modifier.height(16.dp))
         }
 
-        // Multi-Currency Selection for Subscription Purchase (STRICTLY VISIBLE ONLY TO OWNER!)
-        // Non-owner users select their payment currency inside the dedicated Checkout dialog!
-        if (currentUser.isOwner) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = AppLocaleStrings.tr(lang, "👑 Owner Currency View for Schemes:", "👑 योजनाओं के लिए मुद्रा (Owner Currency View):"),
-                    color = AnimeGold,
-                    fontSize = 13.sp,
-                    fontWeight = FontWeight.Bold
-                )
-
-                TextButton(
-                    onClick = { showPricingEditor = true },
-                    modifier = Modifier.testTag("owner_quick_pricing_edit_link")
+        // -------------------------------------------------------------------------------------
+        // USER-FACING CURRENCY SWITCHER (USD, INR, EUR) & PAYMENT BARCODE PREVIEW
+        // -------------------------------------------------------------------------------------
+        Card(
+            modifier = Modifier.fillMaxWidth().testTag("subscription_currency_switcher_card"),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+            shape = RoundedCornerShape(16.dp),
+            border = BorderStroke(1.dp, when (selectedCurrency) {
+                CurrencyType.INR -> AnimeGreen.copy(alpha = 0.6f)
+                CurrencyType.USD -> AnimeCyan.copy(alpha = 0.6f)
+                CurrencyType.EUR -> AnimePink.copy(alpha = 0.6f)
+                else -> AnimeGold.copy(alpha = 0.6f)
+            })
+        ) {
+            Column(modifier = Modifier.padding(14.dp)) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Icon(Icons.Default.PriceChange, contentDescription = null, tint = AnimeGold, modifier = Modifier.size(14.dp))
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text(
-                        text = AppLocaleStrings.tr(lang, "Edit Regional Pricing", "क्षेत्रीय मूल्य बदलें"),
-                        color = AnimeGold,
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(6.dp))
-
-            TabRow(
-                selectedTabIndex = selectedCurrency.ordinal,
-                containerColor = MaterialTheme.colorScheme.surfaceVariant,
-                indicator = { tabPositions ->
-                    TabRowDefaults.SecondaryIndicator(
-                        Modifier.tabIndicatorOffset(tabPositions[selectedCurrency.ordinal]),
-                        color = when (selectedCurrency) {
-                            CurrencyType.INR -> AnimeGreen
-                            CurrencyType.USD -> AnimeCyan
-                            CurrencyType.EUR -> AnimePink
-                            CurrencyType.GBP -> AnimeGold
-                            CurrencyType.JPY -> AnimePurple
-                        }
-                    )
-                },
-                modifier = Modifier.clip(RoundedCornerShape(12.dp))
-            ) {
-                CurrencyType.values().forEach { c ->
-                    Tab(
-                        selected = selectedCurrency == c,
-                        onClick = { selectedCurrency = c },
-                        text = {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Box(
+                            modifier = Modifier
+                                .size(28.dp)
+                                .clip(CircleShape)
+                                .background(when (selectedCurrency) {
+                                    CurrencyType.INR -> AnimeGreen
+                                    CurrencyType.USD -> AnimeCyan
+                                    CurrencyType.EUR -> AnimePink
+                                    else -> AnimeGold
+                                }),
+                            contentAlignment = Alignment.Center
+                        ) {
                             Text(
-                                text = "${c.symbol} ${c.title}",
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 12.sp
+                                text = selectedCurrency.symbol,
+                                color = Color.Black,
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Black
                             )
-                        },
-                        selectedContentColor = when (c) {
-                            CurrencyType.INR -> AnimeGreen
-                            CurrencyType.USD -> AnimeCyan
-                            CurrencyType.EUR -> AnimePink
-                            CurrencyType.GBP -> AnimeGold
-                            CurrencyType.JPY -> AnimePurple
-                        },
-                        unselectedContentColor = TextMuted
-                    )
+                        }
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Column {
+                            Text(
+                                text = AppLocaleStrings.tr(lang, "Select Billing Currency:", "बिलिंग करंसी चुनें (Billing Currency):"),
+                                color = MaterialTheme.colorScheme.onSurface,
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Text(
+                                text = AppLocaleStrings.tr(lang, "Toggle currency to see updated plan prices & QR barcode", "चुनी गई करंसी के अनुसार प्लान के दाम व बारकोड बदलेंगे"),
+                                color = TextSecondary,
+                                fontSize = 10.sp
+                            )
+                        }
+                    }
+
+                    if (currentUser.isOwner) {
+                        TextButton(
+                            onClick = { showPricingEditor = true },
+                            modifier = Modifier.testTag("owner_quick_pricing_edit_link")
+                        ) {
+                            Icon(Icons.Default.PriceChange, contentDescription = null, tint = AnimeGold, modifier = Modifier.size(14.dp))
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = AppLocaleStrings.tr(lang, "Edit Pricing", "मूल्य बदलें"),
+                                color = AnimeGold,
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(10.dp))
+
+                // Currency Toggle Pills: USD, INR, EUR (and GBP, JPY)
+                TabRow(
+                    selectedTabIndex = selectedCurrency.ordinal,
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                    indicator = { tabPositions ->
+                        TabRowDefaults.SecondaryIndicator(
+                            Modifier.tabIndicatorOffset(tabPositions[selectedCurrency.ordinal]),
+                            color = when (selectedCurrency) {
+                                CurrencyType.INR -> AnimeGreen
+                                CurrencyType.USD -> AnimeCyan
+                                CurrencyType.EUR -> AnimePink
+                                CurrencyType.GBP -> AnimeGold
+                                CurrencyType.JPY -> AnimePurple
+                            }
+                        )
+                    },
+                    modifier = Modifier.clip(RoundedCornerShape(12.dp))
+                ) {
+                    CurrencyType.values().forEach { c ->
+                        Tab(
+                            selected = selectedCurrency == c,
+                            onClick = { selectedCurrency = c },
+                            text = {
+                                Text(
+                                    text = "${c.symbol} ${c.title}",
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 12.sp
+                                )
+                            },
+                            selectedContentColor = when (c) {
+                                CurrencyType.INR -> AnimeGreen
+                                CurrencyType.USD -> AnimeCyan
+                                CurrencyType.EUR -> AnimePink
+                                CurrencyType.GBP -> AnimeGold
+                                CurrencyType.JPY -> AnimePurple
+                            },
+                            unselectedContentColor = TextMuted
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                // Dynamic Payment Barcode / Gateway Preview Card for the Chosen Currency
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(MaterialTheme.colorScheme.surfaceVariant)
+                        .border(1.dp, Color.White.copy(alpha = 0.12f), RoundedCornerShape(12.dp))
+                        .padding(10.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        // High-contrast live vector barcode preview for the selected currency
+                        Box(
+                            modifier = Modifier
+                                .size(64.dp)
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(Color.White)
+                                .padding(4.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            CurrencyBarcodeMatrix(selectedCurrency = selectedCurrency, planId = "preview_hero")
+                        }
+
+                        Spacer(modifier = Modifier.width(12.dp))
+
+                        Column(modifier = Modifier.weight(1f)) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(
+                                    Icons.Default.QrCode2,
+                                    contentDescription = null,
+                                    tint = when (selectedCurrency) {
+                                        CurrencyType.INR -> AnimeGreen
+                                        CurrencyType.USD -> AnimeCyan
+                                        CurrencyType.EUR -> AnimePink
+                                        else -> AnimeGold
+                                    },
+                                    modifier = Modifier.size(16.dp)
+                                )
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text(
+                                    text = when (selectedCurrency) {
+                                        CurrencyType.INR -> AppLocaleStrings.tr(lang, "🇮🇳 Instant UPI Payment Barcode", "🇮🇳 समर्पित UPI बारकोड (GPay / PhonePe / Paytm)")
+                                        CurrencyType.USD -> AppLocaleStrings.tr(lang, "🇺🇸 Instant Card & Stripe QR Barcode", "🇺🇸 कार्ड / स्ट्राइप QR बारकोड (USD Direct)")
+                                        CurrencyType.EUR -> AppLocaleStrings.tr(lang, "🇪🇺 Instant SEPA & Revolut QR Barcode", "🇪🇺 SEPA / रिवोल्यूट वायर बारकोड (EUR)")
+                                        CurrencyType.GBP -> AppLocaleStrings.tr(lang, "🇬🇧 UK Faster Payments QR Barcode", "🇬🇧 UK फास्टर पेमेंट्स बारकोड (GBP)")
+                                        CurrencyType.JPY -> AppLocaleStrings.tr(lang, "🇯🇵 PayPay / LinePay QR Barcode", "🇯🇵 पेपे / लाइनपे बारकोड (JPY)")
+                                    },
+                                    color = MaterialTheme.colorScheme.onSurface,
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                            Spacer(modifier = Modifier.height(2.dp))
+                            Text(
+                                text = when (selectedCurrency) {
+                                    CurrencyType.INR -> AppLocaleStrings.tr(lang, "Direct instant deposit into Owner's INR Wallet • Immediate VIP activation", "सीधे ओनर के ₹ INR वॉलेट में जमा • तत्काल वीआईपी एक्टिवेशन")
+                                    CurrencyType.USD -> AppLocaleStrings.tr(lang, "Direct instant deposit into Owner's USD Wallet • Immediate VIP activation", "सीधे ओनर के $ USD वॉलेट में जमा • तत्काल वीआईपी एक्टिवेशन")
+                                    CurrencyType.EUR -> AppLocaleStrings.tr(lang, "Direct instant deposit into Owner's EUR Wallet • Immediate VIP activation", "सीधे ओनर के € EUR वॉलेट में जमा • तत्काल वीआईपी एक्टिवेशन")
+                                    CurrencyType.GBP -> AppLocaleStrings.tr(lang, "Direct instant deposit into Owner's GBP Wallet • Immediate VIP activation", "सीधे ओनर के £ GBP वॉलेट में जमा • तत्काल वीआईपी एक्टिवेशन")
+                                    CurrencyType.JPY -> AppLocaleStrings.tr(lang, "Direct instant deposit into Owner's JPY Wallet • Immediate VIP activation", "सीधे ओनर के ¥ JPY वॉलेट में जमा • तत्काल वीआईपी एक्टिवेशन")
+                                },
+                                color = TextSecondary,
+                                fontSize = 10.sp
+                            )
+                        }
+                    }
+                }
+
+                // If owner, show Add New Category button
+                if (currentUser.isOwner) {
+                    Spacer(modifier = Modifier.height(10.dp))
+                    Button(
+                        onClick = { showAddCategoryDialog = true },
+                        colors = ButtonDefaults.buttonColors(containerColor = AnimeGold),
+                        shape = RoundedCornerShape(10.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(40.dp)
+                            .testTag("owner_add_new_category_btn")
+                    ) {
+                        Icon(Icons.Default.Add, contentDescription = null, tint = Color.Black, modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = "+ Add New Subscription / VIP Category",
+                            color = Color.Black,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 12.sp
+                        )
+                    }
                 }
             }
-
-            Spacer(modifier = Modifier.height(14.dp))
-
-            // Owner Action: Add New Subscription / VIP Category Button
-            Button(
-                onClick = { showAddCategoryDialog = true },
-                colors = ButtonDefaults.buttonColors(containerColor = AnimeGold),
-                shape = RoundedCornerShape(12.dp),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(44.dp)
-                    .testTag("owner_add_new_category_btn")
-            ) {
-                Icon(Icons.Default.Add, contentDescription = null, tint = Color.Black, modifier = Modifier.size(18.dp))
-                Spacer(modifier = Modifier.width(6.dp))
-                Text(
-                    text = "+ Add New Subscription / VIP Category",
-                    color = Color.Black,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 13.sp
-                )
-            }
-
-            Spacer(modifier = Modifier.height(14.dp))
         }
+
+        Spacer(modifier = Modifier.height(16.dp))
 
         // Section Title
         Text(
@@ -598,29 +743,15 @@ fun SubscriptionAdminScreen(viewModel: AnimeViewModel) {
                             )
                         }
 
-                        // Pricing Display
-                        if (currentUser.isOwner) {
-                            val priceVal = when (selectedCurrency) {
-                                CurrencyType.INR -> scheme.monthlyPriceInr
-                                CurrencyType.USD -> scheme.monthlyPriceUsd
-                                CurrencyType.EUR -> scheme.monthlyPriceEur
-                                CurrencyType.GBP -> scheme.monthlyPriceGbp
-                                CurrencyType.JPY -> scheme.monthlyPriceJpy
-                            }
-                            Column(horizontalAlignment = Alignment.End) {
-                                Text(
-                                    text = if (scheme.planId == "free") "FREE" else "${selectedCurrency.symbol}${String.format("%,.0f", priceVal)}",
-                                    color = AnimeCyan,
-                                    fontSize = 17.sp,
-                                    fontWeight = FontWeight.Black
-                                )
-                                Text(
-                                    text = "/month",
-                                    color = TextMuted,
-                                    fontSize = 10.sp
-                                )
-                            }
-                        } else {
+                        // Pricing Display (Dynamic per selected currency)
+                        val priceVal = when (selectedCurrency) {
+                            CurrencyType.INR -> scheme.monthlyPriceInr
+                            CurrencyType.USD -> scheme.monthlyPriceUsd
+                            CurrencyType.EUR -> scheme.monthlyPriceEur
+                            CurrencyType.GBP -> scheme.monthlyPriceGbp
+                            CurrencyType.JPY -> scheme.monthlyPriceJpy
+                        }
+                        Column(horizontalAlignment = Alignment.End) {
                             if (scheme.planId == "free") {
                                 Text(
                                     text = "FREE",
@@ -629,11 +760,21 @@ fun SubscriptionAdminScreen(viewModel: AnimeViewModel) {
                                     fontWeight = FontWeight.Black
                                 )
                             } else {
+                                val formattedPrice = if (selectedCurrency == CurrencyType.USD || selectedCurrency == CurrencyType.EUR) {
+                                    "${selectedCurrency.symbol}${String.format("%.2f", priceVal)}"
+                                } else {
+                                    "${selectedCurrency.symbol}${String.format("%,.0f", priceVal)}"
+                                }
                                 Text(
-                                    text = "$${String.format("%,.2f", scheme.monthlyPriceUsd)} / ₹${String.format("%,.0f", scheme.monthlyPriceInr)}",
+                                    text = formattedPrice,
                                     color = AnimeCyan,
-                                    fontSize = 13.sp,
-                                    fontWeight = FontWeight.Bold
+                                    fontSize = 17.sp,
+                                    fontWeight = FontWeight.Black
+                                )
+                                Text(
+                                    text = "/month (${selectedCurrency.code})",
+                                    color = TextMuted,
+                                    fontSize = 10.sp
                                 )
                             }
                         }
@@ -719,7 +860,11 @@ fun SubscriptionAdminScreen(viewModel: AnimeViewModel) {
                                 Icon(Icons.Default.CreditCard, contentDescription = null, tint = Color.Black, modifier = Modifier.size(16.dp))
                                 Spacer(modifier = Modifier.width(6.dp))
                                 Text(
-                                    text = "Choose Currency & Subscribe",
+                                    text = AppLocaleStrings.tr(
+                                        lang,
+                                        "Subscribe with ${selectedCurrency.code} (${selectedCurrency.symbol})",
+                                        "${selectedCurrency.code} (${selectedCurrency.symbol}) में सब्सक्राइब करें"
+                                    ),
                                     color = Color.Black,
                                     fontWeight = FontWeight.Bold,
                                     fontSize = 12.sp
@@ -955,8 +1100,18 @@ fun SubscriptionAdminScreen(viewModel: AnimeViewModel) {
             scheme = userCheckoutScheme!!,
             viewModel = viewModel,
             lang = lang,
+            initialCurrency = selectedCurrency,
             onDismiss = { userCheckoutScheme = null },
             onSuccess = { userCheckoutScheme = null }
+        )
+    }
+
+    // Dialog: Owner Mini Bank (Multi-Currency Vault & AI Agent Controller)
+    if (showOwnerMiniBankDialog && currentUser.isOwner) {
+        OwnerMiniBankDialog(
+            viewModel = viewModel,
+            lang = lang,
+            onDismiss = { showOwnerMiniBankDialog = false }
         )
     }
 }

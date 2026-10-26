@@ -37,8 +37,16 @@ class SocialMediaKnowledgeEngine private constructor(private val context: Contex
     private val _isSynthesizingKnowledge = MutableStateFlow(false)
     val isSynthesizingKnowledge: StateFlow<Boolean> = _isSynthesizingKnowledge.asStateFlow()
 
+    private val _isSocialLearningEnabled = MutableStateFlow(true)
+    val isSocialLearningEnabled: StateFlow<Boolean> = _isSocialLearningEnabled.asStateFlow()
+
     private val _lastImprovement = MutableStateFlow<KnowledgeImprovementResult?>(null)
     val lastImprovement: StateFlow<KnowledgeImprovementResult?> = _lastImprovement.asStateFlow()
+
+    fun setSocialLearningEnabled(enabled: Boolean) {
+        _isSocialLearningEnabled.value = enabled
+        Log.d(TAG, "Real-time Social Learning set to: $enabled")
+    }
 
     companion object {
         private const val TAG = "SocialKnowledgeEngine"
@@ -55,12 +63,28 @@ class SocialMediaKnowledgeEngine private constructor(private val context: Contex
 
     /**
      * Executes real-time knowledge retrieval, self-learning, and cinematic enhancement.
+     * If user has deactivated social media learning, passes prompt through cleanly.
      */
     suspend fun processCommandAndEnhanceProduction(
         command: String,
         currentPrompt: String,
         productionType: String = "Anime Episode / Webseries"
     ): KnowledgeImprovementResult = withContext(Dispatchers.IO) {
+        if (!_isSocialLearningEnabled.value) {
+            val deactivatedResult = KnowledgeImprovementResult(
+                originalCommand = command,
+                improvedCinematicPrompt = command.ifBlank { currentPrompt },
+                identifiedGenre = detectGenre(command),
+                learnedFromPlatforms = emptyList(),
+                appliedVisualDirection = "Standard User Direction (Social Learning Deactivated)",
+                appliedEditingTechnique = "Standard Editing (Social Learning Deactivated)",
+                appliedAudioMood = "Standard Sound (Social Learning Deactivated)",
+                compressedNodeId = "deactivated_local",
+                storageSavingsPercent = 0
+            )
+            _lastImprovement.value = deactivatedResult
+            return@withContext deactivatedResult
+        }
         _isSynthesizingKnowledge.value = true
         try {
             // 1. Check existing compressed knowledge in local device storage
@@ -140,15 +164,19 @@ class SocialMediaKnowledgeEngine private constructor(private val context: Contex
     private fun determineSourcePlatforms(command: String): List<String> {
         val platforms = mutableListOf<String>()
         val lower = command.lowercase()
-        if (lower.contains("reel") || lower.contains("insta") || lower.contains("aesthetic")) platforms.add("Instagram Reels")
-        if (lower.contains("short") || lower.contains("youtube") || lower.contains("viral")) platforms.add("YouTube Viral")
-        if (lower.contains("search") || lower.contains("google") || lower.contains("trending") || lower.contains("movie")) platforms.add("Google Trends")
-        if (lower.contains("tiktok") || lower.contains("sound") || lower.contains("transition")) platforms.add("TikTok")
+        if (lower.contains("reel") || lower.contains("insta") || lower.contains("instagram") || lower.contains("aesthetic")) platforms.add("Instagram Reels")
+        if (lower.contains("fb") || lower.contains("facebook") || lower.contains("meta")) platforms.add("Facebook Watch")
+        if (lower.contains("snap") || lower.contains("snapchat") || lower.contains("spotlight")) platforms.add("Snapchat Spotlight")
+        if (lower.contains("short") || lower.contains("youtube") || lower.contains("yt") || lower.contains("viral")) platforms.add("YouTube Shorts")
+        if (lower.contains("search") || lower.contains("google") || lower.contains("trending") || lower.contains("movie")) platforms.add("Google Trends & Search")
+        if (lower.contains("tiktok") || lower.contains("sound") || lower.contains("transition")) platforms.add("TikTok Viral")
 
         if (platforms.isEmpty()) {
-            platforms.add("Google Trends")
+            platforms.add("Google Search")
             platforms.add("Instagram Reels")
-            platforms.add("YouTube Viral")
+            platforms.add("Facebook Watch")
+            platforms.add("Snapchat Spotlight")
+            platforms.add("YouTube Shorts")
         }
         return platforms
     }

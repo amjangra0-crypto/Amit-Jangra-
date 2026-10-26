@@ -549,8 +549,13 @@ class MainActivity : ComponentActivity() {
                     if (showCountryPickerSheet) {
                         CountryCodePickerBottomSheet(
                             selectedCountry = selectedCountry,
+                            currentLanguage = state.selectedLanguage,
                             onCountrySelected = { country ->
                                 viewModel.selectCountry(country)
+                                showCountryPickerSheet = false
+                            },
+                            onLanguageSelected = { lang ->
+                                viewModel.setAppLanguage(lang)
                                 showCountryPickerSheet = false
                             },
                             onDismiss = { showCountryPickerSheet = false }

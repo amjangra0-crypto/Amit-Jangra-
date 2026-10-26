@@ -58,11 +58,15 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import com.example.export.VideoExportStatus
+import com.example.localization.AppLocaleStrings
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -94,6 +98,7 @@ import com.example.data.model.AnimeScene
 import com.example.data.model.AnimeScript
 import com.example.ui.AnimeViewModel
 import com.example.ui.theme.AnimeCyan
+import com.example.ui.theme.AnimeCyanLight
 import com.example.ui.theme.AnimeGold
 import com.example.ui.theme.AnimeGreen
 import com.example.ui.theme.AnimePink
@@ -125,6 +130,42 @@ fun ProjectThumbnailVideoPreview(
     val scenes = remember(script) { script?.scenes ?: emptyList() }
     val totalScenes = scenes.size.coerceAtLeast(1)
     val leadCharacter = remember(script) { script?.characters?.firstOrNull() }
+
+    val uiState by viewModel.uiState.collectAsState()
+    val exportProgress by viewModel.videoExportProgress.collectAsState()
+    val customExportProgress by viewModel.exportCustomProgress.collectAsState()
+    val customExportStage by viewModel.exportCustomStage.collectAsState()
+    val lang = uiState.selectedLanguage
+    val isHi = AppLocaleStrings.isHindi(lang)
+
+    // Real-time detection for video rendering or export tasks
+    val isDirectExportingThis = (exportProgress.scriptId == entity.id && exportProgress.status in listOf(
+        VideoExportStatus.PREPARING,
+        VideoExportStatus.RENDERING_SCENES,
+        VideoExportStatus.ENCODING_VIDEO,
+        VideoExportStatus.PROCESSING_AUDIO,
+        VideoExportStatus.SAVING_FILE
+    ))
+    val isCustomExportingThis = (customExportProgress in 0.01f..0.99f && (exportProgress.scriptId == entity.id || customExportStage.contains(entity.title, ignoreCase = true)))
+    val isGeneratingThis = (uiState.isGenerating && uiState.currentScript?.id == entity.id)
+    val isTaskActive = isDirectExportingThis || isCustomExportingThis || isGeneratingThis
+
+    val activeProgress: Float = when {
+        isDirectExportingThis -> (exportProgress.progressPercent / 100f).coerceIn(0f, 1f)
+        isCustomExportingThis -> customExportProgress.coerceIn(0f, 1f)
+        isGeneratingThis -> 0.5f
+        else -> 0f
+    }
+    val activeTaskMessage: String = when {
+        isDirectExportingThis -> exportProgress.statusMessage.ifBlank {
+            if (isHi) "वीडियो रेंडरिंग जारी..." else "Rendering Video Frames..."
+        }
+        isCustomExportingThis -> customExportStage
+        isGeneratingThis -> uiState.generationStep.ifBlank {
+            if (isHi) "एआई वीडियो जनरेशन..." else "AI Generating Scenes..."
+        }
+        else -> ""
+    }
 
     var isPreviewPlaying by remember { mutableStateOf(false) }
     var activePreviewSceneIndex by remember { mutableIntStateOf(0) }
@@ -323,7 +364,7 @@ fun ProjectThumbnailVideoPreview(
                     .padding(horizontal = 6.dp, vertical = 2.dp)
             ) {
                 Text(
-                    text = "⏱️ $timeString • $totalScenes सीन्स",
+                    text = "⏱️ $timeString • $totalScenes " + (if (isHi) "सीन्स" else "Scenes"),
                     color = Color.White,
                     fontSize = 9.sp,
                     fontWeight = FontWeight.SemiBold
@@ -363,7 +404,7 @@ fun ProjectThumbnailVideoPreview(
                     .padding(horizontal = 8.dp, vertical = 3.dp)
             ) {
                 Text(
-                    text = "▶ वीडियो प्रीव्यू देखें",
+                    text = if (isHi) "▶ वीडियो प्रीव्यू देखें" else "▶ Preview Video",
                     color = Color.White,
                     fontSize = 10.sp,
                     fontWeight = FontWeight.Bold
@@ -467,7 +508,7 @@ fun ProjectThumbnailVideoPreview(
             ) {
                 // Scene Name or Scene pills
                 Text(
-                    text = "सीन ${activePreviewSceneIndex + 1}: ${currentScene?.title?.take(16) ?: "Intro"}",
+                    text = (if (isHi) "सीन " else "Scene ") + "${activePreviewSceneIndex + 1}: ${currentScene?.title?.take(16) ?: "Intro"}",
                     color = Color.White,
                     fontSize = 10.sp,
                     fontWeight = FontWeight.SemiBold,
@@ -513,6 +554,88 @@ fun ProjectThumbnailVideoPreview(
                     color = AnimeCyan,
                     trackColor = Color.White.copy(alpha = 0.25f)
                 )
+            }
+        }
+
+        // -------------------------------------------------------------
+        // CIRCULAR PROGRESS INDICATOR OVERLAY FOR RENDERING & EXPORT
+        // -------------------------------------------------------------
+        if (isTaskActive) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.Black.copy(alpha = 0.82f))
+                    .clickable(enabled = false) {}
+                    .testTag("rendering_progress_overlay_${entity.id}"),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center,
+                    modifier = Modifier.padding(12.dp)
+                ) {
+                    Box(
+                        contentAlignment = Alignment.Center,
+                        modifier = Modifier.size(68.dp)
+                    ) {
+                        // Background track
+                        CircularProgressIndicator(
+                            progress = { 1f },
+                            modifier = Modifier.fillMaxSize(),
+                            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f),
+                            strokeWidth = 5.dp
+                        )
+                        // Dynamic progress track
+                        if (activeProgress > 0f) {
+                            CircularProgressIndicator(
+                                progress = { activeProgress },
+                                modifier = Modifier.fillMaxSize(),
+                                color = AnimeCyan,
+                                strokeWidth = 5.dp
+                            )
+                        } else {
+                            CircularProgressIndicator(
+                                modifier = Modifier.fillMaxSize(),
+                                color = AnimeCyan,
+                                strokeWidth = 5.dp
+                            )
+                        }
+
+                        // Center percentage indicator
+                        Text(
+                            text = if (activeProgress > 0f) "${(activeProgress * 100).toInt()}%" else "...",
+                            color = Color.White,
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.ExtraBold
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Text(
+                        text = if (isDirectExportingThis || isCustomExportingThis) {
+                            if (isHi) "🎬 वीडियो रेंडरिंग व एक्सपोर्ट" else "🎬 Video Rendering & Export"
+                        } else {
+                            if (isHi) "⚡ एआई सीन जनरेशन" else "⚡ AI Scene Generation"
+                        },
+                        color = AnimeGold,
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+
+                    Spacer(modifier = Modifier.height(2.dp))
+
+                    Text(
+                        text = activeTaskMessage,
+                        color = AnimeCyanLight,
+                        fontSize = 9.sp,
+                        fontWeight = FontWeight.Medium,
+                        textAlign = TextAlign.Center,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.padding(horizontal = 8.dp)
+                    )
+                }
             }
         }
     }

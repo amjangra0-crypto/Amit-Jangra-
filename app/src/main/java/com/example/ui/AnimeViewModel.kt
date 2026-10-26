@@ -103,6 +103,7 @@ data class AnimeStudioUiState(
     val appInterfaceLanguage: String = "English", // UI interface language (app menus, buttons, strings)
     val videoGenerationLanguage: String = "English", // Video / script / dubbing generation language (dialogue & TTS speech)
     val selectedLanguage: String = "English",
+    val isOfflineMode: Boolean = false, // When true, restricts activity to local assets & Room DB
     val voiceoverLanguage: String = "English",
     val subtitleMode: SubtitleMode = SubtitleMode.TRANSLATED_ONLY,
     val selectedProductionFormat: com.example.data.model.ProductionFormat = com.example.data.model.ProductionFormat.ANIME_EPISODE,
@@ -243,6 +244,7 @@ class AnimeViewModel(application: Application) : AndroidViewModel(application) {
     val videoExportProgress: StateFlow<VideoExportProgress> = exportManager.exportProgress
     val exportedVideosState: StateFlow<List<ExportedVideoEntity>> = db.animeDao().getAllExportedVideos()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+    fun cancelExport() = exportManager.cancelExport()
 
     private val storageManager = com.example.data.storage.StorageDestinationManager.getInstance(application)
     val storageConfig: StateFlow<com.example.data.model.StorageDestinationConfig> = storageManager.config
@@ -1237,8 +1239,15 @@ class AnimeViewModel(application: Application) : AndroidViewModel(application) {
         val matchedCountry = CountryCodeProvider.findByLanguage(initialUiLang) ?: detectedCountry
         _selectedCountry.value = matchedCountry
 
+        val savedOfflineMode = prefs.getBoolean("app_offline_mode", false)
+
         setAppInterfaceLanguage(initialUiLang)
         setVideoGenerationLanguage(savedVideoLang)
+        _uiState.value = _uiState.value.copy(
+            isOfflineMode = savedOfflineMode,
+            isDarkMode = com.example.ui.theme.AppThemeController.isDarkMode,
+            vibrantTheme = com.example.ui.theme.AppThemeController.currentThemeKey
+        )
         startScriptAutosaveLoop()
 
         // Initialize daily WorkManager scheduler if configured
@@ -1702,7 +1711,8 @@ class AnimeViewModel(application: Application) : AndroidViewModel(application) {
                 language = state.videoGenerationLanguage,
                 productionFormat = state.selectedProductionFormat,
                 motionEffect = state.selectedMotionEffect,
-                voiceAccent = state.selectedVoiceAccent
+                voiceAccent = state.selectedVoiceAccent,
+                isOffline = state.isOfflineMode
             )
 
             updateGenerationProgress(
@@ -2715,13 +2725,52 @@ class AnimeViewModel(application: Application) : AndroidViewModel(application) {
 
     fun toggleTheme() {
         val newDark = !_uiState.value.isDarkMode
-        com.example.ui.theme.AppThemeController.setDarkMode(newDark)
-        _uiState.value = _uiState.value.copy(isDarkMode = newDark)
+        com.example.ui.theme.AppThemeController.setDarkMode(newDark, getApplication())
+        _uiState.value = _uiState.value.copy(
+            isDarkMode = newDark,
+            vibrantTheme = com.example.ui.theme.AppThemeController.currentThemeKey
+        )
     }
 
     fun setTheme(isDark: Boolean) {
-        com.example.ui.theme.AppThemeController.setDarkMode(isDark)
-        _uiState.value = _uiState.value.copy(isDarkMode = isDark)
+        com.example.ui.theme.AppThemeController.setDarkMode(isDark, getApplication())
+        _uiState.value = _uiState.value.copy(
+            isDarkMode = isDark,
+            vibrantTheme = com.example.ui.theme.AppThemeController.currentThemeKey
+        )
+    }
+
+    fun setThemeMode(mode: String) {
+        com.example.ui.theme.AppThemeController.setThemeMode(mode, getApplication())
+        _uiState.value = _uiState.value.copy(
+            isDarkMode = com.example.ui.theme.AppThemeController.isDarkMode,
+            vibrantTheme = com.example.ui.theme.AppThemeController.currentThemeKey,
+            statusMessage = when (mode.uppercase()) {
+                "LIGHT" -> msg("☀️ Light Theme (Pure White) Applied", "☀️ लाइट थीम (प्योर व्हाइट) लागू")
+                "DARK" -> msg("🌙 Dark Mode Applied", "🌙 डार्क मोड लागू")
+                else -> msg("⚡ Neon Anime Theme Applied", "⚡ नियॉन एनीमे थीम लागू")
+            }
+        )
+    }
+
+    fun setOfflineMode(enabled: Boolean) {
+        try {
+            getApplication<Application>().getSharedPreferences("app_settings_prefs", Context.MODE_PRIVATE)
+                .edit()
+                .putBoolean("app_offline_mode", enabled)
+                .commit()
+        } catch (_: Exception) {}
+        _uiState.value = _uiState.value.copy(
+            isOfflineMode = enabled,
+            statusMessage = if (enabled)
+                msg("⚡ Offline Mode Enabled (Local Room DB & assets only)", "⚡ ऑफ़लाइन मोड सक्रिय (लोकल रूम डेटाबेस व एसेट्स)")
+            else
+                msg("🌐 Online Cloud AI Generation Enabled", "🌐 ऑनलाइन क्लाउड एआई जेनरेशन सक्रिय")
+        )
+    }
+
+    fun toggleOfflineMode() {
+        setOfflineMode(!_uiState.value.isOfflineMode)
     }
 
     fun getScriptAsSrt(): String {

@@ -9,6 +9,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import java.util.Locale
@@ -120,19 +121,23 @@ class VoiceSyncEngine(private val context: Context) {
         })
     }
 
-    private fun startLipSyncAnimation() {
+    val lipSyncController = LipSyncController()
+    val lipSyncFrame: StateFlow<LipSyncVisualFrame> = lipSyncController.currentFrame
+
+    private fun startLipSyncAnimation(dialogueText: String = "", estimatedDurationMs: Long = 2500L) {
         lipSyncPulseJob?.cancel()
+        lipSyncController.parseDialogueToPhonemes(dialogueText, estimatedDurationMs)
+        val startTime = System.currentTimeMillis()
+
         lipSyncPulseJob = scope.launch {
-            var step = 0
             while (_speakingState.value.isSpeaking) {
-                val mouth = if (step % 2 == 0) (0.5f + (Math.sin(step.toDouble()).toFloat() * 0.45f)).coerceIn(0.1f, 1f) else 0.1f
-                val wave = (0.4f + (Math.sin(step * 1.5).toFloat() * 0.55f)).coerceIn(0.1f, 1f)
+                val elapsed = System.currentTimeMillis() - startTime
+                val frame = lipSyncController.getFrameAtTime(elapsed)
                 _speakingState.value = _speakingState.value.copy(
-                    mouthOpenAmount = mouth,
-                    audioWaveAmplitude = wave
+                    mouthOpenAmount = frame.mouthOpenAmount,
+                    audioWaveAmplitude = frame.audioAmplitude
                 )
-                step++
-                delay(120)
+                delay(40) // 25fps fluid lip synchronization
             }
         }
     }
@@ -140,6 +145,7 @@ class VoiceSyncEngine(private val context: Context) {
     private fun stopLipSyncAnimation() {
         lipSyncPulseJob?.cancel()
         lipSyncPulseJob = null
+        lipSyncController.updateLiveFrame(isSpeaking = false, amplitude = 0f, mouthOpen = 0f)
     }
 
     fun speakDialogue(
@@ -250,8 +256,9 @@ class VoiceSyncEngine(private val context: Context) {
             progress = 0f
         )
 
-        onStart?.invoke()
-        startLipSyncAnimation()
+        val estWordDuration = (300 / finalSpeed.coerceAtLeast(0.5f)).toLong()
+        val estimatedTotalDuration = (dialogueText.split(" ").size.coerceAtLeast(2) * estWordDuration).coerceAtLeast(1800L)
+        startLipSyncAnimation(dialogueText, estimatedTotalDuration)
 
         if (isTtsReady && tts != null) {
             tts?.setPitch(finalPitch)

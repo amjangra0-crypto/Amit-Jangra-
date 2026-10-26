@@ -40,6 +40,10 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -98,13 +102,19 @@ fun UserSubscriptionCheckoutDialog(
     scheme: SubscriptionSchemeDetails,
     viewModel: AnimeViewModel,
     lang: String = "English",
+    initialCurrency: CurrencyType = CurrencyType.USD,
     onDismiss: () -> Unit,
     onSuccess: () -> Unit
 ) {
     val context = LocalContext.current
-    var selectedCurrency by remember { mutableStateOf(CurrencyType.USD) }
+    var selectedCurrency by remember(initialCurrency) { mutableStateOf(initialCurrency) }
     var selectedGateway by remember { mutableStateOf(PaymentGateway.CARD) }
     var isProcessing by remember { mutableStateOf(false) }
+
+    var userDebitCardNumber by remember { mutableStateOf("") }
+    var userDebitCardHolder by remember { mutableStateOf("") }
+    var userDebitCardExpiry by remember { mutableStateOf("") }
+    var userDebitCardCvv by remember { mutableStateOf("") }
 
     val amount = when (selectedCurrency) {
         CurrencyType.INR -> scheme.monthlyPriceInr
@@ -418,7 +428,76 @@ fun UserSubscriptionCheckoutDialog(
                     }
                 }
 
-                Spacer(modifier = Modifier.height(18.dp))
+                Spacer(modifier = Modifier.height(14.dp))
+
+                // DEBIT CARD PAYMENT TERMINAL FORM
+                if (selectedGateway == PaymentGateway.CARD) {
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 4.dp),
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
+                        shape = RoundedCornerShape(14.dp),
+                        border = BorderStroke(1.dp, AnimeCyan.copy(alpha = 0.5f))
+                    ) {
+                        Column(modifier = Modifier.padding(12.dp)) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(Icons.Default.CreditCard, contentDescription = null, tint = AnimeCyan, modifier = Modifier.size(18.dp))
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text(
+                                    text = AppLocaleStrings.tr(lang, "Debit Card Accepted (Visa, Mastercard, RuPay)", "डेबिट कार्ड स्वीकार्य (Visa, Mastercard, RuPay)"),
+                                    color = AnimeCyan,
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                            Spacer(modifier = Modifier.height(8.dp))
+                            OutlinedTextField(
+                                value = userDebitCardHolder,
+                                onValueChange = { userDebitCardHolder = it },
+                                label = { Text(AppLocaleStrings.tr(lang, "Cardholder Name", "कार्डधारक का नाम"), fontSize = 10.sp) },
+                                modifier = Modifier.fillMaxWidth(),
+                                shape = RoundedCornerShape(8.dp)
+                            )
+                            Spacer(modifier = Modifier.height(6.dp))
+                            OutlinedTextField(
+                                value = userDebitCardNumber,
+                                onValueChange = { input ->
+                                    val digits = input.filter { it.isDigit() }.take(16)
+                                    userDebitCardNumber = digits.chunked(4).joinToString(" ")
+                                },
+                                label = { Text(AppLocaleStrings.tr(lang, "Debit Card Number (16 Digits)", "डेबिट कार्ड नंबर (16 अंक)"), fontSize = 10.sp) },
+                                modifier = Modifier.fillMaxWidth(),
+                                shape = RoundedCornerShape(8.dp),
+                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                            )
+                            Spacer(modifier = Modifier.height(6.dp))
+                            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                                OutlinedTextField(
+                                    value = userDebitCardExpiry,
+                                    onValueChange = { input ->
+                                        val digits = input.filter { it.isDigit() }.take(4)
+                                        userDebitCardExpiry = if (digits.length >= 2) "${digits.take(2)}/${digits.drop(2)}" else digits
+                                    },
+                                    label = { Text("MM/YY", fontSize = 10.sp) },
+                                    modifier = Modifier.weight(1f),
+                                    shape = RoundedCornerShape(8.dp),
+                                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                                )
+                                OutlinedTextField(
+                                    value = userDebitCardCvv,
+                                    onValueChange = { userDebitCardCvv = it.filter { ch -> ch.isDigit() }.take(3) },
+                                    label = { Text("CVV", fontSize = 10.sp) },
+                                    modifier = Modifier.weight(1f),
+                                    shape = RoundedCornerShape(8.dp),
+                                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword)
+                                )
+                            }
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(14.dp))
 
                 // ACTION BUTTON: PAY & ACTIVATE INSTANTLY
                 Button(

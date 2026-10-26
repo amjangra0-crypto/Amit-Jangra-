@@ -375,7 +375,7 @@ fun VoiceSelectorStudioComponent(
                     selected = isSelected,
                     onClick = {
                         selectedEmotion = emo
-                        val syncedDialogue = if (AppLocaleStrings.isHindi(lang)) emo.sampleDialogueHi else emo.sampleDialogueJp
+                        val syncedDialogue = if (AppLocaleStrings.isHindi(lang)) emo.sampleDialogueHi else emo.sampleDialogueEn
                         val adjustedPitch = (draft.voicePitch + emo.recommendedPitchDelta).coerceIn(0.5f, 1.8f)
                         viewModel.updateCharacterDraft(
                             draft.copy(
@@ -388,7 +388,7 @@ fun VoiceSelectorStudioComponent(
                     },
                     label = {
                         Text(
-                            text = "${emo.emoji} ${emo.nameEn}",
+                            text = "${emo.emoji} " + if (AppLocaleStrings.isHindi(lang)) emo.nameHi else emo.nameEn,
                             fontSize = 11.sp,
                             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
                         )

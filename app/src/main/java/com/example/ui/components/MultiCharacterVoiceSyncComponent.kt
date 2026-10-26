@@ -105,6 +105,8 @@ fun MultiCharacterVoiceSyncDialog(
     onDismiss: () -> Unit
 ) {
     val context = LocalContext.current
+    val uiState by viewModel.uiState.collectAsState()
+    val isHi = AppLocaleStrings.isHindi(uiState.selectedLanguage)
     val speakingState by viewModel.voiceSyncEngine.speakingState.collectAsState()
 
     // Automatically detect and sync matching voice preset
@@ -118,7 +120,7 @@ fun MultiCharacterVoiceSyncDialog(
         )
     }
 
-    var selectedLanguage by remember { mutableStateOf(VoiceLanguage.HINDI) }
+    var selectedLanguage by remember { mutableStateOf(if (isHi) VoiceLanguage.HINDI else VoiceLanguage.ENGLISH) }
     var selectedAgeGroupFilter by remember { mutableStateOf<VoiceAgeGroup?>(null) }
     var selectedWeightFilter by remember { mutableStateOf<VoiceToneWeight?>(null) }
 
@@ -171,13 +173,14 @@ fun MultiCharacterVoiceSyncDialog(
                         Spacer(modifier = Modifier.width(10.dp))
                         Column {
                             Text(
-                                text = "कैरेक्टर वॉयस व लैंग्वेज सिंक",
+                                text = if (isHi) "कैरेक्टर वॉयस व लैंग्वेज सिंक" else "Character Voice & Language Sync",
                                 color = AnimeGold,
                                 fontSize = 16.sp,
                                 fontWeight = FontWeight.ExtraBold
                             )
                             Text(
-                                text = "बच्चा • एडल्ट • लेडीज • लड़की • वृद्ध • भारी व हल्की आवाज",
+                                text = if (isHi) "बच्चा • एडल्ट • लेडीज • लड़की • वृद्ध • भारी व हल्की आवाज"
+                                       else "Child • Adult Male • Adult Lady • Young Girl • Senior • Heavy & Light Voices",
                                 color = TextSecondary,
                                 fontSize = 10.sp
                             )
@@ -215,20 +218,21 @@ fun MultiCharacterVoiceSyncDialog(
                             Column {
                                 Row(verticalAlignment = Alignment.CenterVertically) {
                                     Text(
-                                        text = "⚡ ऑटोमैटिक वॉइस सिंक एक्टिव",
+                                        text = if (isHi) "⚡ ऑटोमैटिक वॉइस सिंक एक्टिव" else "⚡ Automatic Voice Sync Active",
                                         color = AnimeGreen,
                                         fontSize = 11.sp,
                                         fontWeight = FontWeight.Bold
                                     )
                                     Spacer(modifier = Modifier.width(4.dp))
                                     Text(
-                                        text = "(${autoMatchedPreset.ageGroup.displayNameHi})",
+                                        text = "(${if (isHi) autoMatchedPreset.ageGroup.displayNameHi else autoMatchedPreset.ageGroup.displayNameEn})",
                                         color = TextMuted,
                                         fontSize = 9.sp
                                     )
                                 }
                                 Text(
-                                    text = "'$characterName' के लिए अनुशंसित: ${autoMatchedPreset.nameHi} (${autoMatchedPreset.toneWeight.displayNameHi})",
+                                    text = if (isHi) "'$characterName' के लिए अनुशंसित: ${autoMatchedPreset.nameHi} (${autoMatchedPreset.toneWeight.displayNameHi})"
+                                           else "Recommended for '$characterName': ${autoMatchedPreset.nameEn} (${autoMatchedPreset.toneWeight.displayNameEn})",
                                     color = TextPrimary,
                                     fontSize = 10.sp
                                 )
@@ -240,16 +244,16 @@ fun MultiCharacterVoiceSyncDialog(
                                 currentPreset = autoMatchedPreset
                                 viewModel.voiceSyncEngine.speakWithPreset(
                                     preset = autoMatchedPreset,
-                                    dialogueText = autoMatchedPreset.sampleDialogueHi,
+                                    dialogueText = if (selectedLanguage == VoiceLanguage.ENGLISH) autoMatchedPreset.sampleDialogueEn else autoMatchedPreset.sampleDialogueHi,
                                     language = selectedLanguage
                                 )
-                                Toast.makeText(context, "⚡ ऑटो-सिंक वॉयस लागू!", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, if (isHi) "⚡ ऑटो-सिंक वॉयस लागू!" else "⚡ Auto-sync voice applied!", Toast.LENGTH_SHORT).show()
                             },
                             colors = ButtonDefaults.buttonColors(containerColor = AnimeGreen),
                             shape = RoundedCornerShape(8.dp),
                             modifier = Modifier.height(30.dp)
                         ) {
-                            Text("ऑटो सिंक", color = Color.Black, fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                            Text(if (isHi) "ऑटो सिंक" else "Auto Sync", color = Color.Black, fontSize = 10.sp, fontWeight = FontWeight.Bold)
                         }
                     }
                 }
@@ -261,7 +265,7 @@ fun MultiCharacterVoiceSyncDialog(
                     Icon(Icons.Default.Translate, contentDescription = null, tint = AnimeCyan, modifier = Modifier.size(16.dp))
                     Spacer(modifier = Modifier.width(6.dp))
                     Text(
-                        text = "वॉयस लैंग्वेज चुनें (Select Language):",
+                        text = if (isHi) "वॉयस लैंग्वेज चुनें (Select Language):" else "Select Voice Language:",
                         color = TextPrimary,
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Bold
@@ -284,7 +288,7 @@ fun MultiCharacterVoiceSyncDialog(
                                 .padding(horizontal = 10.dp, vertical = 6.dp)
                         ) {
                             Text(
-                                text = langItem.displayNameHi,
+                                text = if (isHi) langItem.displayNameHi else langItem.displayNameEn,
                                 color = if (isSel) Color.Black else TextPrimary,
                                 fontSize = 10.sp,
                                 fontWeight = if (isSel) FontWeight.Bold else FontWeight.Normal
@@ -301,12 +305,12 @@ fun MultiCharacterVoiceSyncDialog(
                     horizontalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
                     val ageFilters = listOf(
-                        Pair(null, "सभी उम्र"),
-                        Pair(VoiceAgeGroup.CHILD, "बच्चा 👶"),
-                        Pair(VoiceAgeGroup.TEEN_GIRL, "लड़की 🌸"),
-                        Pair(VoiceAgeGroup.ADULT_MALE, "एडल्ट पुरुष 🛡️"),
-                        Pair(VoiceAgeGroup.ADULT_LADY, "एडल्ट महिला 👑"),
-                        Pair(VoiceAgeGroup.ELDERLY, "वृद्ध 👴")
+                        Pair(null, if (isHi) "सभी उम्र" else "All Ages"),
+                        Pair(VoiceAgeGroup.CHILD, if (isHi) "बच्चा 👶" else "Child 👶"),
+                        Pair(VoiceAgeGroup.TEEN_GIRL, if (isHi) "लड़की 🌸" else "Teen Girl 🌸"),
+                        Pair(VoiceAgeGroup.ADULT_MALE, if (isHi) "एडल्ट पुरुष 🛡️" else "Adult Male 🛡️"),
+                        Pair(VoiceAgeGroup.ADULT_LADY, if (isHi) "एडल्ट महिला 👑" else "Adult Lady 👑"),
+                        Pair(VoiceAgeGroup.ELDERLY, if (isHi) "वृद्ध 👴" else "Senior 👴")
                     )
 
                     LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -338,9 +342,9 @@ fun MultiCharacterVoiceSyncDialog(
                     horizontalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
                     val weightFilters = listOf(
-                        Pair(null, "सभी आवाजें"),
-                        Pair(VoiceToneWeight.HEAVY, "भारी आवाज (Heavy/Bass) ⚡"),
-                        Pair(VoiceToneWeight.LIGHT, "हल्की आवाज (Light/Soft) 🕊️")
+                        Pair(null, if (isHi) "सभी आवाजें" else "All Voices"),
+                        Pair(VoiceToneWeight.HEAVY, if (isHi) "भारी आवाज (Heavy/Bass) ⚡" else "Heavy / Deep Bass ⚡"),
+                        Pair(VoiceToneWeight.LIGHT, if (isHi) "हल्की आवाज (Light/Soft) 🕊️" else "Light / Soft Tone 🕊️")
                     )
 
                     weightFilters.forEach { (w, label) ->
@@ -417,13 +421,13 @@ fun MultiCharacterVoiceSyncDialog(
                                         Spacer(modifier = Modifier.width(8.dp))
                                         Column {
                                             Text(
-                                                text = preset.nameHi,
+                                                text = if (isHi) preset.nameHi else preset.nameEn,
                                                 color = if (isSelected) AnimeCyan else TextPrimary,
                                                 fontSize = 12.sp,
                                                 fontWeight = FontWeight.Bold
                                             )
                                             Text(
-                                                text = "${preset.ageGroup.displayNameHi} • ${preset.toneWeight.displayNameHi}",
+                                                text = "${if (isHi) preset.ageGroup.displayNameHi else preset.ageGroup.displayNameEn} • ${if (isHi) preset.toneWeight.displayNameHi else preset.toneWeight.displayNameEn}",
                                                 color = AnimeGold,
                                                 fontSize = 10.sp
                                             )
@@ -447,14 +451,14 @@ fun MultiCharacterVoiceSyncDialog(
                                     ) {
                                         Icon(Icons.Default.VolumeUp, contentDescription = null, tint = Color.Black, modifier = Modifier.size(12.dp))
                                         Spacer(modifier = Modifier.width(4.dp))
-                                        Text("सुनें", color = Color.Black, fontSize = 9.sp, fontWeight = FontWeight.Bold)
+                                        Text(if (isHi) "सुनें" else "Listen", color = Color.Black, fontSize = 9.sp, fontWeight = FontWeight.Bold)
                                     }
                                 }
 
                                 Spacer(modifier = Modifier.height(4.dp))
 
                                 Text(
-                                    text = preset.descriptionHi,
+                                    text = if (isHi) preset.descriptionHi else preset.descriptionEn,
                                     color = TextSecondary,
                                     fontSize = 10.sp
                                 )
@@ -462,7 +466,7 @@ fun MultiCharacterVoiceSyncDialog(
                                 Spacer(modifier = Modifier.height(4.dp))
 
                                 Text(
-                                    text = "संवाद: \"${if (selectedLanguage == VoiceLanguage.ENGLISH) preset.sampleDialogueEn else preset.sampleDialogueHi}\"",
+                                    text = (if (isHi) "संवाद: \"" else "Dialogue: \"") + "${if (selectedLanguage == VoiceLanguage.ENGLISH) preset.sampleDialogueEn else preset.sampleDialogueHi}\"",
                                     color = TextMuted,
                                     fontSize = 9.sp,
                                     maxLines = 2
@@ -487,7 +491,7 @@ fun MultiCharacterVoiceSyncDialog(
                         Icon(Icons.Default.GraphicEq, contentDescription = null, tint = AnimeCyan, modifier = Modifier.size(18.dp))
                         Spacer(modifier = Modifier.width(6.dp))
                         Text(
-                            text = "वॉइस चल रही है: ${speakingState.activeVoiceType}...",
+                            text = (if (isHi) "वॉइस चल रही है: " else "Playing Voice: ") + "${speakingState.activeVoiceType}...",
                             color = AnimeCyan,
                             fontSize = 10.sp,
                             fontWeight = FontWeight.Bold,
@@ -508,7 +512,8 @@ fun MultiCharacterVoiceSyncDialog(
                     onClick = {
                         viewModel.voiceSyncEngine.stop()
                         onVoiceSelected(currentPreset, selectedLanguage)
-                        Toast.makeText(context, "✅ '${currentPreset.nameHi}' कैरेक्टर के साथ सिंक हो गई!", Toast.LENGTH_SHORT).show()
+                        val name = if (isHi) currentPreset.nameHi else currentPreset.nameEn
+                        Toast.makeText(context, if (isHi) "✅ '$name' कैरेक्टर के साथ सिंक हो गई!" else "✅ Synced '$name' to character!", Toast.LENGTH_SHORT).show()
                         onDismiss()
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = AnimeGold),
@@ -519,7 +524,7 @@ fun MultiCharacterVoiceSyncDialog(
                         .testTag("apply_character_voice_btn")
                 ) {
                     Text(
-                        text = "कैरेक्टर के साथ वॉइस सिंक करें व लागू करें",
+                        text = if (isHi) "कैरेक्टर के साथ वॉइस सिंक करें व लागू करें" else "Sync & Apply Character Voice",
                         color = Color.Black,
                         fontWeight = FontWeight.Bold,
                         fontSize = 12.sp

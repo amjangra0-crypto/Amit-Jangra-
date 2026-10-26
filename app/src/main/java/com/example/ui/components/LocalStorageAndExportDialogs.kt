@@ -127,7 +127,7 @@ fun ExportShareSheetDialog(
                     Spacer(modifier = Modifier.width(10.dp))
                     Column {
                         Text(
-                            text = AppLocaleStrings.tr(state.selectedLanguage, "Export & Share", "एक्सपोर्ट व शेयर (Export & Share)"),
+                            text = AppLocaleStrings.tr(state.selectedLanguage, "Export & Share", "एक्सपोर्ट व शेयर"),
                             fontSize = 16.sp,
                             fontWeight = FontWeight.Bold,
                             color = TextPrimary
@@ -177,7 +177,7 @@ fun ExportShareSheetDialog(
                                     fontWeight = FontWeight.Bold
                                 )
                                 Text(
-                                    text = "${script.scenes.size} सीन्स • भाषा: ${script.language} (Voice: ${script.voiceoverLanguage})",
+                                    text = "${script.scenes.size} ${AppLocaleStrings.tr(state.selectedLanguage, "Scenes", "दृश्य")} • ${AppLocaleStrings.tr(state.selectedLanguage, "Language", "भाषा")}: ${script.language}",
                                     color = TextSecondary,
                                     fontSize = 11.sp
                                 )
@@ -188,7 +188,7 @@ fun ExportShareSheetDialog(
                                     .background(AnimeCyan.copy(alpha = 0.2f))
                                     .padding(horizontal = 8.dp, vertical = 4.dp)
                             ) {
-                                Text("Ready to Share", color = AnimeCyan, fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                                Text(AppLocaleStrings.tr(state.selectedLanguage, "Ready to Share", "साझा करने के लिए तैयार"), color = AnimeCyan, fontSize = 10.sp, fontWeight = FontWeight.Bold)
                             }
                         }
                     }
@@ -210,7 +210,7 @@ fun ExportShareSheetDialog(
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Text(
-                                    text = AppLocaleStrings.tr(state.selectedLanguage, "▶️ Generated Video Link:", "▶️ जनरेटेड वीडियो लिंक (Watch Link):"),
+                                    text = AppLocaleStrings.tr(state.selectedLanguage, "▶️ Generated Video Link:", "▶️ निर्मित वीडियो लिंक:"),
                                     fontSize = 11.sp,
                                     fontWeight = FontWeight.Bold,
                                     color = AnimeCyan
@@ -241,7 +241,7 @@ fun ExportShareSheetDialog(
 
                     // Share Mode Selector
                     Text(
-                        text = AppLocaleStrings.tr(state.selectedLanguage, "📋 Choose Share Format:", "📋 शेयरिंग फॉर्मेट चुनें (Share Format Mode):"),
+                        text = AppLocaleStrings.tr(state.selectedLanguage, "📋 Choose Share Format:", "📋 साझा करने का प्रारूप चुनें:"),
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Bold,
                         color = AnimeGold
@@ -289,7 +289,7 @@ fun ExportShareSheetDialog(
                     ) {
                         Icon(Icons.Default.FileDownload, contentDescription = null, tint = Color.Black, modifier = Modifier.size(18.dp))
                         Spacer(modifier = Modifier.width(6.dp))
-                        Text(AppLocaleStrings.tr(state.selectedLanguage, "⬇️ Download to Device", "⬇️ डिवाइस में डाउनलोड करें (Download Video/Script)"), color = Color.Black, fontWeight = FontWeight.ExtraBold, fontSize = 12.sp)
+                        Text(AppLocaleStrings.tr(state.selectedLanguage, "⬇️ Download to Device", "⬇️ डिवाइस में डाउनलोड करें"), color = Color.Black, fontWeight = FontWeight.ExtraBold, fontSize = 12.sp)
                     }
 
                     Spacer(modifier = Modifier.height(8.dp))
@@ -308,14 +308,14 @@ fun ExportShareSheetDialog(
                     ) {
                         Icon(Icons.Default.Share, contentDescription = null, tint = Color.White, modifier = Modifier.size(18.dp))
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text(AppLocaleStrings.tr(state.selectedLanguage, "📲 Share to All Installed Apps", "📲 सभी इंस्टॉल ऐप्स पर शेयर करें (System Share Sheet)"), color = Color.White, fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                        Text(AppLocaleStrings.tr(state.selectedLanguage, "📲 Share to All Installed Apps", "📲 सभी इंस्टॉल किए गए ऐप्स पर साझा करें"), color = Color.White, fontWeight = FontWeight.Bold, fontSize = 12.sp)
                     }
 
                     Spacer(modifier = Modifier.height(12.dp))
 
                     // Social Media Direct Integration Options
                     Text(
-                        text = AppLocaleStrings.tr(state.selectedLanguage, "🌐 Direct Social Media Share:", "🌐 डायरेक्ट सोशल मीडिया शेयर (Direct Social Media Share):"),
+                        text = AppLocaleStrings.tr(state.selectedLanguage, "🌐 Direct Social Media Share:", "🌐 सीधे सोशल मीडिया पर साझा करें:"),
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Bold,
                         color = AnimeCyanLight
@@ -406,7 +406,7 @@ fun ExportShareSheetDialog(
                     ) {
                         Icon(Icons.Default.Subtitles, contentDescription = null, tint = AnimeCyan, modifier = Modifier.size(18.dp))
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text(AppLocaleStrings.tr(state.selectedLanguage, "📑 Export SRT Subtitles (.srt File)", "📑 SRT सबटाइटल्स एक्सपोर्ट करें (.srt File)"), color = AnimeCyan, fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                        Text(AppLocaleStrings.tr(state.selectedLanguage, "📑 Export SRT Subtitles (.srt)", "📑 SRT सबटाइटल्स निर्यात करें (.srt)"), color = AnimeCyan, fontWeight = FontWeight.Bold, fontSize = 12.sp)
                     }
 
                     Spacer(modifier = Modifier.height(10.dp))
@@ -426,7 +426,7 @@ fun ExportShareSheetDialog(
                     ) {
                         Icon(Icons.Default.Save, contentDescription = null, tint = Color.Black, modifier = Modifier.size(18.dp))
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text(AppLocaleStrings.tr(state.selectedLanguage, "💾 Save to Local SQLite Storage", "💾 लोकल स्टोरेज में सेव करें (Save to SQLite)"), color = Color.Black, fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                        Text(AppLocaleStrings.tr(state.selectedLanguage, "💾 Save to Local SQLite Storage", "💾 लोकल स्टोरेज में सुरक्षित करें"), color = Color.Black, fontWeight = FontWeight.Bold, fontSize = 13.sp)
                     }
 
                     Spacer(modifier = Modifier.height(10.dp))
@@ -446,7 +446,7 @@ fun ExportShareSheetDialog(
                     ) {
                         Icon(Icons.Default.Description, contentDescription = null, tint = AnimePink, modifier = Modifier.size(18.dp))
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text(AppLocaleStrings.tr(state.selectedLanguage, "📄 Export Text Script (.txt File)", "📄 टेक्स्ट स्क्रिप्ट एक्सपोर्ट करें (.txt File)"), color = AnimePink, fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                        Text(AppLocaleStrings.tr(state.selectedLanguage, "📄 Export Text Script (.txt)", "📄 टेक्स्ट स्क्रिप्ट निर्यात करें (.txt)"), color = AnimePink, fontWeight = FontWeight.Bold, fontSize = 12.sp)
                     }
 
                     Spacer(modifier = Modifier.height(10.dp))
@@ -466,7 +466,7 @@ fun ExportShareSheetDialog(
                     ) {
                         Icon(Icons.Default.Archive, contentDescription = null, tint = AnimeGold, modifier = Modifier.size(18.dp))
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text(AppLocaleStrings.tr(state.selectedLanguage, "📦 Export Project Backup (.json File)", "📦 प्रोजेक्ट बैकअप एक्सपोर्ट करें (.json File)"), color = AnimeGold, fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                        Text(AppLocaleStrings.tr(state.selectedLanguage, "📦 Export Project Backup (.json)", "📦 प्रोजेक्ट बैकअप निर्यात करें (.json)"), color = AnimeGold, fontWeight = FontWeight.Bold, fontSize = 12.sp)
                     }
 
                     Spacer(modifier = Modifier.height(10.dp))
@@ -513,7 +513,7 @@ fun ExportShareSheetDialog(
         },
         confirmButton = {
             TextButton(onClick = onDismiss) {
-                Text(AppLocaleStrings.tr(state.selectedLanguage, "Done", "पूर्ण (Done)"), color = AnimeCyan, fontWeight = FontWeight.Bold)
+                Text(AppLocaleStrings.tr(state.selectedLanguage, "Done", "पूर्ण"), color = AnimeCyan, fontWeight = FontWeight.Bold)
             }
         },
         containerColor = AnimeSurface,
@@ -881,13 +881,13 @@ fun DownloadProjectDialog(
                     Spacer(modifier = Modifier.width(10.dp))
                     Column {
                         Text(
-                            text = AppLocaleStrings.tr(state.selectedLanguage, "📥 Download & Save", "📥 डाउनलोड व सेव (Download)"),
+                            text = AppLocaleStrings.tr(state.selectedLanguage, "📥 Download & Save", "📥 डाउनलोड व सुरक्षित करें"),
                             fontSize = 16.sp,
                             fontWeight = FontWeight.Bold,
                             color = TextPrimary
                         )
                         Text(
-                            text = AppLocaleStrings.tr(state.selectedLanguage, "Save project to phone Downloads folder", "प्रोजेक्ट को फोन के Downloads फोल्डर में सेव करें"),
+                            text = AppLocaleStrings.tr(state.selectedLanguage, "Save project to phone Downloads folder", "प्रोजेक्ट को फोन के डाउनलोड्स फोल्डर में सुरक्षित करें"),
                             fontSize = 10.sp,
                             color = AnimeCyanLight
                         )

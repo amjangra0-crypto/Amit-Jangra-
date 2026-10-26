@@ -53,6 +53,8 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.ScrollableTabRow
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRowDefaults
 import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
@@ -80,6 +82,7 @@ import com.example.ui.AnimeViewModel
 import com.example.ui.theme.AnimeCyan
 import com.example.ui.theme.AnimeCyanLight
 import com.example.ui.theme.AnimeGold
+import com.example.ui.theme.AnimeGreen
 import com.example.ui.theme.AnimePink
 import com.example.ui.theme.AnimePurple
 import com.example.ui.theme.TextMuted
@@ -197,7 +200,75 @@ fun UnifiedStudioCreationHub(
                 }
             }
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(10.dp))
+
+            // Real-Time Social Media Learning (Google, Facebook, Instagram, Snapchat) Active/Deactive Toggle
+            val isSocialLearningActive by viewModel.socialKnowledgeEngine.isSocialLearningEnabled.collectAsState()
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(if (isSocialLearningActive) AnimeCyan.copy(alpha = 0.12f) else MaterialTheme.colorScheme.surfaceVariant)
+                    .border(1.dp, if (isSocialLearningActive) AnimeCyan.copy(alpha = 0.5f) else TextMuted.copy(alpha = 0.3f), RoundedCornerShape(12.dp))
+                    .padding(horizontal = 10.dp, vertical = 6.dp)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(
+                        modifier = Modifier.weight(1f),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(text = if (isSocialLearningActive) "🌐" else "⚪", fontSize = 14.sp)
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Column {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text(
+                                    text = AppLocaleStrings.tr(
+                                        state.selectedLanguage,
+                                        "Social Media Real-Time Learning:",
+                                        "सोशल मीडिया रियल-टाइम लर्निंग:"
+                                    ),
+                                    color = MaterialTheme.colorScheme.onSurface,
+                                    fontSize = 10.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text(
+                                    text = if (isSocialLearningActive) "ACTIVE" else "DEACTIVATED",
+                                    color = if (isSocialLearningActive) AnimeGreen else AnimePink,
+                                    fontSize = 9.sp,
+                                    fontWeight = FontWeight.ExtraBold
+                                )
+                            }
+                            Text(
+                                text = if (isSocialLearningActive)
+                                    "Learning & applying from Google, Facebook, Instagram, Snapchat"
+                                else
+                                    "Deactivated by user. Using local prompt direction only.",
+                                color = TextMuted,
+                                fontSize = 9.sp
+                            )
+                        }
+                    }
+
+                    Switch(
+                        checked = isSocialLearningActive,
+                        onCheckedChange = { viewModel.socialKnowledgeEngine.setSocialLearningEnabled(it) },
+                        colors = SwitchDefaults.colors(
+                            checkedThumbColor = AnimeGreen,
+                            checkedTrackColor = AnimeGreen.copy(alpha = 0.4f),
+                            uncheckedThumbColor = AnimePink,
+                            uncheckedTrackColor = AnimePink.copy(alpha = 0.3f)
+                        ),
+                        modifier = Modifier.testTag("toggle_social_media_learning")
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(10.dp))
 
             // Navigation Tabs inside the Unified Frame
             val hubTabs = listOf(

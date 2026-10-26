@@ -62,18 +62,22 @@ import com.example.ui.theme.TextMuted
 import com.example.ui.theme.TextPrimary
 import com.example.ui.theme.TextSecondary
 
+import com.example.localization.AppLocaleStrings
+
 /**
- * Modern Compose Data Visualization module inspired by Recharts.
+ * Modern Compose Data Visualization module inspired by Recharts & D3.js.
  * Tracks:
  * 1. Daily Active Video Generations (Gradient Area Chart)
  * 2. Most Popular Character Styles (Horizontal & Vertical Bar Charts)
  * 3. Audience Engagement Trends Over Time (Multi-Line Chart for Views, Retention & CTR)
+ * 4. Weekly Project Creation Activity: Scripts Generated vs Exports Completed
  */
 @Composable
 fun StudioAnalyticsDataViz(
+    lang: String = "English",
     modifier: Modifier = Modifier
 ) {
-    var selectedMetricTab by remember { mutableIntStateOf(0) } // 0: Daily Generations, 1: Character Styles, 2: Engagement Trends
+    var selectedMetricTab by remember { mutableIntStateOf(0) } // 0: Daily, 1: Styles, 2: Engagement, 3: Weekly Activity
     var timeRange by remember { mutableStateOf("7D") } // 7D, 30D, 90D
 
     val dailyGenerationsData = remember(timeRange) {
@@ -85,12 +89,16 @@ fun StudioAnalyticsDataViz(
     }
     val daysLabels = listOf("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
 
+    val weeklyWeeks = listOf("W1", "W2", "W3", "W4", "W5", "W6", "W7")
+    val weeklyScriptsGenerated = listOf(14f, 22f, 35f, 48f, 62f, 85f, 110f)
+    val weeklyExportsCompleted = listOf(10f, 18f, 28f, 40f, 54f, 74f, 98f)
+
     val characterStyles = listOf(
-        Triple("Shonen Battle", 0.42f, AnimeGold),
-        Triple("Cyberpunk Sci-Fi", 0.28f, AnimeCyan),
-        Triple("Shojo & Romance", 0.15f, AnimePink),
-        Triple("Chibi & Comedy", 0.10f, AnimeGreen),
-        Triple("Dark Fantasy", 0.05f, AnimePurple)
+        Triple(AppLocaleStrings.tr(lang, "Shonen Battle", "शोनेन बैटल"), 0.42f, AnimeGold),
+        Triple(AppLocaleStrings.tr(lang, "Cyberpunk Sci-Fi", "साइबरपंक साइंस-फाई"), 0.28f, AnimeCyan),
+        Triple(AppLocaleStrings.tr(lang, "Shojo & Romance", "शोजो व रोमांस"), 0.15f, AnimePink),
+        Triple(AppLocaleStrings.tr(lang, "Chibi & Comedy", "चिबी व कॉमेडी"), 0.10f, AnimeGreen),
+        Triple(AppLocaleStrings.tr(lang, "Dark Fantasy", "डार्क फैंटेसी"), 0.05f, AnimePurple)
     )
 
     Card(
@@ -127,7 +135,7 @@ fun StudioAnalyticsDataViz(
                     Column {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Text(
-                                text = "Studio Intelligence & Metrics",
+                                text = AppLocaleStrings.tr(lang, "Studio Intelligence & Metrics", "स्टूडियो एनालिटिक्स व मेट्रिक्स"),
                                 color = TextPrimary,
                                 fontSize = 14.sp,
                                 fontWeight = FontWeight.Bold
@@ -143,7 +151,11 @@ fun StudioAnalyticsDataViz(
                             }
                         }
                         Text(
-                            text = "Real-time generation volume, character styles & engagement",
+                            text = AppLocaleStrings.tr(
+                                lang,
+                                "Real-time generation volume, character styles & weekly exports",
+                                "रियल-टाइम जनरेशन वॉल्यूम, करैक्टर स्टाइल्स व साप्ताहिक एक्सपोर्ट्स"
+                            ),
                             color = TextSecondary,
                             fontSize = 11.sp
                         )
@@ -178,13 +190,13 @@ fun StudioAnalyticsDataViz(
             // Metric Switcher Chips
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                horizontalArrangement = Arrangement.spacedBy(4.dp)
             ) {
                 FilterChip(
                     selected = selectedMetricTab == 0,
                     onClick = { selectedMetricTab = 0 },
-                    label = { Text("Daily Generations", fontSize = 11.sp) },
-                    leadingIcon = { Icon(Icons.Default.ShowChart, contentDescription = null, modifier = Modifier.size(14.dp)) },
+                    label = { Text(AppLocaleStrings.tr(lang, "Daily", "दैनिक"), fontSize = 10.sp) },
+                    leadingIcon = { Icon(Icons.Default.ShowChart, contentDescription = null, modifier = Modifier.size(12.dp)) },
                     colors = FilterChipDefaults.filterChipColors(
                         selectedContainerColor = AnimeCyan.copy(alpha = 0.3f),
                         selectedLabelColor = AnimeCyan
@@ -194,8 +206,8 @@ fun StudioAnalyticsDataViz(
                 FilterChip(
                     selected = selectedMetricTab == 1,
                     onClick = { selectedMetricTab = 1 },
-                    label = { Text("Popular Styles", fontSize = 11.sp) },
-                    leadingIcon = { Icon(Icons.Default.AutoAwesome, contentDescription = null, modifier = Modifier.size(14.dp)) },
+                    label = { Text(AppLocaleStrings.tr(lang, "Styles", "शैलियां"), fontSize = 10.sp) },
+                    leadingIcon = { Icon(Icons.Default.AutoAwesome, contentDescription = null, modifier = Modifier.size(12.dp)) },
                     colors = FilterChipDefaults.filterChipColors(
                         selectedContainerColor = AnimeGold.copy(alpha = 0.3f),
                         selectedLabelColor = AnimeGold
@@ -205,11 +217,22 @@ fun StudioAnalyticsDataViz(
                 FilterChip(
                     selected = selectedMetricTab == 2,
                     onClick = { selectedMetricTab = 2 },
-                    label = { Text("Engagement", fontSize = 11.sp) },
-                    leadingIcon = { Icon(Icons.Default.Visibility, contentDescription = null, modifier = Modifier.size(14.dp)) },
+                    label = { Text(AppLocaleStrings.tr(lang, "Views", "व्यूज"), fontSize = 10.sp) },
+                    leadingIcon = { Icon(Icons.Default.Visibility, contentDescription = null, modifier = Modifier.size(12.dp)) },
                     colors = FilterChipDefaults.filterChipColors(
                         selectedContainerColor = AnimePink.copy(alpha = 0.3f),
                         selectedLabelColor = AnimePink
+                    ),
+                    modifier = Modifier.weight(1f).height(32.dp)
+                )
+                FilterChip(
+                    selected = selectedMetricTab == 3,
+                    onClick = { selectedMetricTab = 3 },
+                    label = { Text(AppLocaleStrings.tr(lang, "Weekly", "साप्ताहिक"), fontSize = 10.sp) },
+                    leadingIcon = { Icon(Icons.Default.BarChart, contentDescription = null, modifier = Modifier.size(12.dp)) },
+                    colors = FilterChipDefaults.filterChipColors(
+                        selectedContainerColor = AnimePurple.copy(alpha = 0.3f),
+                        selectedLabelColor = AnimePurple
                     ),
                     modifier = Modifier.weight(1f).height(32.dp)
                 )
@@ -222,7 +245,7 @@ fun StudioAnalyticsDataViz(
                 0 -> {
                     // TAB 0: Daily Active Video Generations (Recharts-style Area & Line Chart)
                     Text(
-                        text = "Daily Generations Peak: ${dailyGenerationsData.maxOrNull()?.toInt() ?: 0} clips / day",
+                        text = "${AppLocaleStrings.tr(lang, "Daily Generations Peak", "दैनिक निर्माण शिखर")}: ${dailyGenerationsData.maxOrNull()?.toInt() ?: 0} ${AppLocaleStrings.tr(lang, "clips/day", "क्लिप्स/दिन")}",
                         color = AnimeCyan,
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Bold
@@ -243,7 +266,7 @@ fun StudioAnalyticsDataViz(
                 1 -> {
                     // TAB 1: Most Popular Character Styles Bar Breakdown
                     Text(
-                        text = "Most Used Character Aesthetics & Archetypes:",
+                        text = AppLocaleStrings.tr(lang, "Most Used Character Aesthetics & Archetypes:", "सबसे अधिक उपयोग किए जाने वाले पात्र सौंदर्य और प्रकार:"),
                         color = AnimeGold,
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Bold
@@ -302,9 +325,9 @@ fun StudioAnalyticsDataViz(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        EngagementStatCard(title = "Total Views", value = "120.4K", change = "+42%", tint = AnimeCyan)
-                        EngagementStatCard(title = "Avg Retention", value = "92.4%", change = "+8.2%", tint = AnimeGreen)
-                        EngagementStatCard(title = "Share CTR", value = "18.6%", change = "+5.1%", tint = AnimeGold)
+                        EngagementStatCard(title = AppLocaleStrings.tr(lang, "Total Views", "कुल व्यूज"), value = "120.4K", change = "+42%", tint = AnimeCyan)
+                        EngagementStatCard(title = AppLocaleStrings.tr(lang, "Avg Retention", "औसत प्रतिधारण"), value = "92.4%", change = "+8.2%", tint = AnimeGreen)
+                        EngagementStatCard(title = AppLocaleStrings.tr(lang, "Share CTR", "शेयर सीटीआर"), value = "18.6%", change = "+5.1%", tint = AnimeGold)
                     }
 
                     Spacer(modifier = Modifier.height(10.dp))
@@ -328,11 +351,84 @@ fun StudioAnalyticsDataViz(
                     ) {
                         Box(modifier = Modifier.size(8.dp).clip(CircleShape).background(AnimeCyan))
                         Spacer(modifier = Modifier.width(4.dp))
-                        Text("Views Volume", color = TextSecondary, fontSize = 9.sp)
+                        Text(AppLocaleStrings.tr(lang, "Views Volume", "व्यूज मात्रा"), color = TextSecondary, fontSize = 9.sp)
                         Spacer(modifier = Modifier.width(14.dp))
                         Box(modifier = Modifier.size(8.dp).clip(CircleShape).background(AnimePink))
                         Spacer(modifier = Modifier.width(4.dp))
-                        Text("Audience Retention %", color = TextSecondary, fontSize = 9.sp)
+                        Text(AppLocaleStrings.tr(lang, "Audience Retention %", "दर्शक प्रतिधारण %"), color = TextSecondary, fontSize = 9.sp)
+                    }
+                }
+
+                else -> {
+                    // TAB 3: Weekly Activity (Scripts Generated vs Exports Completed)
+                    val weeksLabels = listOf(
+                        AppLocaleStrings.tr(lang, "W1", "सप्ता.1"),
+                        AppLocaleStrings.tr(lang, "W2", "सप्ता.2"),
+                        AppLocaleStrings.tr(lang, "W3", "सप्ता.3"),
+                        AppLocaleStrings.tr(lang, "W4", "सप्ता.4")
+                    )
+                    val weeklyScripts = listOf(14f, 22f, 31f, 48f)
+                    val weeklyExports = listOf(8f, 16f, 25f, 42f)
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        EngagementStatCard(
+                            title = AppLocaleStrings.tr(lang, "Scripts Created", "निर्मित पटकथाएं"),
+                            value = "115",
+                            change = "+36%",
+                            tint = AnimePurple
+                        )
+                        EngagementStatCard(
+                            title = AppLocaleStrings.tr(lang, "Exports Completed", "पूर्ण किए गए निर्यात"),
+                            value = "91",
+                            change = "+48%",
+                            tint = AnimeGreen
+                        )
+                        EngagementStatCard(
+                            title = AppLocaleStrings.tr(lang, "Render Ratio", "रेंडर अनुपात"),
+                            value = "79.1%",
+                            change = "+6.4%",
+                            tint = AnimeCyan
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    Text(
+                        text = AppLocaleStrings.tr(lang, "Project Creation Activity (Scripts vs Exports):", "प्रोजेक्ट निर्माण गतिविधि (पटकथा बनाम निर्यात):"),
+                        color = AnimePurple,
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    RechartsMultiLineChart(
+                        line1 = weeklyScripts,
+                        line2 = weeklyExports,
+                        labels = weeksLabels,
+                        color1 = AnimePurple,
+                        color2 = AnimeGreen,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(140.dp)
+                    )
+
+                    Spacer(modifier = Modifier.height(6.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.Center,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Box(modifier = Modifier.size(8.dp).clip(CircleShape).background(AnimePurple))
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(AppLocaleStrings.tr(lang, "Scripts Generated", "निर्मित पटकथाएं"), color = TextSecondary, fontSize = 9.sp)
+                        Spacer(modifier = Modifier.width(14.dp))
+                        Box(modifier = Modifier.size(8.dp).clip(CircleShape).background(AnimeGreen))
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(AppLocaleStrings.tr(lang, "Exports Completed", "पूर्ण किए गए निर्यात"), color = TextSecondary, fontSize = 9.sp)
                     }
                 }
             }

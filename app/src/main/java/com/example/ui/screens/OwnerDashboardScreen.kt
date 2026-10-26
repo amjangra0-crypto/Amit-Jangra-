@@ -117,6 +117,9 @@ import com.example.ui.components.SubscriptionRevenueChartCard
 import com.example.ui.components.FirebaseCloudSyncCard
 import com.example.ui.components.OwnerTrendPulseAgentSection
 import com.example.ui.components.OwnerAiAgentResearchHub
+import com.example.ui.components.OwnerMiniBankDialog
+import com.example.data.engine.OwnerFeatureGovernanceManager
+import com.example.data.engine.GovernedFeature
 import com.example.ui.theme.AnimeCyan
 import com.example.ui.theme.AnimeCyanLight
 import com.example.ui.theme.AnimeGold
@@ -203,8 +206,12 @@ fun OwnerDashboardScreen(
     var showCurrencyExchangeDialog by remember { mutableStateOf(false) }
     var showModifyOwnerCredentialsDialog by remember { mutableStateOf(false) }
     var showSubscriptionHistoryDialog by remember { mutableStateOf(false) }
+    var showOwnerMiniBankDialog by remember { mutableStateOf(false) }
     var scannedWithdrawalDestination by remember { mutableStateOf<ScannedBarcodeResult?>(null) }
     var selectedWalletCurrency by remember { mutableStateOf(CurrencyType.INR) }
+
+    val governanceManager = remember { OwnerFeatureGovernanceManager.getInstance(context) }
+    val governanceStates by governanceManager.governanceStates.collectAsState()
 
     // If not authenticated, show Security Quarantine barrier
     if (!isSessionAuthenticated) {
@@ -443,6 +450,129 @@ fun OwnerDashboardScreen(
                 Icon(Icons.Default.Wallet, contentDescription = null, tint = Color.White, modifier = Modifier.size(14.dp))
                 Spacer(modifier = Modifier.width(4.dp))
                 Text("Full Wallet", color = Color.White, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+            }
+        }
+
+        // OWNER MINI BANK QUICK ENTRY
+        Button(
+            onClick = { showOwnerMiniBankDialog = true },
+            colors = ButtonDefaults.buttonColors(containerColor = AnimeCyan),
+            shape = RoundedCornerShape(12.dp),
+            modifier = Modifier.fillMaxWidth().height(44.dp).testTag("owner_dashboard_open_mini_bank_btn")
+        ) {
+            Icon(Icons.Default.AccountBalance, contentDescription = null, tint = Color.Black, modifier = Modifier.size(18.dp))
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(
+                text = AppLocaleStrings.tr(
+                    lang,
+                    "👑 Open Owner Mini Bank (Multi-Currency & AI Agent Controller)",
+                    "👑 ओनर मिनी बैंक खोलें (मल्टी-करेंसी व एआई एजेंट)"
+                ),
+                color = Color.Black,
+                fontWeight = FontWeight.Bold,
+                fontSize = 12.sp
+            )
+        }
+
+        Spacer(modifier = Modifier.height(14.dp))
+
+        // OWNER REMOTE FEATURE GOVERNANCE CARD (AUTOMATION, TRENDPLUS, LEARNING HUB, SOCIAL RESEARCH)
+        Card(
+            modifier = Modifier.fillMaxWidth().testTag("owner_remote_feature_governance_card"),
+            colors = CardDefaults.cardColors(containerColor = AnimeSurface),
+            shape = RoundedCornerShape(16.dp),
+            border = BorderStroke(1.5.dp, AnimePurple)
+        ) {
+            Column(modifier = Modifier.padding(14.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Box(
+                        modifier = Modifier
+                            .size(36.dp)
+                            .clip(CircleShape)
+                            .background(AnimePurple.copy(alpha = 0.2f)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(Icons.Default.ManageAccounts, contentDescription = null, tint = AnimePurple, modifier = Modifier.size(20.dp))
+                    }
+                    Spacer(modifier = Modifier.width(10.dp))
+                    Column {
+                        Text(
+                            text = AppLocaleStrings.tr(lang, "🎛️ Remote Feature Controls for Users", "🎛️ यूजर्स के लिए रिमोट फीचर नियंत्रण"),
+                            color = AnimePurple,
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Text(
+                            text = AppLocaleStrings.tr(
+                                lang,
+                                "Disabling turns off instantly in real-time. Enabling requires users to update app.",
+                                "बंद करने पर तुरंत बंद होता है। चालू करने पर यूजर्स को अपडेट करना अनिवार्य है।"
+                            ),
+                            color = TextMuted,
+                            fontSize = 10.sp
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                GovernedFeature.entries.forEach { feat ->
+                    val state = governanceStates[feat] ?: com.example.data.engine.FeatureGovernanceState(feat)
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 4.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text(feat.iconEmoji, fontSize = 14.sp)
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text(
+                                    text = if (lang == "Hindi") feat.titleHi else feat.titleEn,
+                                    color = TextPrimary,
+                                    fontSize = 12.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                            Text(
+                                text = if (lang == "Hindi") feat.descriptionHi else feat.descriptionEn,
+                                color = TextMuted,
+                                fontSize = 9.sp
+                            )
+                            Text(
+                                text = if (state.isOwnerEnabled) "Status: Enabled for Users (Update Enforced)" else "Status: Disabled (Blocked in Real-Time)",
+                                color = if (state.isOwnerEnabled) AnimeGreen else AnimePink,
+                                fontSize = 8.sp,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.width(8.dp))
+
+                        Switch(
+                            checked = state.isOwnerEnabled,
+                            onCheckedChange = { isChecked ->
+                                val userConsentMgr = com.example.data.engine.UserUpdateConsentManager.getInstance(context)
+                                governanceManager.setFeatureEnabledByOwner(feat, isChecked, userConsentMgr)
+                                val msg = if (isChecked) {
+                                    "✓ Enabled ${feat.titleEn}. Rollout update dispatched to users."
+                                } else {
+                                    "⚠️ Disabled ${feat.titleEn}. Blocked immediately in real-time for all users."
+                                }
+                                Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
+                            },
+                            colors = SwitchDefaults.colors(
+                                checkedThumbColor = AnimeGreen,
+                                checkedTrackColor = AnimeGreen.copy(alpha = 0.4f),
+                                uncheckedThumbColor = AnimePink,
+                                uncheckedTrackColor = AnimePink.copy(alpha = 0.3f)
+                            )
+                        )
+                    }
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.2f), modifier = Modifier.padding(vertical = 4.dp))
+                }
             }
         }
 
@@ -1048,6 +1178,15 @@ fun OwnerDashboardScreen(
     // =============================================================================================
     // MODAL DIALOGS
     // =============================================================================================
+
+    // DIALOG 0: OWNER MINI BANK (MULTI-CURRENCY & AI AGENT CONTROLLER)
+    if (showOwnerMiniBankDialog) {
+        OwnerMiniBankDialog(
+            viewModel = viewModel,
+            lang = lang,
+            onDismiss = { showOwnerMiniBankDialog = false }
+        )
+    }
 
     // DIALOG 1: ADJUST / ADD FUNDS TO WALLET BALANCE
     if (showAdjustBalanceDialog) {

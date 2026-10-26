@@ -40,6 +40,10 @@ import androidx.compose.material.icons.filled.RecordVoiceOver
 import androidx.compose.material.icons.filled.Save
 import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material.icons.filled.Tune
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Movie
+import androidx.compose.material.icons.filled.Shield
 import androidx.compose.material.icons.filled.VolumeUp
 import androidx.compose.material.icons.filled.ViewCarousel
 import com.example.ui.components.CharacterStudioPreviewComponent
@@ -292,7 +296,15 @@ fun CharacterStudioScreen(viewModel: AnimeViewModel) {
                         OutlinedTextField(
                             value = state.characterPromptInput,
                             onValueChange = { viewModel.setCharacterPromptInput(it) },
-                            placeholder = { Text("उदा: Cyber samurai girl with neon cyan twin tails, dragon kimono and glowing katana...") },
+                            placeholder = {
+                                Text(
+                                    AppLocaleStrings.tr(
+                                        state.selectedLanguage,
+                                        "e.g.: Cyber samurai girl with neon cyan twin tails, dragon kimono and glowing katana...",
+                                        "उदा: Cyber samurai girl with neon cyan twin tails, dragon kimono and glowing katana..."
+                                    )
+                                )
+                            },
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .testTag("char_visual_prompt_input"),
@@ -431,12 +443,120 @@ fun CharacterStudioScreen(viewModel: AnimeViewModel) {
                         )
 
                         // Accessory Aura
+                        // Accessory Aura
                         VisualAttributeSelector(
                             title = AppLocaleStrings.tr(state.selectedLanguage, "Accessory & Aura", "औरा / इफेक्ट (Accessory & Aura)"),
-                            options = listOf("Crackling Blue Lightning Sparks", "Dancing Sakura Blossom Blizzard", "Swirling Dragon Fire Aura", "Holographic Glitch Particles", "Celestial Golden Particles"),
+                            options = listOf(
+                                "👑 Shadow Sovereign Aura (Monarch Domain)",
+                                "⚡ Ultra Instinct Divine Spark",
+                                "🔥 Super Saiyan Golden Surge",
+                                "🖤 Conqueror's Haki Domination",
+                                "🩸 Bloodlust Demon Lord Menace",
+                                "🌸 Swirling Sakura Blade Blizzard",
+                                "Crackling Blue Lightning Sparks",
+                                "Celestial Golden Particles"
+                            ),
                             selected = draft.accessoryAura,
                             onSelect = { viewModel.updateCharacterDraft(draft.copy(accessoryAura = it)) }
                         )
+
+                        Spacer(modifier = Modifier.height(10.dp))
+
+                        // --- Dedicated Aura Farming & Suspense Entry Control Card ---
+                        var targetRole by remember { mutableStateOf("Main Character (MC)") }
+                        var auraIntensityVal by remember { mutableFloatStateOf(0.85f) }
+                        var suspenseStyle by remember { mutableStateOf("🌫️ Silhouette in Dense Fog / Smoke") }
+
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = CardDefaults.cardColors(containerColor = AnimeSurfaceVariant),
+                            shape = RoundedCornerShape(12.dp),
+                            border = BorderStroke(1.dp, AnimePurple.copy(alpha = 0.6f))
+                        ) {
+                            Column(modifier = Modifier.padding(12.dp)) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(Icons.Default.Shield, contentDescription = null, tint = AnimeGold, modifier = Modifier.size(16.dp))
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Text(
+                                        text = AppLocaleStrings.tr(state.selectedLanguage, "👑 Aura Farming & Suspense Entry Station", "👑 औरा फार्मिंग व सस्पेंस एंट्री स्टेशन"),
+                                        color = AnimeGold,
+                                        fontSize = 12.sp,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                }
+                                Spacer(modifier = Modifier.height(6.dp))
+
+                                Text(AppLocaleStrings.tr(state.selectedLanguage, "Target Character Role:", "लक्षित करैक्टर रोल:"), color = TextSecondary, fontSize = 10.sp)
+                                Row(horizontalArrangement = Arrangement.spacedBy(4.dp), modifier = Modifier.fillMaxWidth()) {
+                                    val roles = listOf("MC", "Villain", "Rival", draft.name.take(6))
+                                    roles.forEach { r ->
+                                        val isSel = targetRole.contains(r, ignoreCase = true)
+                                        Box(
+                                            modifier = Modifier
+                                                .clip(RoundedCornerShape(6.dp))
+                                                .background(if (isSel) AnimePurple else AnimeSurface)
+                                                .border(1.dp, if (isSel) AnimeGold else Color.Transparent, RoundedCornerShape(6.dp))
+                                                .clickable {
+                                                    targetRole = r
+                                                    val roleTitle = when (r) {
+                                                        "MC" -> "Main Character (MC)"
+                                                        "Villain" -> "Villain / Final Boss"
+                                                        "Rival" -> "Rival / Anti-Hero"
+                                                        else -> draft.name
+                                                    }
+                                                    viewModel.updateCharacterDraft(draft.copy(role = roleTitle))
+                                                }
+                                                .padding(horizontal = 8.dp, vertical = 4.dp)
+                                        ) {
+                                            Text(r, color = if (isSel) Color.White else TextSecondary, fontSize = 10.sp, fontWeight = if (isSel) FontWeight.Bold else FontWeight.Normal)
+                                        }
+                                    }
+                                }
+
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                                    Text(AppLocaleStrings.tr(state.selectedLanguage, "Aura Farming Power Surge:", "औरा फार्मिंग ऊर्जा स्तर:"), color = TextSecondary, fontSize = 10.sp)
+                                    Text("${(auraIntensityVal * 100).toInt()}%", color = AnimeGold, fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                                }
+                                Slider(
+                                    value = auraIntensityVal,
+                                    onValueChange = { auraIntensityVal = it },
+                                    valueRange = 0.25f..1.0f,
+                                    colors = SliderDefaults.colors(thumbColor = AnimeGold, activeTrackColor = AnimeGold)
+                                )
+
+                                Spacer(modifier = Modifier.height(6.dp))
+                                Text(AppLocaleStrings.tr(state.selectedLanguage, "Suspense Entry Sequence:", "सस्पेंस एंट्री सीक्वेंस:"), color = TextSecondary, fontSize = 10.sp)
+                                val entries = listOf(
+                                    "🌫️ Silhouette in Fog",
+                                    "⚡ Lightning Crater Landing",
+                                    "👣 Slow-Mo Footsteps",
+                                    "👁️ Red Eyes in Darkness",
+                                    "🌪️ Sky Descent Impact",
+                                    "⚔️ Katana Click Shockwave"
+                                )
+                                FlowRow(horizontalArrangement = Arrangement.spacedBy(4.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                                    entries.forEach { ent ->
+                                        val isSel = suspenseStyle.contains(ent.take(8), ignoreCase = true)
+                                        Box(
+                                            modifier = Modifier
+                                                .clip(RoundedCornerShape(6.dp))
+                                                .background(if (isSel) AnimeCyan.copy(alpha = 0.2f) else AnimeSurface)
+                                                .border(1.dp, if (isSel) AnimeCyan else Color.Transparent, RoundedCornerShape(6.dp))
+                                                .clickable {
+                                                    suspenseStyle = ent
+                                                    viewModel.updateCharacterDraft(draft.copy(personality = ent))
+                                                }
+                                                .padding(horizontal = 6.dp, vertical = 3.dp)
+                                        ) {
+                                            Text(ent, color = if (isSel) AnimeCyanLight else TextSecondary, fontSize = 9.sp)
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(10.dp))
 
                         // Expression
                         VisualAttributeSelector(

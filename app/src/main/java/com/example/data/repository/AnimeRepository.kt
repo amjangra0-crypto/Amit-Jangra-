@@ -131,7 +131,8 @@ class AnimeRepository(
         sourcePlatform: SourcePlatform = SourcePlatform.DIRECT_TEXT,
         isSeriesContinuity: Boolean = false,
         linkedScript: AnimeScript? = null,
-        linkedEpisodeNumber: Int = 1
+        linkedEpisodeNumber: Int = 1,
+        isOffline: Boolean = false
     ): AnimeScript {
         val excludedNames = if (isSeriesContinuity) emptySet() else getExistingCharacterNames()
         val script = geminiService.generateAnimeScript(
@@ -147,7 +148,8 @@ class AnimeRepository(
             isSeriesContinuity = isSeriesContinuity,
             linkedScript = linkedScript,
             linkedEpisodeNumber = linkedEpisodeNumber,
-            excludedCharacterNames = excludedNames
+            excludedCharacterNames = excludedNames,
+            isOffline = isOffline
         )
         return script
     }
@@ -339,215 +341,22 @@ class AnimeRepository(
     }
 
     suspend fun ensureInitialProjectsSeeded() {
-        val existing = dao.getAllScriptsOnce()
-        if (existing.isEmpty()) {
-            val now = System.currentTimeMillis()
-
-            val project1 = AnimeScript(
-                id = "proj_cyber_shinobi_2099",
-                title = "Cyber Shinobi 2099: Neo Tokyo Awakening",
-                originalPrompt = "नियॉन टोक्यो 2099 में साइबर शिनोबी और भविष्य के योद्धाओं का महामुकाबला",
-                inputSourceType = "TEXT_PROMPT",
-                genre = "Cyberpunk Action",
-                artStyle = "Japanese Anime",
-                productionFormat = "Standard Anime Episode",
-                defaultMotionEffect = "Shonen Speedlines",
-                language = "Hindi",
-                voiceoverLanguage = "Hindi",
-                synopsis = "वर्ष 2099 में जब नियॉन टोक्यो की गलियों पर विशाल कॉर्प्स का कब्ज़ा हो जाता है, तब युवा शिनोबी रेन और आयरा अपनी जादुई साइबर तलवारों से स्वतंत्रता की अंतिम लड़ाई लड़ते हैं।",
-                characters = defaultCharacters,
-                scenes = listOf(
-                    AnimeScene(
-                        sceneNumber = 1,
-                        title = "Raid on the Neon Skyline",
-                        visualPrompt = "Cyber shinobi standing atop a neon-lit futuristic skyscraper in Neo Tokyo during acid rain",
-                        backgroundType = "Futuristic Cyberpunk Skyline",
-                        bgMood = "Dark Cyber Synthwave",
-                        dialogues = listOf(
-                            DialogueLine(
-                                characterName = "Ren",
-                                text = "आयरा, शहर का केंद्रीय ग्रिड सक्रिय हो चुका है। अब पीछे हटने का कोई रास्ता नहीं है!",
-                                emotion = "Determined",
-                                expression = "Confident Smirk",
-                                motionEffect = "SPEEDLINES_ACTION",
-                                voicePitch = 1.15f,
-                                voiceSpeed = 1.05f,
-                                voiceType = "Boy",
-                                voiceAccent = "Hindi Dub (Heroic Bollywood Anime)"
-                            ),
-                            DialogueLine(
-                                characterName = "Aira",
-                                text = "My plasma blade is charged, Ren! We will liberate Neo Tokyo today!",
-                                emotion = "Heroic",
-                                expression = "Determined Glance",
-                                motionEffect = "GLOW_AURA",
-                                voicePitch = 1.35f,
-                                voiceSpeed = 1.02f,
-                                voiceType = "Girl",
-                                voiceAccent = "Hindi Dub (Heroic Bollywood Anime)"
-                            )
-                        ),
-                        durationSec = 8,
-                        sceneDrawableName = "scene_neon_tokyo",
-                        atmosphericEffect = "Cyber Neon Rain",
-                        motionEffect = "SPEEDLINES_ACTION",
-                        productionFormat = "Standard Anime Episode"
-                    ),
-                    AnimeScene(
-                        sceneNumber = 2,
-                        title = "Master Kyoto's Secret Directive",
-                        visualPrompt = "Holographic shrine inside a hidden underground dojo with Master Kyoto guiding the disciples",
-                        backgroundType = "Cyber Shrine Dojo",
-                        bgMood = "Mystic Cyber Flute",
-                        dialogues = listOf(
-                            DialogueLine(
-                                characterName = "Master Kyoto",
-                                text = "A shinobi spirit is never defeated. Awaken the thunder within!",
-                                emotion = "Wise",
-                                expression = "Calm Master",
-                                motionEffect = "SHOCKWAVE",
-                                voicePitch = 1.0f,
-                                voiceSpeed = 0.95f,
-                                voiceType = "Lady",
-                                voiceAccent = "Sensei Hindi Cadence"
-                            )
-                        ),
-                        durationSec = 7,
-                        sceneDrawableName = "scene_cherry_temple",
-                        atmosphericEffect = "Holographic Petals",
-                        motionEffect = "DYNAMIC_ZOOM_IN",
-                        productionFormat = "Standard Anime Episode"
-                    ),
-                    AnimeScene(
-                        sceneNumber = 3,
-                        title = "Final Supersonic Strike",
-                        visualPrompt = "Climactic duel over the neon megatower with dual energy swords colliding",
-                        backgroundType = "Megatower Apex",
-                        bgMood = "Epic Shonen Battle Rock",
-                        dialogues = listOf(
-                            DialogueLine(
-                                characterName = "Ren",
-                                text = "Shinobi Secret Art: Thunder Dragon Cleave!",
-                                emotion = "Explosive",
-                                expression = "Battle Cry",
-                                motionEffect = "SPEEDLINES_ACTION",
-                                voicePitch = 1.25f,
-                                voiceSpeed = 1.15f,
-                                voiceType = "Boy",
-                                voiceAccent = "Hindi Dub (Heroic Bollywood Anime)"
-                            )
-                        ),
-                        durationSec = 9,
-                        sceneDrawableName = "scene_neon_tokyo",
-                        atmosphericEffect = "Thunder Sparks",
-                        motionEffect = "SPEEDLINES_ACTION",
-                        productionFormat = "Standard Anime Episode"
-                    )
-                ),
-                createdAt = now - (3600000L * 4) // 4 hours ago
-            )
-
-            val project2 = AnimeScript(
-                id = "proj_dragon_alchemist_lotus",
-                title = "The Last Dragon Alchemist: Crimson Lotus",
-                originalPrompt = "Shonen anime of ancient dragon alchemy and sacred flame lotus",
-                inputSourceType = "TEXT_PROMPT",
-                genre = "Fantasy Magic",
-                artStyle = "Studio Ghibli Lush",
-                productionFormat = "Anime Short Film",
-                defaultMotionEffect = "Cherry Blossom Drift",
-                language = "Hindi",
-                voiceoverLanguage = "Hindi",
-                synopsis = "एक युवा कीमियागर जो ड्रैगन की लुप्त अग्नि कला की खोज में चेरी ब्लॉसम पर्वत की चोटियों पर निकलता है, जहाँ उसका सामना जादुई ताकतों से होता है।",
-                characters = defaultCharacters,
-                scenes = listOf(
-                    AnimeScene(
-                        sceneNumber = 1,
-                        title = "Temple of the Flame Lotus",
-                        visualPrompt = "Ancient sacred dragon shrine in misty autumn mountains covered in red maple leaves",
-                        backgroundType = "Crimson Lotus Sanctuary",
-                        bgMood = "Emotional Piano & Strings",
-                        dialogues = listOf(
-                            DialogueLine(
-                                characterName = "Popo (पोपो)",
-                                text = "Master! The ancient wheel is glowing! Is the dragon really awakening?",
-                                emotion = "Excited",
-                                expression = "Wide Eyed Mascot",
-                                motionEffect = "GENTLE_FLOAT",
-                                voicePitch = 1.6f,
-                                voiceSpeed = 1.15f,
-                                voiceType = "Mascot",
-                                voiceAccent = "Cute Mascot Hindi"
-                            ),
-                            DialogueLine(
-                                characterName = "Ren",
-                                text = "Yes Popo, after centuries of sleep, the dragon flame shall ignite again!",
-                                emotion = "Awe",
-                                expression = "Hopeful Smile",
-                                motionEffect = "GLOW_AURA",
-                                voicePitch = 1.15f,
-                                voiceSpeed = 1.05f,
-                                voiceType = "Boy",
-                                voiceAccent = "Hindi Dub (Heroic Bollywood Anime)"
-                            )
-                        ),
-                        durationSec = 8,
-                        sceneDrawableName = "scene_cherry_temple",
-                        atmosphericEffect = "Crimson Petal Storm",
-                        motionEffect = "GENTLE_FLOAT",
-                        productionFormat = "Anime Short Film"
-                    )
-                ),
-                createdAt = now - (3600000L * 28) // Yesterday
-            )
-
-            val project3 = AnimeScript(
-                id = "proj_tokyo_sakura_chronicles",
-                title = "Tokyo Midnight Sakura: Love & Legends",
-                originalPrompt = "टोक्यो की बारिश और चेरी ब्लॉसम के साए में दो प्रेमियों की रहस्यमयी कहानी",
-                inputSourceType = "TEXT_PROMPT",
-                genre = "Romance Supernatural",
-                artStyle = "Makoto Shinkai Cinematic",
-                productionFormat = "Anime Music Video (AMV)",
-                defaultMotionEffect = "Cherry Blossom Drift",
-                language = "Hindi",
-                voiceoverLanguage = "Hindi",
-                synopsis = "टोक्यो की मध्यरात्रि में जब समय थम जाता है, केवल वे दो लोग चेरी ब्लॉसम के पेड़ों के नीचे एक-दूसरे की आवाज़ सुन सकते हैं।",
-                characters = defaultCharacters,
-                scenes = listOf(
-                    AnimeScene(
-                        sceneNumber = 1,
-                        title = "Midnight Sakura Bridge",
-                        visualPrompt = "Two lovers meeting on a traditional wooden bridge under a luminous full moon with cherry blossoms falling",
-                        backgroundType = "Kyoto Moonlight Sanctuary",
-                        bgMood = "Nostalgic Acoustic Guitar",
-                        dialogues = listOf(
-                            DialogueLine(
-                                characterName = "Aira",
-                                text = "Ren, even if the world forgets us, these blossoms will remember our promise.",
-                                emotion = "Gentle Love",
-                                expression = "Blushing Warm Smile",
-                                motionEffect = "GENTLE_FLOAT",
-                                voicePitch = 1.3f,
-                                voiceSpeed = 0.98f,
-                                voiceType = "Girl",
-                                voiceAccent = "Hindi Dub (Heroic Bollywood Anime)"
-                            )
-                        ),
-                        durationSec = 8,
-                        sceneDrawableName = "scene_cherry_temple",
-                        atmosphericEffect = "Golden Stardust",
-                        motionEffect = "GENTLE_FLOAT",
-                        productionFormat = "Anime Music Video (AMV)"
-                    )
-                ),
-                createdAt = now - (3600000L * 72) // 3 days ago
-            )
-
-            saveScript(project1)
-            saveScript(project2)
-            saveScript(project3)
-        }
+        // As strictly required: When any user installs and creates an account, there must NOT be any
+        // example videos anywhere in this app until the user generates a video themselves.
+        // Clean up any previously seeded mock projects so all project lists start completely clean.
+        try {
+            val existing = dao.getAllScriptsOnce()
+            for (script in existing) {
+                if (script.id == "proj_cyber_shinobi_2099" ||
+                    script.id == "proj_dragon_alchemist_lotus" ||
+                    script.id == "proj_tokyo_sakura_chronicles" ||
+                    script.id.startsWith("demo_") ||
+                    script.id.startsWith("sample_")
+                ) {
+                    dao.deleteScriptById(script.id)
+                }
+            }
+        } catch (_: Exception) {}
     }
 
     suspend fun updateAdminSettings(settings: AdminAccessEntity) {
