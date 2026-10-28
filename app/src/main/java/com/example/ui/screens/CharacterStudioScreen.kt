@@ -428,7 +428,7 @@ fun CharacterStudioScreen(viewModel: AnimeViewModel) {
 
                         // Eye Color
                         VisualAttributeSelector(
-                            title = AppLocaleStrings.tr(state.selectedLanguage, "Eye Color", "आंखों का रंग (Eye Color)"),
+                            title = AppLocaleStrings.tr(state.selectedLanguage, "Eye Color", "आंखों का रंग"),
                             options = listOf("Sapphire Neon Blue", "Crimson Ruby Flame", "Amethyst Mystic Violet", "Emerald Forest Glow", "Golden Topaz"),
                             selected = draft.eyeColor,
                             onSelect = { viewModel.updateCharacterDraft(draft.copy(eyeColor = it)) }
@@ -436,7 +436,7 @@ fun CharacterStudioScreen(viewModel: AnimeViewModel) {
 
                         // Outfit
                         VisualAttributeSelector(
-                            title = AppLocaleStrings.tr(state.selectedLanguage, "Outfit", "कॉस्ट्यूम / आउटफिट (Outfit)"),
+                            title = AppLocaleStrings.tr(state.selectedLanguage, "Outfit", "कॉस्ट्यूम व परिधान"),
                             options = listOf("Cyber Shinobi Exo-Suit", "Traditional Ronin Kimono", "High Academy Uniform", "Enchanted Starlight Cloak", "Battle Armor"),
                             selected = draft.outfit,
                             onSelect = { viewModel.updateCharacterDraft(draft.copy(outfit = it)) }
@@ -445,7 +445,7 @@ fun CharacterStudioScreen(viewModel: AnimeViewModel) {
                         // Accessory Aura
                         // Accessory Aura
                         VisualAttributeSelector(
-                            title = AppLocaleStrings.tr(state.selectedLanguage, "Accessory & Aura", "औरा / इफेक्ट (Accessory & Aura)"),
+                            title = AppLocaleStrings.tr(state.selectedLanguage, "Accessory & Aura", "औरा व प्रभाव"),
                             options = listOf(
                                 "👑 Shadow Sovereign Aura (Monarch Domain)",
                                 "⚡ Ultra Instinct Divine Spark",
@@ -560,7 +560,7 @@ fun CharacterStudioScreen(viewModel: AnimeViewModel) {
 
                         // Expression
                         VisualAttributeSelector(
-                            title = AppLocaleStrings.tr(state.selectedLanguage, "Expression", "चेहरे का भाव (Expression)"),
+                            title = AppLocaleStrings.tr(state.selectedLanguage, "Expression", "चेहरे का भाव"),
                             options = listOf("Fierce Determined Stare", "Warm Confident Smile", "Calm Mysterious Smirk", "Playful Kawaii Winking"),
                             selected = draft.expression,
                             onSelect = { viewModel.updateCharacterDraft(draft.copy(expression = it)) }
@@ -579,7 +579,7 @@ fun CharacterStudioScreen(viewModel: AnimeViewModel) {
                         ) {
                             Icon(Icons.Default.Save, contentDescription = null, modifier = Modifier.size(16.dp))
                             Spacer(modifier = Modifier.width(6.dp))
-                            Text(AppLocaleStrings.tr(state.selectedLanguage, "Save to Anime Roster", "करैक्टर सेव करें (Save to Anime Roster)"), fontWeight = FontWeight.Bold)
+                            Text(AppLocaleStrings.tr(state.selectedLanguage, "Save to Anime Roster", "करैक्टर सहेजें"), fontWeight = FontWeight.Bold)
                         }
                     }
                 }
@@ -610,7 +610,7 @@ fun CharacterStudioScreen(viewModel: AnimeViewModel) {
                             Icon(Icons.Default.RecordVoiceOver, contentDescription = null, tint = AnimePink, modifier = Modifier.size(20.dp))
                             Spacer(modifier = Modifier.width(6.dp))
                             Text(
-                                text = AppLocaleStrings.tr(state.selectedLanguage, "🎙️ AI Voice Selection (Diverse Voices: Male, Female, Child, Accents)", "🎙️ AI वॉइस चयन (Diverse Voices: Male, Female, Child, Accents)"),
+                                text = AppLocaleStrings.tr(state.selectedLanguage, "🎙️ AI Voice Selection (Diverse Voices: Male, Female, Child, Accents)", "🎙️ AI वॉइस चयन (विविध आवाजें: पुरुष, महिला, बालक, एक्सेंट)"),
                                 color = TextPrimary,
                                 fontSize = 14.sp,
                                 fontWeight = FontWeight.Bold
@@ -619,7 +619,7 @@ fun CharacterStudioScreen(viewModel: AnimeViewModel) {
                         Spacer(modifier = Modifier.height(12.dp))
 
                         // 1. Voice Gender Selection
-                        Text(AppLocaleStrings.tr(state.selectedLanguage, "1. Voice Gender:", "1. वॉइस जेंडर (Voice Gender):"), color = TextSecondary, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                        Text(AppLocaleStrings.tr(state.selectedLanguage, "1. Voice Gender:", "1. वॉइस जेंडर:"), color = TextSecondary, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(vertical = 4.dp)) {
                             listOf("Male", "Female", "Child").forEach { g ->
                                 val isSelected = draft.voiceGender.equals(g, ignoreCase = true)
@@ -675,7 +675,7 @@ fun CharacterStudioScreen(viewModel: AnimeViewModel) {
                         Spacer(modifier = Modifier.height(10.dp))
 
                         // 2. Voice Persona Options based on selected gender
-                        Text(AppLocaleStrings.tr(state.selectedLanguage, "2. AI Voice Persona:", "2. AI वॉइस परसोना (Voice Persona):"), color = TextSecondary, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                        Text(AppLocaleStrings.tr(state.selectedLanguage, "2. AI Voice Persona:", "2. AI वॉइस परसोना:"), color = TextSecondary, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
                         val personas = when (draft.voiceGender) {
                             "Male" -> listOf(
                                 "Deep Shonen Hero" to 0.88f,
@@ -722,7 +722,7 @@ fun CharacterStudioScreen(viewModel: AnimeViewModel) {
                         Spacer(modifier = Modifier.height(10.dp))
 
                         // 3. Accent & Cadence selection
-                        Text(AppLocaleStrings.tr(state.selectedLanguage, "3. Accent & Dialect:", "3. एक्सेंट और उच्चारण (Accent & Dialect):"), color = TextSecondary, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                        Text(AppLocaleStrings.tr(state.selectedLanguage, "3. Accent & Dialect:", "3. एक्सेंट और उच्चारण:"), color = TextSecondary, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
                         val accents = listOf(
                             "Standard Anime (Japanese Cadence)",
                             "English (British Posh)",
@@ -757,12 +757,12 @@ fun CharacterStudioScreen(viewModel: AnimeViewModel) {
                         // Sliders for pitch and speed fine-tuning
                         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                             Text(
-                                text = "${AppLocaleStrings.tr(state.selectedLanguage, "Pitch Modulation:", "पिच मॉड्यूलेशन (Pitch):")} ${"%.2f".format(draft.voicePitch)}x",
+                                text = "${AppLocaleStrings.tr(state.selectedLanguage, "Pitch Modulation:", "पिच मॉड्यूलेशन:")} ${"%.2f".format(draft.voicePitch)}x",
                                 color = AnimeGold,
                                 fontSize = 12.sp
                             )
                             Text(
-                                text = "${AppLocaleStrings.tr(state.selectedLanguage, "Speed:", "गति (Speed):")} ${"%.2f".format(draft.voiceSpeed)}x",
+                                text = "${AppLocaleStrings.tr(state.selectedLanguage, "Speed:", "गति:")} ${"%.2f".format(draft.voiceSpeed)}x",
                                 color = AnimeCyan,
                                 fontSize = 12.sp
                             )
@@ -871,7 +871,7 @@ fun CharacterStudioScreen(viewModel: AnimeViewModel) {
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = AppLocaleStrings.tr(state.selectedLanguage, "Saved Anime Roster", "सेव किए गए एनिमे करैक्टर्स (Saved Anime Roster)"),
+                        text = AppLocaleStrings.tr(state.selectedLanguage, "Saved Anime Roster", "सहेजे गए एनिमे किरदार"),
                         color = TextPrimary,
                         fontSize = 15.sp,
                         fontWeight = FontWeight.Bold

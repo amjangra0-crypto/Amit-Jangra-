@@ -221,6 +221,40 @@ class AuthAndWalletRepository(private val context: Context) {
         return true
     }
 
+    fun createAccount(
+        name: String,
+        email: String,
+        phoneNumber: String,
+        otp: String
+    ): Boolean {
+        val cleanName = name.trim().ifBlank { "Anime Creator" }
+        val cleanEmail = email.trim()
+        val cleanPhone = phoneNumber.trim()
+        val isOwner = cleanEmail.equals(getOwnerEmail(), ignoreCase = true) || cleanEmail.equals(OWNER_EMAIL, ignoreCase = true) || cleanPhone.contains("9876543210")
+        val stableUid = if (isOwner) getOwnerAdminUid() else "user_" + UUID.randomUUID().toString().take(8)
+        val defaultPlan = if (isOwner) "VIP OWNER LIFETIME" else "Free Explorer"
+        val expiry = if (isOwner) "Lifetime Unlimited" else "Active"
+
+        val newProfile = UserProfile(
+            userId = stableUid,
+            displayName = if (isOwner) getOwnerUsername() else cleanName,
+            email = cleanEmail.ifBlank { null },
+            phoneNumber = cleanPhone.ifBlank { null },
+            avatarDrawableName = if (isOwner) "char_shonen_hero" else "char_anime_heroine",
+            bio = if (isOwner) "Lead Director & Founder at Anime Studio AI." else "Anime Studio Creator. Crafting stories with AI.",
+            creatorSpecialty = if (isOwner) "Anime Film Director" else "Anime Creator",
+            isOwner = isOwner,
+            authProvider = if (cleanEmail.isNotBlank()) AuthProvider.GMAIL else AuthProvider.MOBILE_OTP,
+            subscriptionPlan = defaultPlan,
+            subscriptionExpiry = expiry,
+            isLoggedIn = true,
+            joinedDate = "Today"
+        )
+        _currentUser.value = newProfile
+        saveUserProfile(newProfile)
+        return true
+    }
+
     fun logout() {
         val guest = UserProfile(
             userId = "guest_${UUID.randomUUID().toString().take(6)}",

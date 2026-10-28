@@ -26,6 +26,8 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.CloudDownload
 import androidx.compose.material.icons.filled.Key
+import androidx.compose.material.icons.filled.Share
+import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.NewReleases
 import androidx.compose.material.icons.filled.Publish
 import androidx.compose.material.icons.filled.Security
@@ -519,7 +521,7 @@ fun UpdateSettingsScreen(viewModel: AnimeViewModel) {
                         text = AppLocaleStrings.tr(
                             lang,
                             "AI Engine & Model Status",
-                            "एआई इंजन स्थिति (AI Engine Status)"
+                            "एआई इंजन स्थिति"
                         ),
                         color = TextPrimary,
                         fontSize = 14.sp,

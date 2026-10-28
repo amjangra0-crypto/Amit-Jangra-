@@ -1243,12 +1243,21 @@ class AnimeViewModel(application: Application) : AndroidViewModel(application) {
 
         setAppInterfaceLanguage(initialUiLang)
         setVideoGenerationLanguage(savedVideoLang)
+        val savedUser = authAndWalletRepo.currentUser.value
         _uiState.value = _uiState.value.copy(
             isOfflineMode = savedOfflineMode,
             isDarkMode = com.example.ui.theme.AppThemeController.isDarkMode,
-            vibrantTheme = com.example.ui.theme.AppThemeController.currentThemeKey
+            vibrantTheme = com.example.ui.theme.AppThemeController.currentThemeKey,
+            isOwnerAdmin = savedUser.isOwner && savedUser.isLoggedIn
         )
         startScriptAutosaveLoop()
+        viewModelScope.launch {
+            authAndWalletRepo.currentUser.collect { user ->
+                _uiState.value = _uiState.value.copy(
+                    isOwnerAdmin = user.isOwner && user.isLoggedIn
+                )
+            }
+        }
 
         // Initialize daily WorkManager scheduler if configured
         val creds = ytCredManager.credentials.value
@@ -3214,6 +3223,16 @@ class AnimeViewModel(application: Application) : AndroidViewModel(application) {
         _uiState.value = _uiState.value.copy(
             isOwnerAdmin = isOwner,
             statusMessage = if (isOwner) "👑 ओनर मोबाइल लॉगिन सफल! सभी विशेषाधिकार अनलॉक हैं।" else "✓ मोबाइल OTP सत्यापन सफल!"
+        )
+        return res
+    }
+
+    fun createAccount(name: String, email: String, phoneNumber: String, otp: String): Boolean {
+        val res = authAndWalletRepo.createAccount(name, email, phoneNumber, otp)
+        val isOwner = authAndWalletRepo.currentUser.value.isOwner
+        _uiState.value = _uiState.value.copy(
+            isOwnerAdmin = isOwner,
+            statusMessage = if (isOwner) "👑 स्वागत है ओनर! ओनर मोड सक्रिय है।" else "✓ खाता सफलतापूर्वक बन गया! (Account Created)"
         )
         return res
     }

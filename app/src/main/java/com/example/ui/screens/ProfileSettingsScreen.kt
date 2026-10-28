@@ -1,5 +1,7 @@
 package com.example.ui.screens
 
+import com.example.localization.AppLocaleStrings
+
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -29,10 +31,13 @@ import androidx.compose.material.icons.filled.Mail
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material.icons.filled.Save
+import androidx.compose.material.icons.filled.Share
+import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Security
 import androidx.compose.material.icons.filled.Stars
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -82,10 +87,14 @@ fun ProfileSettingsScreen(
     onNavigateBack: () -> Unit
 ) {
     val currentUser by viewModel.currentUser.collectAsState()
+    val state by viewModel.uiState.collectAsState()
+    val lang = state.selectedLanguage
     val context = LocalContext.current
+    val clipboardManager = androidx.compose.ui.platform.LocalClipboardManager.current
 
     var displayName by remember { mutableStateOf(currentUser.displayName) }
     var bio by remember { mutableStateOf(currentUser.bio) }
+
     val initialCountry = remember(currentUser.phoneNumber) {
         val phone = currentUser.phoneNumber ?: ""
         CountryCodeProvider.countries
@@ -113,17 +122,17 @@ fun ProfileSettingsScreen(
     var feedbackMessage by remember { mutableStateOf("") }
 
     val availableAvatars = listOf(
-        Pair("char_shonen_hero", "Shonen Hero (रेन)"),
-        Pair("char_anime_heroine", "Anime Heroine (आयरा)"),
-        Pair("char_lady_mentor", "Sensei Mentor (क्योटो)"),
-        Pair("char_chibi_mascot", "Chibi Mascot (पोपो)")
+        Pair("char_shonen_hero", AppLocaleStrings.tr(lang, "Shonen Hero", "शोनेन हीरो")),
+        Pair("char_anime_heroine", AppLocaleStrings.tr(lang, "Anime Heroine", "एनिमे नायिका")),
+        Pair("char_lady_mentor", AppLocaleStrings.tr(lang, "Sensei Mentor", "सेंसेई मेंटर")),
+        Pair("char_chibi_mascot", AppLocaleStrings.tr(lang, "Chibi Mascot", "चिबी शुभंकर"))
     )
 
     val specialties = listOf(
-        "Anime Film Director",
-        "Manga Concept Artist",
-        "AI Voice Dubbing Artist",
-        "Cinematic Sound Designer"
+        AppLocaleStrings.tr(lang, "Anime Film Director", "एनिमे फिल्म निर्देशक"),
+        AppLocaleStrings.tr(lang, "Manga Concept Artist", "मांगा कॉन्सेप्ट आर्टिस्ट"),
+        AppLocaleStrings.tr(lang, "AI Voice Dubbing Artist", "एआई वॉइस डबिंग आर्टिस्ट"),
+        AppLocaleStrings.tr(lang, "Cinematic Sound Designer", "सिनेमैटिक साउंड डिज़ाइनर")
     )
 
     Column(
@@ -145,13 +154,13 @@ fun ProfileSettingsScreen(
             Spacer(modifier = Modifier.width(6.dp))
             Column {
                 Text(
-                    text = "प्रोफ़ाइल सेटिंग्स (Profile Settings)",
+                    text = AppLocaleStrings.tr(lang, "Profile Settings", "प्रोफ़ाइल सेटिंग्स"),
                     color = TextPrimary,
                     fontSize = 18.sp,
                     fontWeight = FontWeight.ExtraBold
                 )
                 Text(
-                    text = "अपनी प्रोफ़ाइल, संपर्क व अवतार को अनुकूलित करें",
+                    text = AppLocaleStrings.tr(lang, "Customize your profile, contact details and persona avatar", "अपनी प्रोफ़ाइल, संपर्क व अवतार को अनुकूलित करें"),
                     color = TextSecondary,
                     fontSize = 12.sp
                 )
@@ -169,7 +178,7 @@ fun ProfileSettingsScreen(
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
                 Text(
-                    text = "अवतार छवि चुनें (Select Persona Avatar):",
+                    text = AppLocaleStrings.tr(lang, "Select Persona Avatar:", "अवतार छवि चुनें:"),
                     color = TextPrimary,
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Bold
@@ -234,18 +243,17 @@ fun ProfileSettingsScreen(
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
                 Text(
-                    text = "व्यक्तिगत जानकारी (Personal Information)",
+                    text = AppLocaleStrings.tr(lang, "Personal Information", "व्यक्तिगत जानकारी"),
                     color = TextPrimary,
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Bold
                 )
-
                 Spacer(modifier = Modifier.height(12.dp))
 
                 OutlinedTextField(
                     value = displayName,
                     onValueChange = { displayName = it },
-                    label = { Text("डिस्प्ले नाम (Display Name)") },
+                    label = { Text(AppLocaleStrings.tr(lang, "Display Name", "डिस्प्ले नाम")) },
                     singleLine = true,
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = AnimeCyan,
@@ -261,8 +269,8 @@ fun ProfileSettingsScreen(
                 OutlinedTextField(
                     value = bio,
                     onValueChange = { bio = it },
-                    label = { Text("बायो / परिचय (About Bio)") },
-                    placeholder = { Text("उदा: Creator of Next-Gen Cyber Anime") },
+                    label = { Text(AppLocaleStrings.tr(lang, "About Bio", "बायो / परिचय")) },
+                    placeholder = { Text(AppLocaleStrings.tr(lang, "e.g., Creator of Next-Gen Cyber Anime", "उदा: नेक्स्ट-जेन साइबर एनिमे निर्माता")) },
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = AnimeCyan,
                         focusedTextColor = TextPrimary,
@@ -277,12 +285,13 @@ fun ProfileSettingsScreen(
 
                 // Mobile No with Multi Country Code Selector
                 Text(
-                    text = "मोबाइल नंबर (Global Access Phone Number)",
+                    text = AppLocaleStrings.tr(lang, "Global Access Phone Number", "मोबाइल नंबर"),
                     color = TextPrimary,
                     fontSize = 12.sp,
                     fontWeight = FontWeight.Medium
                 )
                 Spacer(modifier = Modifier.height(4.dp))
+
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically
@@ -303,7 +312,7 @@ fun ProfileSettingsScreen(
                                 phoneNumber = digitsOnly
                             }
                         },
-                        label = { Text("${selectedCountry.name} Phone") },
+                        label = { Text(AppLocaleStrings.tr(lang, "${selectedCountry.name} Phone", "${selectedCountry.name} फ़ोन")) },
                         placeholder = { Text(selectedCountry.exampleNumber, color = TextMuted) },
                         singleLine = true,
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
@@ -323,7 +332,7 @@ fun ProfileSettingsScreen(
                 OutlinedTextField(
                     value = email,
                     onValueChange = { email = it },
-                    label = { Text("Gmail Address") },
+                    label = { Text(AppLocaleStrings.tr(lang, "Gmail Address", "Gmail पता")) },
                     placeholder = { Text("creator@gmail.com") },
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
@@ -348,7 +357,7 @@ fun ProfileSettingsScreen(
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
                 Text(
-                    text = "क्रिएटर विशेषज्ञता (Creator Specialty):",
+                    text = AppLocaleStrings.tr(lang, "Creator Specialty:", "क्रिएटर विशेषज्ञता:"),
                     color = TextPrimary,
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Bold
@@ -395,7 +404,7 @@ fun ProfileSettingsScreen(
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
                 Text(
-                    text = "नोटिफिकेशन व प्राथमिकताएं (Preferences)",
+                    text = AppLocaleStrings.tr(lang, "Preferences & Notifications", "नोटिफिकेशन व प्राथमिकताएं"),
                     color = TextPrimary,
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Bold
@@ -478,6 +487,107 @@ fun ProfileSettingsScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
+        // Share App Link Card (Settings)
+        Card(
+            modifier = Modifier.fillMaxWidth().testTag("profile_share_app_card"),
+            colors = CardDefaults.cardColors(containerColor = AnimeSurface),
+            shape = RoundedCornerShape(16.dp),
+            border = BorderStroke(1.dp, AnimePink.copy(alpha = 0.5f))
+        ) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Box(
+                        modifier = Modifier
+                            .size(36.dp)
+                            .clip(CircleShape)
+                            .background(AnimePink.copy(alpha = 0.2f)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(Icons.Default.Share, contentDescription = null, tint = AnimePink, modifier = Modifier.size(18.dp))
+                    }
+                    Spacer(modifier = Modifier.width(10.dp))
+                    Column {
+                        Text(
+                            text = AppLocaleStrings.tr(lang, "Share App", "ऐप शेयर करें"),
+                            color = TextPrimary,
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Text(
+                            text = AppLocaleStrings.tr(lang, "Share link with creators & friends", "क्रिएटर्स व दोस्तों के साथ ऐप लिंक शेयर करें"),
+                            color = TextSecondary,
+                            fontSize = 11.sp
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                val appUrl = "https://ais-dev-phqcxnymlvriok453hilu6-213587951665.asia-southeast1.run.app"
+
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(MaterialTheme.colorScheme.surfaceVariant)
+                        .padding(horizontal = 12.dp, vertical = 10.dp)
+                ) {
+                    Text(
+                        text = appUrl,
+                        color = AnimeCyan,
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Medium
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    OutlinedButton(
+                        onClick = {
+                            clipboardManager.setText(androidx.compose.ui.text.AnnotatedString(appUrl))
+                            feedbackMessage = AppLocaleStrings.tr(lang, "✓ Link copied to clipboard!", "✓ लिंक क्लिपबोर्ड पर कॉपी हो गया!")
+                        },
+                        modifier = Modifier.weight(1f).height(44.dp).testTag("copy_app_link_btn"),
+                        shape = RoundedCornerShape(10.dp),
+                        border = BorderStroke(1.dp, AnimeCyan)
+                    ) {
+                        Icon(Icons.Default.ContentCopy, contentDescription = null, tint = AnimeCyan, modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(AppLocaleStrings.tr(lang, "Copy Link", "लिंक कॉपी करें"), color = AnimeCyan, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                    }
+
+                    Button(
+                        onClick = {
+                            val shareText = AppLocaleStrings.tr(
+                                lang,
+                                "Check out Anime Studio AI! Create anime videos, 3D characters, and voice dubbing with AI: $appUrl",
+                                "Anime Studio AI आज़माएं! AI के साथ एनिमे वीडियो, 3D किरदार और वॉइस डबिंग बनाएं: $appUrl"
+                            )
+                            val sendIntent = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
+                                putExtra(android.content.Intent.EXTRA_TEXT, shareText)
+                                type = "text/plain"
+                            }
+                            val shareIntent = android.content.Intent.createChooser(sendIntent, AppLocaleStrings.tr(lang, "Share App", "ऐप शेयर करें"))
+                            context.startActivity(shareIntent)
+                        },
+                        colors = ButtonDefaults.buttonColors(containerColor = AnimePink),
+                        shape = RoundedCornerShape(10.dp),
+                        modifier = Modifier.weight(1f).height(44.dp).testTag("share_app_direct_btn")
+                    ) {
+                        Icon(Icons.Default.Share, contentDescription = null, tint = Color.White, modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(AppLocaleStrings.tr(lang, "Share Link", "शेयर लिंक"), color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                    }
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
         if (feedbackMessage.isNotBlank()) {
             Text(
                 text = feedbackMessage,
@@ -505,7 +615,7 @@ fun ProfileSettingsScreen(
                 feedbackMessage = com.example.localization.AppLocaleStrings.tr(
                     viewModel.uiState.value.selectedLanguage,
                     "✓ Profile settings updated successfully!",
-                    "✓ प्रोफ़ाइल सेटिंग्स सफलतापूर्वक सहेजी गईं! (Profile Updated)"
+                    "✓ प्रोफ़ाइल सेटिंग्स सफलतापूर्वक सहेजी गईं!"
                 )
             },
             colors = ButtonDefaults.buttonColors(containerColor = AnimeCyan),
@@ -521,7 +631,7 @@ fun ProfileSettingsScreen(
                 text = com.example.localization.AppLocaleStrings.tr(
                     viewModel.uiState.value.selectedLanguage,
                     "Save Changes",
-                    "सेटिंग्स सहेजें (Save Changes)"
+                    "सेटिंग्स सहेजें"
                 ),
                 color = Color.Black,
                 fontWeight = FontWeight.Bold,

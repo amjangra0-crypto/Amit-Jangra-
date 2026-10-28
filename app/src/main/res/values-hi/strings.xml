@@ -1,0 +1,78 @@
+<resources>
+    <string name="app_name">Anime Studio AI</string>
+    
+    <!-- Navigation & Core Tabs -->
+    <string name="nav_studio">स्टूडियो</string>
+    <string name="nav_player">प्लेयर</string>
+    <string name="nav_builder">बिल्डर</string>
+    <string name="nav_characters">किरदार</string>
+    <string name="nav_vip">वीआईपी</string>
+    <string name="nav_profile">प्रोफ़ाइल</string>
+    
+    <!-- Account & Authentication -->
+    <string name="auth_title">खाता लॉगिन / साइन इन</string>
+    <string name="auth_subtitle">Gmail या मोबाइल नंबर से सुरक्षित लॉगिन करें</string>
+    <string name="auth_tab_sign_in">लॉगिन</string>
+    <string name="auth_tab_create_account">नया खाता बनाएं</string>
+    <string name="auth_tab_gmail">Gmail</string>
+    <string name="auth_tab_mobile">मोबाइल नंबर (OTP)</string>
+    <string name="auth_google_account_header">गूगल खाता / Gmail</string>
+    <string name="auth_google_account_sub">लॉगिन करने के लिए अपना Gmail पता दर्ज करें:</string>
+    <string name="auth_owner_badge">ऐप ओनर</string>
+    <string name="auth_display_name_label">डिस्प्ले नाम</string>
+    <string name="auth_display_name_hint">उदा: अमन जांगड़ा</string>
+    <string name="auth_gmail_label">Gmail पता</string>
+    <string name="auth_gmail_hint">creator@gmail.com</string>
+    <string name="auth_gmail_submit">Gmail से लॉगिन करें</string>
+    <string name="auth_mobile_header">मोबाइल नंबर दर्ज करें</string>
+    <string name="auth_mobile_sub">देश का डायलिंग कोड चुनें और मोबाइल नंबर दर्ज करें:</string>
+    <string name="auth_send_otp_btn">OTP भेजें</string>
+    <string name="auth_verify_otp_header">OTP कोड सत्यापित करें</string>
+    <string name="auth_otp_sent_to">पर भेजा गया</string>
+    <string name="auth_otp_label">6-अंकों का OTP कोड</string>
+    <string name="auth_resend_otp">OTP पुनः भेजें</string>
+    <string name="auth_resend_prompt">OTP नहीं मिला?</string>
+    <string name="auth_verify_submit">सत्यापित करें व लॉगिन करें</string>
+    <string name="auth_invalid_otp">अमान्य OTP कोड! कृपया पुनः प्रयास करें।</string>
+    <string name="auth_fill_6_digit">कृपया पूरा 6-अंकों का OTP दर्ज करें।</string>
+
+    <!-- Create Account Strings -->
+    <string name="create_account_title">नया क्रिएटर खाता बनाएं</string>
+    <string name="create_account_subtitle">नया खाता पंजीकृत करने व अपने एनिमे प्रोजेक्ट्स सिंक करने हेतु विवरण भरें</string>
+    <string name="create_account_name_label">पूरा नाम (Display Name)</string>
+    <string name="create_account_name_hint">उदा: अमन शर्मा</string>
+    <string name="create_account_email_label">Gmail पता</string>
+    <string name="create_account_email_hint">creator@gmail.com</string>
+    <string name="create_account_phone_label">मोबाइल नंबर</string>
+    <string name="create_account_otp_prompt">इस मोबाइल नंबर पर SMS/OTP सत्यापन कोड भेजा जाएगा।</string>
+    <string name="create_account_send_otp">OTP से सत्यापित करें</string>
+    <string name="create_account_submit">पुष्टि करें व खाता बनाएं</string>
+    <string name="create_account_success">✓ खाता सफलतापूर्वक बन गया! Anime Studio AI में आपका स्वागत है।</string>
+
+    <!-- Share App Strings -->
+    <string name="share_app_title">ऐप शेयर करें</string>
+    <string name="share_app_desc">Anime Studio AI का लिंक अन्य क्रिएटर्स और दोस्तों के साथ शेयर करें</string>
+    <string name="share_app_btn">शेयर लिंक</string>
+    <string name="copy_link_btn">लिंक कॉपी करें</string>
+    <string name="share_app_copied">लिंक क्लिपबोर्ड पर कॉपी हो गया!</string>
+    <string name="share_app_share_text">Anime Studio AI आज़माएं! AI के साथ एनिमे वीडियो, 3D किरदार और वॉइस डबिंग बनाएं: https://ais-dev-phqcxnymlvriok453hilu6-213587951665.asia-southeast1.run.app</string>
+    
+    <!-- Logout Dialog -->
+    <string name="logout_confirm_title">लॉगआउट की पुष्टि</string>
+    <string name="logout_confirm_msg">क्या आप वास्तव में अपने खाते से लॉगआउट करना चाहते हैं? लॉगआउट करने पर सुरक्षित ओनर वॉलेट व प्राइवेट सेटिंग्स हाइड हो जाएंगी।</string>
+    <string name="logout_confirm_btn">हाँ, लॉगआउट करें</string>
+    <string name="cancel">रद्द करें</string>
+    <string name="save_changes">सेटिंग्स सहेजें</string>
+
+    <!-- Profile Settings Screen -->
+    <string name="profile_settings_title">प्रोफ़ाइल सेटिंग्स</string>
+    <string name="profile_settings_subtitle">अपनी प्रोफ़ाइल, संपर्क व अवतार को अनुकूलित करें</string>
+    <string name="profile_avatar_title">अवतार छवि चुनें:</string>
+    <string name="profile_personal_info">व्यक्तिगत जानकारी</string>
+    <string name="profile_bio_label">बायो / परिचय</string>
+    <string name="profile_bio_hint">उदा: नेक्स्ट-जेन साइबर एनिमे निर्माता</string>
+    <string name="profile_phone_label">मोबाइल नंबर</string>
+    <string name="profile_specialty_title">क्रिएटर विशेषज्ञता:</string>
+    <string name="profile_preferences_title">नोटिफिकेशन व प्राथमिकताएं</string>
+    <string name="profile_updated_success">✓ प्रोफ़ाइल सेटिंग्स सफलतापूर्वक सहेजी गईं!</string>
+</resources>

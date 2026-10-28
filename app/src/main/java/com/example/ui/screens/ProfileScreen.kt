@@ -33,6 +33,7 @@ import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.Movie
 import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.TrendingUp
 import androidx.compose.material.icons.filled.VideoLibrary
 import androidx.compose.material.icons.filled.Wallet
@@ -697,6 +698,35 @@ fun ProfileScreen(
 
         Spacer(modifier = Modifier.height(8.dp))
 
+        // 5. Share App Link Option
+        ProfileOptionItem(
+            icon = Icons.Default.Share,
+            iconTint = AnimePink,
+            title = AppLocaleStrings.tr(lang, "Share App", "ऐप शेयर करें"),
+            subtitle = AppLocaleStrings.tr(
+                lang,
+                "Share Anime Studio AI link with fellow creators and friends",
+                "Anime Studio AI लिंक अन्य क्रिएटर्स और दोस्तों के साथ शेयर करें"
+            ),
+            onClick = {
+                val appUrl = "https://ais-dev-phqcxnymlvriok453hilu6-213587951665.asia-southeast1.run.app"
+                val shareText = AppLocaleStrings.tr(
+                    lang,
+                    "Check out Anime Studio AI! Create anime videos, 3D characters, and voice dubbing with AI: $appUrl",
+                    "Anime Studio AI आज़माएं! AI के साथ एनिमे वीडियो, 3D किरदार और वॉइस डबिंग बनाएं: $appUrl"
+                )
+                val sendIntent = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
+                    putExtra(android.content.Intent.EXTRA_TEXT, shareText)
+                    type = "text/plain"
+                }
+                val shareIntent = android.content.Intent.createChooser(sendIntent, AppLocaleStrings.tr(lang, "Share Anime Studio AI", "ऐप शेयर करें"))
+                context.startActivity(shareIntent)
+            },
+            testTag = "menu_share_app"
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
         // 4. Login / Switch Account
         ProfileOptionItem(
             icon = Icons.Default.Login,
@@ -753,7 +783,8 @@ fun ProfileScreen(
                 viewModel.logout()
                 showLogoutConfirm = false
             },
-            onDismiss = { showLogoutConfirm = false }
+            onDismiss = { showLogoutConfirm = false },
+            lang = state.selectedLanguage
         )
     }
 

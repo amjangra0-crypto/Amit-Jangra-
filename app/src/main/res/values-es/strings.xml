@@ -1,0 +1,78 @@
+<resources>
+    <string name="app_name">Anime Studio AI</string>
+    
+    <!-- Navigation & Core Tabs -->
+    <string name="nav_studio">Estudio</string>
+    <string name="nav_player">Reproductor</string>
+    <string name="nav_builder">Constructor</string>
+    <string name="nav_characters">Personajes</string>
+    <string name="nav_vip">VIP</string>
+    <string name="nav_profile">Perfil</string>
+    
+    <!-- Account & Authentication -->
+    <string name="auth_title">Autenticación de Cuenta</string>
+    <string name="auth_subtitle">Inicie sesión de forma segura con Gmail o número de móvil</string>
+    <string name="auth_tab_sign_in">Iniciar Sesión</string>
+    <string name="auth_tab_create_account">Crear Cuenta</string>
+    <string name="auth_tab_gmail">Gmail</string>
+    <string name="auth_tab_mobile">Móvil (OTP)</string>
+    <string name="auth_google_account_header">Cuenta de Google / Gmail</string>
+    <string name="auth_google_account_sub">Ingrese su dirección de Gmail para iniciar sesión:</string>
+    <string name="auth_owner_badge">PROPIETARIO</string>
+    <string name="auth_display_name_label">Nombre para Mostrar</string>
+    <string name="auth_display_name_hint">ej., Carlos Mendoza</string>
+    <string name="auth_gmail_label">Dirección de Gmail</string>
+    <string name="auth_gmail_hint">creador@gmail.com</string>
+    <string name="auth_gmail_submit">Iniciar Sesión con Gmail</string>
+    <string name="auth_mobile_header">Acceso Telefónico Global</string>
+    <string name="auth_mobile_sub">Seleccione el código de país e ingrese su número:</string>
+    <string name="auth_send_otp_btn">Enviar Código OTP</string>
+    <string name="auth_verify_otp_header">Verificar Código OTP</string>
+    <string name="auth_otp_sent_to">Enviado a</string>
+    <string name="auth_otp_label">Código OTP de 6 Dígitos</string>
+    <string name="auth_resend_otp">Reenviar OTP</string>
+    <string name="auth_resend_prompt">¿No recibió el OTP?</string>
+    <string name="auth_verify_submit">Verificar e Iniciar Sesión</string>
+    <string name="auth_invalid_otp">¡Código OTP inválido! Inténtelo de nuevo.</string>
+    <string name="auth_fill_6_digit">Por favor, ingrese el código OTP completo de 6 dígitos.</string>
+
+    <!-- Create Account Strings -->
+    <string name="create_account_title">Crear Cuenta de Creador</string>
+    <string name="create_account_subtitle">Ingrese sus datos para registrarse y sincronizar sus proyectos</string>
+    <string name="create_account_name_label">Nombre Completo</string>
+    <string name="create_account_name_hint">ej., María Gómez</string>
+    <string name="create_account_email_label">Correo Gmail</string>
+    <string name="create_account_email_hint">creador@gmail.com</string>
+    <string name="create_account_phone_label">Número de Teléfono Móvil</string>
+    <string name="create_account_otp_prompt">Se enviará un código de verificación por SMS/OTP a este número.</string>
+    <string name="create_account_send_otp">Verificar con OTP</string>
+    <string name="create_account_submit">Confirmar y Crear Cuenta</string>
+    <string name="create_account_success">¡Cuenta creada con éxito! Bienvenido a Anime Studio AI.</string>
+
+    <!-- Share App Strings -->
+    <string name="share_app_title">Compartir Aplicación</string>
+    <string name="share_app_desc">Comparta el enlace del estudio con sus amigos y creadores</string>
+    <string name="share_app_btn">Compartir Enlace</string>
+    <string name="copy_link_btn">Copiar Enlace</string>
+    <string name="share_app_copied">¡Enlace copiado al portapapeles!</string>
+    <string name="share_app_share_text">¡Descubre Anime Studio AI! Crea videos de anime, personajes 3D y doblaje de voz con IA: https://ais-dev-phqcxnymlvriok453hilu6-213587951665.asia-southeast1.run.app</string>
+    
+    <!-- Logout Dialog -->
+    <string name="logout_confirm_title">Confirmar Cierre de Sesión</string>
+    <string name="logout_confirm_msg">¿Está seguro de que desea cerrar sesión en su cuenta?</string>
+    <string name="logout_confirm_btn">Sí, Cerrar Sesión</string>
+    <string name="cancel">Cancelar</string>
+    <string name="save_changes">Guardar Cambios</string>
+
+    <!-- Profile Settings Screen -->
+    <string name="profile_settings_title">Ajustes de Perfil</string>
+    <string name="profile_settings_subtitle">Personalice su perfil, datos de contacto y avatar</string>
+    <string name="profile_avatar_title">Seleccionar Avatar:</string>
+    <string name="profile_personal_info">Información Personal</string>
+    <string name="profile_bio_label">Biografía</string>
+    <string name="profile_bio_hint">ej., Creador de anime cibernético</string>
+    <string name="profile_phone_label">Número de Teléfono Global</string>
+    <string name="profile_specialty_title">Especialidad de Creador:</string>
+    <string name="profile_preferences_title">Preferencias y Notificaciones</string>
+    <string name="profile_updated_success">¡Ajustes de perfil guardados con éxito!</string>
+</resources>

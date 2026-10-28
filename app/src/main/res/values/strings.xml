@@ -1,3 +1,78 @@
 <resources>
     <string name="app_name">Anime Studio AI</string>
+    
+    <!-- Navigation & Core Tabs -->
+    <string name="nav_studio">Studio</string>
+    <string name="nav_player">Player</string>
+    <string name="nav_builder">Builder</string>
+    <string name="nav_characters">Characters</string>
+    <string name="nav_vip">VIP</string>
+    <string name="nav_profile">Profile</string>
+    
+    <!-- Account & Authentication -->
+    <string name="auth_title">Account Authentication</string>
+    <string name="auth_subtitle">Sign in securely with Gmail or Mobile Number</string>
+    <string name="auth_tab_sign_in">Sign In</string>
+    <string name="auth_tab_create_account">Create Account</string>
+    <string name="auth_tab_gmail">Gmail Login</string>
+    <string name="auth_tab_mobile">Mobile Number (OTP)</string>
+    <string name="auth_google_account_header">Google Account / Gmail</string>
+    <string name="auth_google_account_sub">Enter your Gmail address to sign in:</string>
+    <string name="auth_owner_badge">APP OWNER</string>
+    <string name="auth_display_name_label">Display Name</string>
+    <string name="auth_display_name_hint">e.g., Alex Rivers</string>
+    <string name="auth_gmail_label">Gmail Address</string>
+    <string name="auth_gmail_hint">creator@gmail.com</string>
+    <string name="auth_gmail_submit">Sign In with Gmail</string>
+    <string name="auth_mobile_header">Global Phone Access</string>
+    <string name="auth_mobile_sub">Select country dial code and enter mobile number:</string>
+    <string name="auth_send_otp_btn">Send OTP Code</string>
+    <string name="auth_verify_otp_header">Verify OTP Code</string>
+    <string name="auth_otp_sent_to">Sent to</string>
+    <string name="auth_otp_label">6-Digit OTP Code</string>
+    <string name="auth_resend_otp">Resend OTP</string>
+    <string name="auth_resend_prompt">Didn\'t receive OTP?</string>
+    <string name="auth_verify_submit">Verify &amp; Sign In</string>
+    <string name="auth_invalid_otp">Invalid OTP code! Please try again.</string>
+    <string name="auth_fill_6_digit">Please enter full 6-digit OTP code.</string>
+
+    <!-- Create Account Strings -->
+    <string name="create_account_title">Create Creator Account</string>
+    <string name="create_account_subtitle">Fill details to register your account and sync your anime projects</string>
+    <string name="create_account_name_label">Full Name</string>
+    <string name="create_account_name_hint">e.g., Alex Rivers</string>
+    <string name="create_account_email_label">Gmail Address</string>
+    <string name="create_account_email_hint">creator@gmail.com</string>
+    <string name="create_account_phone_label">Mobile Phone Number</string>
+    <string name="create_account_otp_prompt">A verification code will be sent to this mobile number via OTP.</string>
+    <string name="create_account_send_otp">Verify with OTP</string>
+    <string name="create_account_submit">Confirm &amp; Create Account</string>
+    <string name="create_account_success">✓ Account created successfully! Welcome to Anime Studio AI.</string>
+
+    <!-- Share App Strings -->
+    <string name="share_app_title">Share App</string>
+    <string name="share_app_desc">Share Anime Studio AI link with fellow creators and friends</string>
+    <string name="share_app_btn">Share Link</string>
+    <string name="copy_link_btn">Copy Link</string>
+    <string name="share_app_copied">Link copied to clipboard!</string>
+    <string name="share_app_share_text">Check out Anime Studio AI! Create anime videos, 3D characters, and voice dubbing with AI: https://ais-dev-phqcxnymlvriok453hilu6-213587951665.asia-southeast1.run.app</string>
+    
+    <!-- Logout Dialog -->
+    <string name="logout_confirm_title">Confirm Logout</string>
+    <string name="logout_confirm_msg">Are you sure you want to log out of your account? Secure owner wallet and private settings will be hidden.</string>
+    <string name="logout_confirm_btn">Yes, Log Out</string>
+    <string name="cancel">Cancel</string>
+    <string name="save_changes">Save Changes</string>
+
+    <!-- Profile Settings Screen -->
+    <string name="profile_settings_title">Profile Settings</string>
+    <string name="profile_settings_subtitle">Customize your profile, contact details and persona avatar</string>
+    <string name="profile_avatar_title">Select Persona Avatar:</string>
+    <string name="profile_personal_info">Personal Information</string>
+    <string name="profile_bio_label">About Bio</string>
+    <string name="profile_bio_hint">e.g., Creator of Next-Gen Cyber Anime</string>
+    <string name="profile_phone_label">Global Access Phone Number</string>
+    <string name="profile_specialty_title">Creator Specialty:</string>
+    <string name="profile_preferences_title">Preferences &amp; Notifications</string>
+    <string name="profile_updated_success">✓ Profile settings updated successfully!</string>
 </resources>

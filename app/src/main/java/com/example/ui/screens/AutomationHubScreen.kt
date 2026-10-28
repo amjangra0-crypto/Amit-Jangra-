@@ -441,7 +441,7 @@ fun AutomationHubScreen(
                     Text(
                         text = AppLocaleStrings.tr(
                             lang,
-                            "YouTube automation access is restricted exclusively to the Owner and authorized persons. Contact owner (amjangra0@gmail.com) for access.",
+                            "YouTube automation access is restricted exclusively to the Owner and authorized persons. Contact app owner for authorization.",
                             "YouTube ऑटोमेशन का एक्सेस केवल ओनर व अधिकृत विशिष्ट व्यक्तियों के लिए है। अनुमति हेतु ओनर से संपर्क करें।"
                         ),
                         color = TextSecondary,
