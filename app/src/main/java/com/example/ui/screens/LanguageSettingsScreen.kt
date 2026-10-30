@@ -7,6 +7,7 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -181,13 +182,13 @@ fun LanguageSettingsScreen(
                             Spacer(modifier = Modifier.width(10.dp))
                             Column {
                                 Text(
-                                    text = "Anime Dubbing Audio",
+                                    text = AppLocaleStrings.tr(lang, "Anime Dubbing Audio", "एनिमे डबिंग ऑडियो"),
                                     color = TextPrimary,
                                     fontSize = 15.sp,
                                     fontWeight = FontWeight.Bold
                                 )
                                 Text(
-                                    text = "Auto-Synced Dialogue & Character Vocals",
+                                    text = AppLocaleStrings.tr(lang, "Auto-Synced Dialogue & Character Vocals", "ऑटो-सिंक संवाद व करैक्टर वोकल्स"),
                                     color = TextMuted,
                                     fontSize = 11.sp
                                 )
@@ -211,7 +212,7 @@ fun LanguageSettingsScreen(
                                 )
                                 Spacer(modifier = Modifier.width(4.dp))
                                 Text(
-                                    text = "DataStore Persisted",
+                                    text = AppLocaleStrings.tr(lang, "DataStore Persisted", "DataStore सुरक्षित"),
                                     color = AnimeGreen,
                                     fontSize = 10.sp,
                                     fontWeight = FontWeight.Bold
@@ -223,7 +224,11 @@ fun LanguageSettingsScreen(
                     Spacer(modifier = Modifier.height(10.dp))
 
                     Text(
-                        text = "Choose your preferred audio dubbing language. All character scripts, TTS voice-overs, and lip-sync timings will generate in this target language, saved automatically to on-device DataStore Preferences.",
+                        text = AppLocaleStrings.tr(
+                            lang,
+                            "Choose your preferred audio dubbing language. All character scripts, TTS voice-overs, and lip-sync timings will generate in this target language, saved automatically to on-device DataStore Preferences.",
+                            "अपनी पसंदीदा ऑडियो डबिंग भाषा चुनें। सभी करैक्टर संवाद, TTS वॉइसओवर व लिप-सिंक इस भाषा में तैयार होंगे और DataStore Preferences में सुरक्षित रहेंगे।"
+                        ),
                         color = TextSecondary,
                         fontSize = 11.sp,
                         lineHeight = 16.sp
@@ -250,7 +255,11 @@ fun LanguageSettingsScreen(
                         fontWeight = FontWeight.Bold
                     )
                     Text(
-                        text = "Select from Japanese, Hindi, English, or Spanish using the dropdown menu below",
+                        text = AppLocaleStrings.tr(
+                            lang,
+                            "Select from global anime dubbing languages using the dropdown menu below",
+                            "नीचे दिए गए ड्रॉपडाउन मेनू से अपनी पसंदीदा डबिंग भाषा चुनें"
+                        ),
                         color = TextMuted,
                         fontSize = 11.sp
                     )
@@ -348,7 +357,7 @@ fun LanguageSettingsScreen(
                                         isDropdownExpanded = false
                                         Toast.makeText(
                                             context,
-                                            "✅ Dubbing Language saved: ${option.name} (DataStore)",
+                                            "✓ ${option.name} (DataStore)",
                                             Toast.LENGTH_SHORT
                                         ).show()
                                     },
@@ -362,15 +371,17 @@ fun LanguageSettingsScreen(
 
                     // Quick Switch Chips
                     Text(
-                        text = "QUICK LANGUAGE SHORTCUTS:",
+                        text = AppLocaleStrings.tr(lang, "QUICK LANGUAGE SHORTCUTS:", "त्वरित भाषा शॉर्टकट:"),
                         color = TextSecondary,
                         fontSize = 10.sp,
                         fontWeight = FontWeight.Bold
                     )
                     Spacer(modifier = Modifier.height(6.dp))
                     Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .horizontalScroll(rememberScrollState()),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         languages.forEach { option ->
                             val isSelected = option.name.equals(currentDubbingLang, ignoreCase = true)
@@ -392,9 +403,7 @@ fun LanguageSettingsScreen(
                                     containerColor = AnimeSurfaceVariant
                                 ),
                                 border = BorderStroke(1.dp, if (isSelected) AnimeGold else Color.Transparent),
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .testTag("quick_chip_${option.name.lowercase()}")
+                                modifier = Modifier.testTag("quick_chip_${option.name.lowercase()}")
                             )
                         }
                     }
@@ -420,7 +429,7 @@ fun LanguageSettingsScreen(
                     ) {
                         Column {
                             Text(
-                                text = "Active Dubbing Profile",
+                                text = AppLocaleStrings.tr(lang, "Active Dubbing Profile", "सक्रिय डबिंग प्रोफाइल"),
                                 color = TextPrimary,
                                 fontSize = 13.sp,
                                 fontWeight = FontWeight.Bold
@@ -439,7 +448,12 @@ fun LanguageSettingsScreen(
                                 .background(AnimeCyan.copy(alpha = 0.2f))
                                 .padding(horizontal = 8.dp, vertical = 2.dp)
                         ) {
-                            Text("TTS Code: ${selectedOption.code}", color = AnimeCyan, fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                            Text(
+                                text = "${AppLocaleStrings.tr(lang, "TTS Code", "TTS कोड")}: ${selectedOption.code}",
+                                color = AnimeCyan,
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.Bold
+                            )
                         }
                     }
 
@@ -464,7 +478,7 @@ fun LanguageSettingsScreen(
                     ) {
                         Column {
                             Text(
-                                text = "SAMPLE DUBBING DIALOGUE:",
+                                text = AppLocaleStrings.tr(lang, "SAMPLE DUBBING DIALOGUE:", "डबिंग संवाद का नमूना:"),
                                 color = TextMuted,
                                 fontSize = 9.sp,
                                 fontWeight = FontWeight.Bold
@@ -502,7 +516,11 @@ fun LanguageSettingsScreen(
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            text = if (speakingState.isSpeaking) "Speaking in ${selectedOption.name}..." else "Audition ${selectedOption.name} Dubbing Sample",
+                            text = if (speakingState.isSpeaking) {
+                                AppLocaleStrings.tr(lang, "Speaking in ${selectedOption.name}...", "${selectedOption.name} में बोल रहा है...")
+                            } else {
+                                AppLocaleStrings.tr(lang, "Audition ${selectedOption.name} Dubbing Sample", "${selectedOption.name} डबिंग नमूना सुनें")
+                            },
                             color = Color.Black,
                             fontSize = 12.sp,
                             fontWeight = FontWeight.Bold
@@ -515,7 +533,7 @@ fun LanguageSettingsScreen(
 
             // REAL-TIME VOICE MOOD FILTER SLIDER COMPONENT
             Text(
-                text = "VOICE MOOD FILTER (FOR GENERATED AUDIO):",
+                text = AppLocaleStrings.tr(lang, "VOICE MOOD FILTER (FOR GENERATED AUDIO):", "वॉइस मूड फ़िल्टर (ऑडियो निर्माण के लिए):"),
                 color = TextSecondary,
                 fontSize = 11.sp,
                 fontWeight = FontWeight.Bold
@@ -555,13 +573,13 @@ fun LanguageSettingsScreen(
                     Spacer(modifier = Modifier.width(10.dp))
                     Column {
                         Text(
-                            text = "DataStore Preference Synced",
+                            text = AppLocaleStrings.tr(lang, "DataStore Preference Synced", "DataStore प्राथमिकता समन्वयित"),
                             color = TextPrimary,
                             fontSize = 11.sp,
                             fontWeight = FontWeight.Bold
                         )
                         Text(
-                            text = "Stored key: 'preferred_dubbing_language' = '${selectedOption.name}'. Survives app restarts & updates.",
+                            text = "${AppLocaleStrings.tr(lang, "Stored key", "सहेजी गई कुंजी")}: 'preferred_dubbing_language' = '${selectedOption.name}'.",
                             color = TextMuted,
                             fontSize = 10.sp
                         )

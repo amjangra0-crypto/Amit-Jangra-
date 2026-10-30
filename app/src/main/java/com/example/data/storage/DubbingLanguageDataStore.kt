@@ -78,6 +78,46 @@ class DubbingLanguageDataStore(private val context: Context) {
                 sampleDialogue = "¡Nuestra aventura acaba de comenzar! ¡Nunca te rindas, amigo!",
                 animeVibe = "Ibero-American Anime Cast",
                 ttsLocaleTag = "es"
+            ),
+            DubbingLanguageOption(
+                code = "de",
+                name = "German",
+                nativeName = "Deutsch",
+                flag = "🇩🇪",
+                description = "Precise, powerful German theatrical voice acting for epic fantasy and mecha anime",
+                sampleDialogue = "Unsere epische Reise hat gerade erst begonnen! Gemeinsam sind wir unbesiegbar!",
+                animeVibe = "European Mecha & Epic Dub",
+                ttsLocaleTag = "de"
+            ),
+            DubbingLanguageOption(
+                code = "fr",
+                name = "French",
+                nativeName = "Français",
+                flag = "🇫🇷",
+                description = "Expressive, poetic French voice dubbing with rich emotional depth and romantic flair",
+                sampleDialogue = "Notre aventure ne fait que commencer ! Restons unis jusqu'au bout !",
+                animeVibe = "Cinematic French Dubbing",
+                ttsLocaleTag = "fr"
+            ),
+            DubbingLanguageOption(
+                code = "ko",
+                name = "Korean",
+                nativeName = "한국어 (Korean)",
+                flag = "🇰🇷",
+                description = "Vibrant Korean webtoon style dubbing with dynamic cadence and heroic vocal styling",
+                sampleDialogue = "우리의 모험은 이제 막 시작되었어! 절대 포기하지 마!",
+                animeVibe = "K-Animation & Webtoon Dub",
+                ttsLocaleTag = "ko"
+            ),
+            DubbingLanguageOption(
+                code = "it",
+                name = "Italian",
+                nativeName = "Italiano",
+                flag = "🇮🇹",
+                description = "Melodic and dramatic Italian voice artistry for legendary anime adventures",
+                sampleDialogue = "La nostra avventura è appena iniziata! Non arrenderti mai!",
+                animeVibe = "Mediterranean Anime Vibe",
+                ttsLocaleTag = "it"
             )
         )
 

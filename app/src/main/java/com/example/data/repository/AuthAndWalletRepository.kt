@@ -11,6 +11,9 @@ import com.example.data.model.PaymentGateway
 import com.example.data.model.TransactionType
 import com.example.data.model.UserProfile
 import com.example.data.model.WalletTransaction
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -53,8 +56,21 @@ class AuthAndWalletRepository(private val context: Context) {
         return true
     }
 
+    private val sessionDataStore = com.example.data.storage.UserSessionDataStore(context)
+
     private val _currentUser = MutableStateFlow(loadUserProfile())
     val currentUser: StateFlow<UserProfile> = _currentUser.asStateFlow()
+
+    init {
+        kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.IO).launch {
+            try {
+                val savedSession = sessionDataStore.getSavedSession()
+                if (savedSession != null && savedSession.isLoggedIn) {
+                    _currentUser.value = savedSession
+                }
+            } catch (_: Exception) {}
+        }
+    }
 
     private val _connectedBankAccount = MutableStateFlow(loadBankAccount())
     val connectedBankAccount: StateFlow<OwnerBankAccount> = _connectedBankAccount.asStateFlow()
@@ -875,6 +891,15 @@ class AuthAndWalletRepository(private val context: Context) {
             putInt("stat_videos", profile.videosRendered)
             putInt("stat_voice", profile.voiceMinutesUsed)
             apply()
+        }
+        kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.IO).launch {
+            try {
+                if (profile.isLoggedIn) {
+                    sessionDataStore.saveUserSession(profile)
+                } else {
+                    sessionDataStore.clearSession()
+                }
+            } catch (_: Exception) {}
         }
     }
 

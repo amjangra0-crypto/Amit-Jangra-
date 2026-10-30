@@ -108,6 +108,9 @@ import com.example.ui.theme.AnimeSurface
 import com.example.ui.theme.AnimeSurfaceVariant
 import com.example.ui.theme.TextMuted
 import com.example.ui.theme.TextPrimary
+import androidx.compose.material.icons.filled.Share
+import androidx.compose.material.icons.filled.ContentCopy
+import androidx.compose.ui.text.AnnotatedString
 import com.example.ui.theme.TextSecondary
 import com.example.ui.theme.VibrantThemePresets
 import kotlinx.coroutines.launch
@@ -123,6 +126,7 @@ fun AppSettingsScreen(
     val selectedCountry by viewModel.selectedCountry.collectAsState()
     val storageConfig by viewModel.storageConfig.collectAsState()
     val context = LocalContext.current
+    val clipboardManager = androidx.compose.ui.platform.LocalClipboardManager.current
     val coroutineScope = rememberCoroutineScope()
     val lang = state.selectedLanguage
 
@@ -1458,6 +1462,186 @@ fun AppSettingsScreen(
                 } else {
                     Text(AppLocaleStrings.tr(lang, "Studio Architecture: Enterprise AI Creative Suite", "स्टूडियो आर्किटेक्चर: एंटरप्राइज एआई क्रिएटिव सुइट"), color = TextMuted, fontSize = 12.sp)
                     Text(AppLocaleStrings.tr(lang, "License Status: Active Creator License", "लाइसेंस स्थिति: सक्रिय क्रिएटर लाइसेंस"), color = AnimeCyan, fontSize = 11.sp)
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Share App & Invite Creators Feature
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .testTag("app_settings_share_invite_card"),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+            shape = RoundedCornerShape(16.dp),
+            border = BorderStroke(1.dp, AnimePurple.copy(alpha = 0.5f))
+        ) {
+            val deepLinkUrl = "https://ais-dev-phqcxnymlvriok453hilu6-213587951665.asia-southeast1.run.app?invited_by=${Uri.encode(currentUser.displayName)}"
+            val shareText = AppLocaleStrings.tr(
+                lang,
+                "🎬 Create cinematic anime videos, 3D character lip-sync, and rich voiceovers on Anime Studio AI!\n\nOpen Invite: $deepLinkUrl",
+                "🎬 Anime Studio AI पर एनिमे वीडियो, 3D लिप-सिंक व वॉइसओवर बनाएं!\n\nआमंत्रण लिंक: $deepLinkUrl"
+            )
+
+            Column(modifier = Modifier.padding(16.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Box(
+                        modifier = Modifier
+                            .size(36.dp)
+                            .clip(CircleShape)
+                            .background(AnimePurple.copy(alpha = 0.2f)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Share,
+                            contentDescription = null,
+                            tint = AnimePurple,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(10.dp))
+                    Column {
+                        Text(
+                            text = AppLocaleStrings.tr(lang, "Share & Invite Creators", "ऐप शेयर करें व क्रिएटर आमंत्रित करें"),
+                            color = TextPrimary,
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Text(
+                            text = AppLocaleStrings.tr(
+                                lang,
+                                "Invite friends to Anime Studio AI via deep link",
+                                "डीप लिंक द्वारा दोस्तों को एनिमे स्टूडियो एआई में आमंत्रित करें"
+                            ),
+                            color = TextSecondary,
+                            fontSize = 11.sp
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(10.dp))
+                        .background(AnimeSurfaceVariant)
+                        .padding(horizontal = 12.dp, vertical = 8.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = AppLocaleStrings.tr(lang, "Generated Deep Link:", "जनरेट किया गया डीप लिंक:"),
+                                color = AnimeCyan,
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                            Text(
+                                text = deepLinkUrl,
+                                color = TextMuted,
+                                fontSize = 10.sp,
+                                maxLines = 1,
+                                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                            )
+                        }
+                        IconButton(
+                            onClick = {
+                                clipboardManager.setText(AnnotatedString(deepLinkUrl))
+                                Toast.makeText(
+                                    context,
+                                    AppLocaleStrings.tr(lang, "✓ Deep link copied to clipboard!", "✓ डीप लिंक क्लिपबोर्ड पर कॉपी हो गया!"),
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            },
+                            modifier = Modifier.testTag("app_settings_copy_deep_link_btn")
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.ContentCopy,
+                                contentDescription = "Copy Link",
+                                tint = AnimeCyan,
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Button(
+                        onClick = {
+                            val sendIntent = Intent().apply {
+                                action = Intent.ACTION_SEND
+                                putExtra(Intent.EXTRA_TEXT, shareText)
+                                putExtra(Intent.EXTRA_SUBJECT, "Invite to Anime Studio AI")
+                                type = "text/plain"
+                            }
+                            val shareIntent = Intent.createChooser(
+                                sendIntent,
+                                AppLocaleStrings.tr(lang, "Invite to Anime Studio AI", "एनिमे स्टूडियो एआई में आमंत्रित करें")
+                            )
+                            context.startActivity(shareIntent)
+                        },
+                        colors = ButtonDefaults.buttonColors(containerColor = AnimePurple),
+                        shape = RoundedCornerShape(10.dp),
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(42.dp)
+                            .testTag("app_settings_share_intent_btn")
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Share,
+                            contentDescription = null,
+                            tint = Color.White,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = AppLocaleStrings.tr(lang, "Share Invite", "शेयर करें"),
+                            color = Color.White,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 12.sp
+                        )
+                    }
+
+                    OutlinedButton(
+                        onClick = {
+                            clipboardManager.setText(AnnotatedString(deepLinkUrl))
+                            Toast.makeText(
+                                context,
+                                AppLocaleStrings.tr(lang, "✓ Deep link copied!", "✓ डीप लिंक कॉपी हुआ!"),
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        },
+                        border = BorderStroke(1.dp, AnimeCyan),
+                        shape = RoundedCornerShape(10.dp),
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(42.dp)
+                            .testTag("app_settings_copy_link_btn")
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.ContentCopy,
+                            contentDescription = null,
+                            tint = AnimeCyan,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = AppLocaleStrings.tr(lang, "Copy Link", "लिंक कॉपी करें"),
+                            color = AnimeCyan,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 12.sp
+                        )
+                    }
                 }
             }
         }
