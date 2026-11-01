@@ -88,6 +88,8 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.material.icons.filled.AddPhotoAlternate
 import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Security
+import com.example.ui.components.LinguisticFirewallDialog
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.CloudUpload
 import androidx.compose.material.icons.filled.Delete
@@ -136,6 +138,7 @@ fun StudioCreateScreen(viewModel: AnimeViewModel) {
     val context = LocalContext.current
     val scrollState = rememberScrollState()
     var showStudioTrendAgentModal by remember { mutableStateOf(false) }
+    var showLinguisticFirewallDialog by remember { mutableStateOf(false) }
 
     val photoPickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickVisualMedia()
@@ -413,6 +416,27 @@ fun StudioCreateScreen(viewModel: AnimeViewModel) {
                     .padding(horizontal = 16.dp)
             ) {
                 OutlinedButton(
+                    onClick = { showLinguisticFirewallDialog = true },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(38.dp)
+                        .testTag("open_linguistic_firewall_btn"),
+                    shape = RoundedCornerShape(10.dp),
+                    border = BorderStroke(1.dp, Brush.horizontalGradient(listOf(AnimeCyan, AnimePurple, AnimeGold)))
+                ) {
+                    Icon(Icons.Default.Security, contentDescription = null, tint = AnimeCyan, modifier = Modifier.size(16.dp))
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        text = AppLocaleStrings.tr(state.selectedLanguage, "🛡️ Linguistic Firewall & Creative Engine", "🛡️ भाषाई फ़ायरवॉल व क्रिएटिव इंजन"),
+                        color = AnimeCyan,
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(6.dp))
+
+                OutlinedButton(
                     onClick = { showStudioTrendAgentModal = true },
                     modifier = Modifier
                         .fillMaxWidth()
@@ -424,7 +448,7 @@ fun StudioCreateScreen(viewModel: AnimeViewModel) {
                     Icon(Icons.Default.Psychology, contentDescription = null, tint = AnimeGold, modifier = Modifier.size(16.dp))
                     Spacer(modifier = Modifier.width(6.dp))
                     Text(
-                        text = "🌐 TrendPulse AI Agent (Sync Viral & Future Trends)",
+                        text = AppLocaleStrings.tr(state.selectedLanguage, "🌐 TrendPulse AI Agent (Sync Viral & Future Trends)", "🌐 ट्रेंडपल्स AI एजेंट (वायरल व भविष्य के ट्रेंड्स)"),
                         color = AnimeGold,
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Bold
@@ -1596,6 +1620,14 @@ fun StudioCreateScreen(viewModel: AnimeViewModel) {
             viewModel = viewModel,
             lang = state.selectedLanguage,
             onDismiss = { showStudioTrendAgentModal = false }
+        )
+    }
+
+    // Linguistic Firewall & Creative Engine Dialog
+    if (showLinguisticFirewallDialog) {
+        LinguisticFirewallDialog(
+            viewModel = viewModel,
+            onDismiss = { showLinguisticFirewallDialog = false }
         )
     }
 }

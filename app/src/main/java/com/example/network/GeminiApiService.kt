@@ -792,6 +792,7 @@ class GeminiApiService {
         val isHindi = language.equals("Hindi", ignoreCase = true) || language.equals("hi", ignoreCase = true)
         val isKorean = language.equals("Korean", ignoreCase = true) || language.equals("ko", ignoreCase = true)
         val isJapanese = language.equals("Japanese", ignoreCase = true) || language.equals("ja", ignoreCase = true)
+        val isSpanish = language.equals("Spanish", ignoreCase = true) || language.equals("es", ignoreCase = true)
         val isManhwa = artStyle == AnimeArtStyle.MANHWA_WEBTOON || productionFormat == com.example.data.model.ProductionFormat.MANHWA_WEB_SERIES || topic.contains("manhwa", ignoreCase = true) || topic.contains("hunter", ignoreCase = true) || topic.contains("shadow", ignoreCase = true)
         val isManga = artStyle == AnimeArtStyle.CLASSIC_MANGA || topic.contains("manga", ignoreCase = true)
         val isMovie = productionFormat == com.example.data.model.ProductionFormat.CINEMATIC_MOVIE
@@ -825,6 +826,21 @@ class GeminiApiService {
             "${linkedScript.title}: भाग $linkedEpisodeNumber (Ep. $linkedEpisodeNumber)"
         } else {
             when {
+                isJapanese -> when {
+                    isCosmic -> "太陽系と星辰の探求: $topic"
+                    isNature -> "神秘の滝と聖なる森の神話: $topic"
+                    isMecha -> "超音速メカ戦闘機とサイバー機動隊: $topic"
+                    isRomance -> "桜吹雪と夕焼けの永遠の恋物語: $topic"
+                    isFight -> "雷鳴と神域大戦の決闘録: $topic"
+                    isShorts -> "⚡ 30秒激闘ハイパーアニメ: $topic"
+                    isMovie -> "シネマティックアニメ超大作: $topic"
+                    else -> "星辰の運命年代記: $topic"
+                }
+                isSpanish -> when {
+                    isShorts -> "⚡ 30s Anime de Alto Voltaje: $topic"
+                    isMovie -> "Odisea Astral Cinemática: $topic"
+                    else -> "Crónicas del Destino: $topic"
+                }
                 isCosmic && isHindi -> "सौरमंडल व ब्रह्मांडीय ग्रहों की खोज: $topic"
                 isNature && isHindi -> "रहस्यमयी झरने व पवित्र वनों की गाथा: $topic"
                 isMecha && isHindi -> "सुपरसोनिक मेका विमान व साइबर मशीन्स: $topic"
@@ -844,6 +860,8 @@ class GeminiApiService {
         }
 
         val synopsis = when {
+            isJapanese -> "古代の予言が目覚めし時、若き英雄たちは次元を越え神聖なる歴史を守るための宿命の戦いに身を投じる。"
+            isSpanish -> "Cuando la antigua profecía despierta, los héroes viajan a través de dimensiones para salvaguardar la línea temporal sagrada."
             isManhwa && isKorean -> "서울 한복판에 열린 붉은 던전 게이트! 진성우의 그림자 군단이 마침내 깨어난다."
             isManhwa && isHindi -> "सियोल के रहस्यमयी डंजन में जब डार्क शैडो पोर्टल खुलता है, तब हंटर की नीली चमकती आंखें और शैडो आर्मी प्रकट होती है!"
             isManhwa -> "When the mysterious S-Rank red gate manifests in Seoul, the legendary Hunter awakens his Shadow Army with glowing eyes."
@@ -866,6 +884,16 @@ class GeminiApiService {
                     DialogueLine(protagonistName, "여기서 끝이다. 일어나라, 나의 그림자여!", "Fierce", "Manhwa Glowing Eyes", "AURA_GLOW_PARTICLES", 0.88f, 1.1f, "Boy", effectiveAccent),
                     DialogueLine(heroineName, "엄청난 마력이야... 단숨에 게이트를 부숴버려!", "Excited", "Fierce Battle Roar", "SPEEDLINES_ACTION", 1.35f, 1.05f, "Girl", effectiveAccent)
                 )
+            } else if (isJapanese) {
+                listOf(
+                    DialogueLine(protagonistName, "ここで終わりにする。我が内に眠る星辰の刃よ、目覚めよ！", "Fierce", "Manhwa Glowing Eyes", "AURA_GLOW_PARTICLES", 0.95f, 1.1f, "Boy", effectiveAccent),
+                    DialogueLine(heroineName, "ものすごい魔力だわ…一撃で暗黒の結界を切り裂いて！", "Excited", "Fierce Battle Roar", "SPEEDLINES_ACTION", 1.35f, 1.05f, "Girl", effectiveAccent)
+                )
+            } else if (isSpanish) {
+                listOf(
+                    DialogueLine(protagonistName, "¡Esto termina aquí mismo! ¡Despierta, filo de las estrellas!", "Fierce", "Manhwa Glowing Eyes", "AURA_GLOW_PARTICLES", 0.95f, 1.1f, "Boy", effectiveAccent),
+                    DialogueLine(heroineName, "¡Su energía mágica es descomunal! ¡Destruye la barrera de un solo golpe!", "Excited", "Fierce Battle Roar", "SPEEDLINES_ACTION", 1.35f, 1.05f, "Girl", effectiveAccent)
+                )
             } else if (isHindi) {
                 listOf(
                     DialogueLine(protagonistName, "अब कोई नहीं बचेगा! जागो, मेरी शैडो आर्मी!", "Fierce", "Manhwa Glowing Eyes", "AURA_GLOW_PARTICLES", 0.95f, 1.1f, "Boy", effectiveAccent),
@@ -883,6 +911,16 @@ class GeminiApiService {
                     DialogueLine(protagonistName, "일격필살! 극한의 그림자 참격!", "Determined", "Fierce Battle Roar", "SCREEN_SHAKE_IMPACT", 0.88f, 1.15f, "Boy", effectiveAccent),
                     DialogueLine(mascotName, "대승리다, 크아아앙!", "Happy", "Kawaii Blush & Sparkles", "SPEEDLINES_ACTION", 1.65f, 1.2f, "Mascot", effectiveAccent)
                 )
+            } else if (isJapanese) {
+                listOf(
+                    DialogueLine(protagonistName, "極限一閃！アストラル・ブレイク！", "Determined", "Fierce Battle Roar", "SCREEN_SHAKE_IMPACT", 0.95f, 1.15f, "Boy", effectiveAccent),
+                    DialogueLine(mascotName, "完全勝利だよ！やったね！", "Happy", "Kawaii Blush & Sparkles", "SPEEDLINES_ACTION", 1.65f, 1.2f, "Mascot", effectiveAccent)
+                )
+            } else if (isSpanish) {
+                listOf(
+                    DialogueLine(protagonistName, "¡Impacto Definitivo! ¡Corte Astral!", "Determined", "Fierce Battle Roar", "SCREEN_SHAKE_IMPACT", 0.95f, 1.15f, "Boy", effectiveAccent),
+                    DialogueLine(mascotName, "¡Victoria absoluta! ¡Lo logramos!", "Happy", "Kawaii Blush & Sparkles", "SPEEDLINES_ACTION", 1.65f, 1.2f, "Mascot", effectiveAccent)
+                )
             } else if (isHindi) {
                 listOf(
                     DialogueLine(protagonistName, "महा-प्रहार! शैडो स्लैश!", "Determined", "Fierce Battle Roar", "SCREEN_SHAKE_IMPACT", 0.95f, 1.15f, "Boy", effectiveAccent),
@@ -898,7 +936,7 @@ class GeminiApiService {
             scenesList.add(
                 AnimeScene(
                     sceneNumber = 1,
-                    title = if (isHindi) "शार्ट दृश्य १: शैडो पोर्टल का विस्फोट" else "Scene 1: The Shadow Gate Burst",
+                    title = if (isJapanese) "ショート第1幕：星辰の覚醒" else if (isSpanish) "Escena 1: El Despertar Astral" else if (isHindi) "शार्ट दृश्य १: शैडो पोर्टल का विस्फोट" else "Scene 1: The Shadow Gate Burst",
                     visualPrompt = "Dynamic high-contrast anime action frame, glowing blue eyes, radial speedlines, dark purple flame aura",
                     backgroundType = if (isManhwa) "Shadow Dungeon" else "Cyber Neo City",
                     bgMood = "Epic Battle",
@@ -913,7 +951,7 @@ class GeminiApiService {
             scenesList.add(
                 AnimeScene(
                     sceneNumber = 2,
-                    title = if (isHindi) "शार्ट दृश्य २: अंतिम निर्णायक प्रहार" else "Scene 2: The Final Impact",
+                    title = if (isJapanese) "ショート第2幕：決着の一閃" else if (isSpanish) "Escena 2: El Impacto Final" else if (isHindi) "शार्ट दृश्य २: अंतिम निर्णायक प्रहार" else "Scene 2: The Final Impact",
                     visualPrompt = "Climactic slash frame with screen shake, speedlines, electric aura explosion, cinematic freeze frame",
                     backgroundType = if (isManhwa) "Shadow Dungeon" else "Cyber Neo City",
                     bgMood = "Epic Battle",
@@ -987,8 +1025,12 @@ class GeminiApiService {
             // Standard Episode (4 scenes) or Movie (6 scenes)
             val sceneCount = if (isMovie) 6 else 4
             for (idx in 0 until sceneCount) {
-                val scTitle = if (isHindi) "दृश्य ${idx + 1}: ${if (idx == 0) "चेरी ब्लॉसम की जागृति" else if (idx == sceneCount - 1) "अंतिम विजय व नया सवेरा" else "महा-युद्ध का आगाज़"}" 
-                              else "Scene ${idx + 1}: ${if (idx == 0) "The Celestial Awakening" else if (idx == sceneCount - 1) "Dawn of the New Era" else "Clash of Destinies"}"
+                val scTitle = when {
+                    isJapanese -> "第${idx + 1}幕：${if (idx == 0) "星辰の覚醒と桜の光" else if (idx == sceneCount - 1) "新時代の夜明け" else "運命の激突"}"
+                    isSpanish -> "Escena ${idx + 1}: ${if (idx == 0) "El Despertar Astral" else if (idx == sceneCount - 1) "El Alba de una Nueva Era" else "Choque de Destinos"}"
+                    isHindi -> "दृश्य ${idx + 1}: ${if (idx == 0) "चेरी ब्लॉसम की जागृति" else if (idx == sceneCount - 1) "अंतिम विजय व नया सवेरा" else "महा-युद्ध का आगाज़"}"
+                    else -> "Scene ${idx + 1}: ${if (idx == 0) "The Celestial Awakening" else if (idx == sceneCount - 1) "Dawn of the New Era" else "Clash of Destinies"}"
+                }
 
                 val eff = when {
                     isCosmic -> if (idx % 2 == 0) "PLANETARY_COSMOS" else "CINEMATIC_ZOOM"
@@ -1022,7 +1064,47 @@ class GeminiApiService {
                     else -> if (idx % 2 == 0) "Cherry Blossom Sanctuary" else "Cyber Neo City"
                 }
 
-                val dList = if (isHindi) {
+                val dList = if (isJapanese) {
+                    when {
+                        isCosmic -> listOf(
+                            DialogueLine(heroBoy.name, "太陽系惑星の軌道を捉えた！星辰の推進力最大出力！", "Fierce", "Fierce Battle Roar", eff, heroBoy.voicePitch, heroBoy.voiceSpeed, heroBoy.voiceType, effectiveAccent),
+                            DialogueLine(heroine.name, "銀河星雲の波動が共鳴しているわ…未知の星域へ突入する！", "Excited", "Manhwa Glowing Eyes", eff, heroine.voicePitch, heroine.voiceSpeed, heroine.voiceType, effectiveAccent)
+                        )
+                        isNature -> listOf(
+                            DialogueLine(heroine.name, "この滝のせせらぎと聖なる森の風には、深い安らぎが宿っているわ。", "Peaceful", "Kawaii Blush & Sparkles", eff, heroine.voicePitch, heroine.voiceSpeed, heroine.voiceType, effectiveAccent),
+                            DialogueLine(heroBoy.name, "大自然の息吹とともに、我らの冒険が再び始まる！", "Determined", "Fierce Battle Roar", eff, heroBoy.voicePitch, heroBoy.voiceSpeed, heroBoy.voiceType, effectiveAccent)
+                        )
+                        isFight -> listOf(
+                            DialogueLine(heroBoy.name, "雷光の力よ…この一撃ですべてに決着をつける！", "Fierce", "Fierce Battle Roar", eff, heroBoy.voicePitch, heroBoy.voiceSpeed, heroBoy.voiceType, effectiveAccent),
+                            DialogueLine(heroine.name, "油断しないで！敵の奥義が来るわ！", "Determined", "Manhwa Glowing Eyes", eff, heroine.voicePitch, heroine.voiceSpeed, heroine.voiceType, effectiveAccent)
+                        )
+                        isRomance -> listOf(
+                            DialogueLine(heroine.name, "夕焼けに染まる桜の花びら…この瞬間がずっと続けばいいのに。", "Loving", "Kawaii Blush & Sparkles", eff, heroine.voicePitch, heroine.voiceSpeed, heroine.voiceType, effectiveAccent),
+                            DialogueLine(heroBoy.name, "何があっても、俺が必ず君を守り抜く。", "Determined", "Confident Smirk", eff, heroBoy.voicePitch, heroBoy.voiceSpeed, heroBoy.voiceType, effectiveAccent)
+                        )
+                        else -> listOf(
+                            DialogueLine(heroine.name, "空を見て！桜の花びらが星の光に輝いているわ！", "Excited", "Kawaii Blush & Sparkles", eff, heroine.voicePitch, heroine.voiceSpeed, heroine.voiceType, effectiveAccent),
+                            DialogueLine(heroBoy.name, "俺たちの剣は決して折れない！真の力を解き放とう！", "Fierce", "Fierce Battle Roar", eff, heroBoy.voicePitch, heroBoy.voiceSpeed, heroBoy.voiceType, effectiveAccent),
+                            DialogueLine(mascot.name, "みんな準備はバッチリだよ！一緒に世界を救おう！", "Happy", "Comedic Sweatdrop", eff, mascot.voicePitch, mascot.voiceSpeed, mascot.voiceType, effectiveAccent)
+                        )
+                    }
+                } else if (isSpanish) {
+                    when {
+                        isFight -> listOf(
+                            DialogueLine(heroBoy.name, "¡Con el poder del relámpago... este golpe lo decidirá todo!", "Fierce", "Fierce Battle Roar", eff, heroBoy.voicePitch, heroBoy.voiceSpeed, heroBoy.voiceType, effectiveAccent),
+                            DialogueLine(heroine.name, "¡Cuidado! ¡Su ataque definitivo se aproxima!", "Determined", "Manhwa Glowing Eyes", eff, heroine.voicePitch, heroine.voiceSpeed, heroine.voiceType, effectiveAccent)
+                        )
+                        isRomance -> listOf(
+                            DialogueLine(heroine.name, "Los pétalos cayendo bajo el atardecer... desearía que este instante fuera eterno.", "Loving", "Kawaii Blush & Sparkles", eff, heroine.voicePitch, heroine.voiceSpeed, heroine.voiceType, effectiveAccent),
+                            DialogueLine(heroBoy.name, "Pase lo que pase, te protegeré siempre con mi espada.", "Determined", "Confident Smirk", eff, heroBoy.voicePitch, heroBoy.voiceSpeed, heroBoy.voiceType, effectiveAccent)
+                        )
+                        else -> listOf(
+                            DialogueLine(heroine.name, "¡Mira el cielo! ¡Los pétalos de sakura resplandecen con luz astral!", "Excited", "Kawaii Blush & Sparkles", eff, heroine.voicePitch, heroine.voiceSpeed, heroine.voiceType, effectiveAccent),
+                            DialogueLine(heroBoy.name, "¡Nuestra determinación es inquebrantable! ¡Liberemos nuestro verdadero poder!", "Fierce", "Fierce Battle Roar", eff, heroBoy.voicePitch, heroBoy.voiceSpeed, heroBoy.voiceType, effectiveAccent),
+                            DialogueLine(mascot.name, "¡Estamos listos para triunfar! ¡Juntos salvaremos el mundo!", "Happy", "Comedic Sweatdrop", eff, mascot.voicePitch, mascot.voiceSpeed, mascot.voiceType, effectiveAccent)
+                        )
+                    }
+                } else if (isHindi) {
                     when {
                         isCosmic -> listOf(
                             DialogueLine(heroBoy.name, "सौरमंडल के उस पार... एक नया आकाशीय ग्रह हमारा इंतज़ार कर रहा है!", "Determined", "Manhwa Glowing Eyes", eff, heroBoy.voicePitch, heroBoy.voiceSpeed, heroBoy.voiceType, effectiveAccent),

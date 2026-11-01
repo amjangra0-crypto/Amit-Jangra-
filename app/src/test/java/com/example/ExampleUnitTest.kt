@@ -80,4 +80,52 @@ class ExampleUnitTest {
     assertEquals("Manhwa Webtoon", entity.artStyle)
     assertTrue(entity.createdAt > 0)
   }
+
+  @Test
+  fun testLinguisticFirewallEnginePurityJapanese() {
+    val config = com.example.localization.LinguisticFirewallEngine.EngineConfig(
+      selectedLanguage = "Japanese",
+      selectedCountry = "Japan",
+      dialingCode = "+81",
+      currentRole = "Owner",
+      liveInr = "48500",
+      liveUsd = "620"
+    )
+
+    val output = com.example.localization.LinguisticFirewallEngine.execute(config)
+
+    // Verify 4-part Output Architecture bracket headers are preserved
+    assertTrue(output.fullFormattedOutput.contains("[ACTIVATED_COMPONENTS]"))
+    assertTrue(output.fullFormattedOutput.contains("[TRENDPLUS_FORECAST]"))
+    assertTrue(output.fullFormattedOutput.contains("[CREATIVE_PRODUCTION_BLUEPRINT]"))
+    assertTrue(output.fullFormattedOutput.contains("[FINANCIAL_PAYOUT_ROUTING]"))
+
+    // Verify authentic Japanese characters are present
+    assertTrue(output.activatedComponents.contains("生成型アニメ動画制作スタジオ"))
+    assertTrue(output.trendplusForecast.contains("急上昇指標"))
+    assertTrue(output.creativeBlueprint.contains("キャラクター設計仕様"))
+
+    // Verify Owner balance is present
+    assertTrue(output.financialPayoutRouting.contains("48500"))
+    assertTrue(output.financialPayoutRouting.contains("620"))
+  }
+
+  @Test
+  fun testLinguisticFirewallEngineUserVaultIsolation() {
+    val userConfig = com.example.localization.LinguisticFirewallEngine.EngineConfig(
+      selectedLanguage = "Japanese",
+      selectedCountry = "Japan",
+      dialingCode = "+81",
+      currentRole = "User",
+      liveInr = "48500",
+      liveUsd = "620"
+    )
+
+    val output = com.example.localization.LinguisticFirewallEngine.execute(userConfig)
+
+    // For User role, ledger pools must be hidden
+    assertFalse(output.financialPayoutRouting.contains("48500"))
+    assertFalse(output.financialPayoutRouting.contains("620"))
+    assertTrue(output.financialPayoutRouting.contains("非公開") || output.financialPayoutRouting.contains("安全取引"))
+  }
 }

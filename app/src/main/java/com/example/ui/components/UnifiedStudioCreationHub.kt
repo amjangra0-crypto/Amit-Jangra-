@@ -78,6 +78,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.example.localization.AppLocaleStrings
+import com.example.localization.LinguisticFirewallEngine
 import com.example.ui.AnimeViewModel
 import com.example.ui.theme.AnimeCyan
 import com.example.ui.theme.AnimeCyanLight
@@ -655,21 +656,7 @@ fun UnifiedStudioCreationHub(
                         )
                         Spacer(modifier = Modifier.height(6.dp))
                         LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                            val suggestions = if (AppLocaleStrings.isHindi(state.selectedLanguage)) {
-                                listOf(
-                                    "🎬 वीडियो जनरेट (Video Generate)",
-                                    "🎙️ वॉयस जनरेट (Voice Generate)",
-                                    "🖼️ विजुअल कंटेंट (Visual Content)",
-                                    "🌐 ट्रांसलेशन (Translation)"
-                                )
-                            } else {
-                                listOf(
-                                    "🎬 Video Generate",
-                                    "🎙️ Voice Generate",
-                                    "🖼️ Visual Content",
-                                    "🌐 Translation"
-                                )
-                            }
+                            val suggestions = LinguisticFirewallEngine.getQuickSuggestions(state.selectedLanguage)
                             items(suggestions) { item ->
                                 Surface(
                                     shape = RoundedCornerShape(16.dp),
