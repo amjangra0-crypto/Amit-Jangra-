@@ -35,6 +35,7 @@ import androidx.compose.material.icons.filled.FileDownload
 import androidx.compose.material.icons.filled.FolderSpecial
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.LightMode
+import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.PlayCircle
 import androidx.compose.material.icons.filled.Settings
@@ -134,13 +135,14 @@ class MainActivity : ComponentActivity() {
             var isShowingProfileSettings by remember { mutableStateOf(false) }
             var isShowingAdvancedSettings by remember { mutableStateOf(false) }
             var showCountryPickerSheet by remember { mutableStateOf(false) }
+            var showPermissionsOnboarding by remember { mutableStateOf(false) }
 
-            // Mark permission onboarding handled on install so the app NEVER repeatedly prompts on start.
-            // Users can manually enable/disable in Settings or when tapping the mic button.
+            // Strictly prompts Google Maps & GPS permission ONCE upon initial app install
             val permissionManager = remember { com.example.util.PermissionManager.getInstance(this@MainActivity) }
             LaunchedEffect(Unit) {
-                com.example.util.PermissionPreferenceManager.markPermissionRequestedOnInstall(this@MainActivity)
-                permissionManager.markAlreadyRequestedOnInstall()
+                if (com.example.util.PermissionPreferenceManager.shouldTriggerInitialPermissionRequest(this@MainActivity)) {
+                    showPermissionsOnboarding = true
+                }
             }
 
             val isFollowSystem = com.example.ui.theme.AppThemeController.isFollowSystemTheme
@@ -194,6 +196,45 @@ class MainActivity : ComponentActivity() {
                                 }
                             },
                             actions = {
+                                // GPS Regional Auto-Detection Status Indicator
+                                Box(
+                                    modifier = Modifier
+                                        .clip(RoundedCornerShape(8.dp))
+                                        .background(if (state.isManualLanguageOverrideActive) AnimePink.copy(alpha = 0.15f) else AnimeGreen.copy(alpha = 0.15f))
+                                        .border(
+                                            1.dp,
+                                            if (state.isManualLanguageOverrideActive) AnimePink.copy(alpha = 0.5f) else AnimeGreen.copy(alpha = 0.5f),
+                                            RoundedCornerShape(8.dp)
+                                        )
+                                        .clickable {
+                                            if (state.isManualLanguageOverrideActive) {
+                                                viewModel.resetToGpsLanguage()
+                                            } else {
+                                                showCountryPickerSheet = true
+                                            }
+                                        }
+                                        .padding(horizontal = 6.dp, vertical = 4.dp)
+                                        .testTag("top_bar_gps_status_btn")
+                                ) {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Icon(
+                                            imageVector = Icons.Default.LocationOn,
+                                            contentDescription = null,
+                                            tint = if (state.isManualLanguageOverrideActive) AnimePink else AnimeGreen,
+                                            modifier = Modifier.size(12.dp)
+                                        )
+                                        Spacer(modifier = Modifier.width(3.dp))
+                                        Text(
+                                            text = if (state.isManualLanguageOverrideActive) "MANUAL" else "GPS",
+                                            color = if (state.isManualLanguageOverrideActive) AnimePink else AnimeGreen,
+                                            fontSize = 9.sp,
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                    }
+                                }
+
+                                Spacer(modifier = Modifier.width(4.dp))
+
                                 // Global Country & Language Quick Selector Chip
                                 Box(
                                     modifier = Modifier
@@ -570,6 +611,17 @@ class MainActivity : ComponentActivity() {
                             lang = state.selectedLanguage,
                             onAcceptUpdate = { updateId -> viewModel.acceptFeatureUpdate(updateId) },
                             onPostponeUpdate = { updateId -> viewModel.postponeFeatureUpdate(updateId) }
+                        )
+                    }
+
+                    // Google Maps & GPS Installation One-Time Permission Onboarding
+                    if (showPermissionsOnboarding) {
+                        AppPermissionsOnboardingDialog(
+                            language = state.selectedLanguage,
+                            onDismiss = {
+                                showPermissionsOnboarding = false
+                                viewModel.refreshGpsLocation()
+                            }
                         )
                     }
                 }

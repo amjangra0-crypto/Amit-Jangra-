@@ -462,6 +462,34 @@ fun StudioCreateScreen(viewModel: AnimeViewModel) {
         // Real-Time Studio Video Player Component (Live Scene Preview)
         StudioSceneVideoPlayer(viewModel = viewModel)
 
+        Spacer(modifier = Modifier.height(12.dp))
+
+        // Google Maps Data Grounding Studio Card (Gemini 3.8 Flash)
+        Box(modifier = Modifier.padding(horizontal = 16.dp)) {
+            com.example.ui.components.GoogleMapsGroundingStudioCard(
+                uiState = state,
+                onScoutLocation = { location -> viewModel.scoutLocationWithGoogleMaps(location) },
+                onApplyToPrompt = { groundedScript ->
+                    val cur = state.promptInput
+                    viewModel.setPromptInput(if (cur.isBlank()) groundedScript else "$cur\n\n$groundedScript")
+                },
+                onRefreshGps = { viewModel.refreshGpsLocation() }
+            )
+        }
+
+        Spacer(modifier = Modifier.height(10.dp))
+
+        // Global Architecture Matrix Card (4 Laws & UI Matrix Blocks)
+        Box(modifier = Modifier.padding(horizontal = 16.dp)) {
+            com.example.ui.components.GlobalArchitectureMatrixCard(
+                uiState = state,
+                isOwner = state.isOwnerAdmin,
+                onResetToGps = { viewModel.resetToGpsLanguage() },
+                onChangeLanguage = { viewModel.setTab(AppTab.LANGUAGE_SETTINGS) },
+                onOpenPermissions = { viewModel.setTab(AppTab.SETTINGS) }
+            )
+        }
+
         Spacer(modifier = Modifier.height(10.dp))
 
         // Input Mode Tabs (Prompt / Web Link / Image Scanner)

@@ -28,7 +28,11 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Language
+import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Mic
+import androidx.compose.material.icons.filled.Navigation
+import androidx.compose.material.icons.filled.Place
 import androidx.compose.material.icons.filled.Security
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Shield
@@ -41,6 +45,7 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -59,6 +64,7 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.core.content.ContextCompat
 import com.example.localization.AppLocaleStrings
+import com.example.localization.GpsLocationManager
 import com.example.ui.theme.AnimeCyan
 import com.example.ui.theme.AnimeGold
 import com.example.ui.theme.AnimeGreen
@@ -69,11 +75,13 @@ import com.example.ui.theme.AnimeSurfaceVariant
 import com.example.ui.theme.TextMuted
 import com.example.ui.theme.TextPrimary
 import com.example.ui.theme.TextSecondary
+import com.example.util.PermissionPreferenceManager
 
 /**
- * Single-Permission Onboarding Dialog (Prompted only once after installation).
- * Requests solely Microphone access for AI Voice Dubbing & Speech Prompts.
- * Camera, Location, and Notifications are completely excluded.
+ * One-Time Installation Permissions Onboarding Dialog.
+ * Prompts strictly ONCE upon initial app installation to acquire Google Maps GPS location
+ * for regional auto-detection and anime studio grounding, plus microphone for voice dubbing.
+ * Persistently recorded so it never prompts again automatically.
  */
 @Composable
 fun AppPermissionsOnboardingDialog(
@@ -81,15 +89,14 @@ fun AppPermissionsOnboardingDialog(
     onDismiss: () -> Unit
 ) {
     val context = LocalContext.current
-    val prefs = remember {
-        context.getSharedPreferences("anime_app_permissions_prefs", Context.MODE_PRIVATE)
-    }
-    val settingsPrefs = remember {
-        context.getSharedPreferences("app_settings_prefs", Context.MODE_PRIVATE)
-    }
+    val gpsManager = remember { GpsLocationManager.getInstance(context) }
+    val activeCountry by gpsManager.activeGpsCountry.collectAsState()
 
-    fun markPermissionHandled() {
-        com.example.util.PermissionPreferenceManager.markPermissionRequestedOnInstall(context)
+    var locationGranted by remember {
+        mutableStateOf(
+            ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED ||
+            ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
+        )
     }
 
     var micGranted by remember {
@@ -98,22 +105,38 @@ fun AppPermissionsOnboardingDialog(
         )
     }
 
-    val requestPermissionLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.RequestPermission()
-    ) { isGranted ->
-        micGranted = isGranted
-        // Permanently record that permission was prompted on install so it never asks repeatedly
-        markPermissionHandled()
-        if (isGranted) {
-            Toast.makeText(context, AppLocaleStrings.get("permissions_granted_toast", language), Toast.LENGTH_SHORT).show()
+    fun markHandled() {
+        PermissionPreferenceManager.markPermissionRequestedOnInstall(context)
+    }
+
+    val multiplePermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestMultiplePermissions()
+    ) { result ->
+        val fineLoc = result[Manifest.permission.ACCESS_FINE_LOCATION] ?: false
+        val coarseLoc = result[Manifest.permission.ACCESS_COARSE_LOCATION] ?: false
+        val mic = result[Manifest.permission.RECORD_AUDIO] ?: false
+
+        locationGranted = fineLoc || coarseLoc
+        micGranted = mic
+
+        markHandled()
+
+        if (locationGranted) {
+            gpsManager.refreshGpsLocation()
         }
+
+        val successMsg = if (AppLocaleStrings.isHindi(language)) {
+            "✅ गूगल मैप्स व स्टूडियो अनुमतियाँ सफलतापूर्वक सक्रिय की गईं!"
+        } else {
+            "✅ Google Maps & Studio permissions active!"
+        }
+        Toast.makeText(context, successMsg, Toast.LENGTH_SHORT).show()
         onDismiss()
     }
 
     Dialog(
         onDismissRequest = {
-            // Dismissed by user: mark handled so it won't prompt again
-            markPermissionHandled()
+            markHandled()
             onDismiss()
         },
         properties = DialogProperties(dismissOnBackPress = true, dismissOnClickOutside = true)
@@ -121,9 +144,9 @@ fun AppPermissionsOnboardingDialog(
         Card(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(vertical = 16.dp)
+                .padding(vertical = 12.dp)
                 .testTag("permissions_onboarding_dialog"),
-            shape = RoundedCornerShape(22.dp),
+            shape = RoundedCornerShape(24.dp),
             colors = CardDefaults.cardColors(containerColor = AnimeSurface),
             border = BorderStroke(
                 1.5.dp,
@@ -132,14 +155,14 @@ fun AppPermissionsOnboardingDialog(
         ) {
             Column(
                 modifier = Modifier
-                    .padding(22.dp)
+                    .padding(20.dp)
                     .verticalScroll(rememberScrollState()),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 // Header Icon
                 Box(
                     modifier = Modifier
-                        .size(56.dp)
+                        .size(54.dp)
                         .clip(CircleShape)
                         .background(
                             Brush.linearGradient(listOf(AnimeCyan, AnimePink, AnimeGold))
@@ -147,16 +170,16 @@ fun AppPermissionsOnboardingDialog(
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
-                        imageVector = Icons.Default.Shield,
+                        imageVector = Icons.Default.LocationOn,
                         contentDescription = null,
                         tint = Color.Black,
-                        modifier = Modifier.size(30.dp)
+                        modifier = Modifier.size(28.dp)
                     )
                 }
 
-                Spacer(modifier = Modifier.height(14.dp))
+                Spacer(modifier = Modifier.height(12.dp))
 
-                // One Permission Required Badge
+                // One-Time Install Badge
                 Box(
                     modifier = Modifier
                         .clip(RoundedCornerShape(8.dp))
@@ -166,9 +189,9 @@ fun AppPermissionsOnboardingDialog(
                 ) {
                     Text(
                         text = if (AppLocaleStrings.isHindi(language)) {
-                            "⚡ केवल 1 अनुमति आवश्यक (One Permission Only)"
+                            "⚡ इंस्टालेशन पर केवल एक बार अनुमति (One-Time Install Setup)"
                         } else {
-                            "⚡ Only 1 Permission Required"
+                            "⚡ One-Time Installation Permission"
                         },
                         color = AnimeCyan,
                         fontSize = 11.sp,
@@ -179,7 +202,11 @@ fun AppPermissionsOnboardingDialog(
                 Spacer(modifier = Modifier.height(10.dp))
 
                 Text(
-                    text = AppLocaleStrings.get("permissions_title", language),
+                    text = if (AppLocaleStrings.isHindi(language)) {
+                        "गूगल मैप्स व ग्लोबल आर्किटेक्चर सेटअप"
+                    } else {
+                        "Google Maps & Global Studio Architecture"
+                    },
                     color = TextPrimary,
                     fontSize = 17.sp,
                     fontWeight = FontWeight.ExtraBold
@@ -188,15 +215,19 @@ fun AppPermissionsOnboardingDialog(
                 Spacer(modifier = Modifier.height(6.dp))
 
                 Text(
-                    text = AppLocaleStrings.get("permissions_desc", language),
+                    text = if (AppLocaleStrings.isHindi(language)) {
+                        "जीपीएस ऑटो-डिटेक्शन, रीजनल एनिमे लोकेशन ग्राउंडिंग व विशुद्ध देशीय भाषा अनुवाद सक्रिय करें।"
+                    } else {
+                        "Enable hardware GPS regional auto-detection, Google Maps scene grounding, and zero-bleed native localization."
+                    },
                     color = TextSecondary,
                     fontSize = 12.sp,
-                    lineHeight = 17.sp
+                    lineHeight = 16.sp
                 )
 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(14.dp))
 
-                // Single Permission Item: Microphone
+                // Feature 1: Google Maps & GPS Regional Auto-Detection
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -204,28 +235,88 @@ fun AppPermissionsOnboardingDialog(
                         .background(AnimeSurfaceVariant)
                         .border(
                             1.dp,
-                            if (micGranted) AnimeGreen.copy(alpha = 0.6f) else AnimeCyan.copy(alpha = 0.4f),
+                            if (locationGranted) AnimeGreen.copy(alpha = 0.6f) else AnimeCyan.copy(alpha = 0.4f),
                             RoundedCornerShape(14.dp)
                         )
-                        .padding(14.dp),
+                        .padding(12.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Box(
                         modifier = Modifier
-                            .size(42.dp)
+                            .size(40.dp)
                             .clip(CircleShape)
-                            .background(if (micGranted) AnimeGreen.copy(alpha = 0.2f) else AnimeCyan.copy(alpha = 0.2f)),
+                            .background(if (locationGranted) AnimeGreen.copy(alpha = 0.2f) else AnimeCyan.copy(alpha = 0.2f)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Place,
+                            contentDescription = null,
+                            tint = if (locationGranted) AnimeGreen else AnimeCyan,
+                            modifier = Modifier.size(22.dp)
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.width(10.dp))
+
+                    Column(modifier = Modifier.weight(1f)) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(
+                                text = if (AppLocaleStrings.isHindi(language)) "गूगल मैप्स व जीपीएस ऑटो-डिटेक्शन" else "Google Maps & GPS Detection",
+                                color = TextPrimary,
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            if (locationGranted) {
+                                Icon(Icons.Default.CheckCircle, contentDescription = null, tint = AnimeGreen, modifier = Modifier.size(14.dp))
+                            }
+                        }
+                        Spacer(modifier = Modifier.height(2.dp))
+                        Text(
+                            text = if (AppLocaleStrings.isHindi(language)) {
+                                "क्षेत्रीय भाषा का शून्य-मिलावट अनुवाद व गूगल मैप्स सीन लोकेशन स्काउटिंग।"
+                            } else {
+                                "Maps-grounded anime scene landmarks & pure script regional localization."
+                            },
+                            color = TextSecondary,
+                            fontSize = 11.sp,
+                            lineHeight = 14.sp
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(10.dp))
+
+                // Feature 2: Microphone for Audio Dubbing
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(14.dp))
+                        .background(AnimeSurfaceVariant)
+                        .border(
+                            1.dp,
+                            if (micGranted) AnimeGreen.copy(alpha = 0.6f) else AnimePink.copy(alpha = 0.4f),
+                            RoundedCornerShape(14.dp)
+                        )
+                        .padding(12.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(40.dp)
+                            .clip(CircleShape)
+                            .background(if (micGranted) AnimeGreen.copy(alpha = 0.2f) else AnimePink.copy(alpha = 0.2f)),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
                             imageVector = Icons.Default.Mic,
                             contentDescription = null,
-                            tint = if (micGranted) AnimeGreen else AnimeCyan,
-                            modifier = Modifier.size(24.dp)
+                            tint = if (micGranted) AnimeGreen else AnimePink,
+                            modifier = Modifier.size(22.dp)
                         )
                     }
 
-                    Spacer(modifier = Modifier.width(12.dp))
+                    Spacer(modifier = Modifier.width(10.dp))
 
                     Column(modifier = Modifier.weight(1f)) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -237,112 +328,98 @@ fun AppPermissionsOnboardingDialog(
                             )
                             Spacer(modifier = Modifier.width(6.dp))
                             if (micGranted) {
-                                Icon(
-                                    imageVector = Icons.Default.CheckCircle,
-                                    contentDescription = null,
-                                    tint = AnimeGreen,
-                                    modifier = Modifier.size(14.dp)
-                                )
+                                Icon(Icons.Default.CheckCircle, contentDescription = null, tint = AnimeGreen, modifier = Modifier.size(14.dp))
                             }
                         }
-                        Spacer(modifier = Modifier.height(3.dp))
+                        Spacer(modifier = Modifier.height(2.dp))
                         Text(
                             text = AppLocaleStrings.get("perm_mic_desc", language),
                             color = TextSecondary,
                             fontSize = 11.sp,
-                            lineHeight = 15.sp
+                            lineHeight = 14.sp
                         )
                     }
                 }
 
                 Spacer(modifier = Modifier.height(12.dp))
 
-                // Privacy Guarantees Box (No camera, location, storage prompts)
-                Row(
+                // GPS Regional Tag Preview Box
+                Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clip(RoundedCornerShape(10.dp))
-                        .background(AnimePurple.copy(alpha = 0.15f))
-                        .border(1.dp, AnimePurple.copy(alpha = 0.3f), RoundedCornerShape(10.dp))
-                        .padding(horizontal = 12.dp, vertical = 8.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(AnimePurple.copy(alpha = 0.18f))
+                        .border(1.dp, AnimePurple.copy(alpha = 0.35f), RoundedCornerShape(12.dp))
+                        .padding(horizontal = 12.dp, vertical = 8.dp)
+                ) {
+                    Column {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(Icons.Default.Navigation, contentDescription = null, tint = AnimeGold, modifier = Modifier.size(14.dp))
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(
+                                text = "[ACTIVE_GPS_COUNTRY: $activeCountry]",
+                                color = AnimeGold,
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                        Text(
+                            text = if (AppLocaleStrings.isHindi(language)) {
+                                "स्वचालित क्षेत्रीय भाषा: ${GpsLocationManager.getInstance(context).mapCountryToLanguage(activeCountry)} (मैन्युअल बदलाव कभी भी संभव)"
+                            } else {
+                                "Auto-Mapped Language: ${GpsLocationManager.getInstance(context).mapCountryToLanguage(activeCountry)} (Manual override always available)"
+                            },
+                            color = TextMuted,
+                            fontSize = 10.sp
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(18.dp))
+
+                // Primary Button: Grant All
+                Button(
+                    onClick = {
+                        val toRequest = mutableListOf<String>()
+                        if (!locationGranted) {
+                            toRequest.add(Manifest.permission.ACCESS_FINE_LOCATION)
+                            toRequest.add(Manifest.permission.ACCESS_COARSE_LOCATION)
+                        }
+                        if (!micGranted) {
+                            toRequest.add(Manifest.permission.RECORD_AUDIO)
+                        }
+
+                        if (toRequest.isEmpty()) {
+                            markHandled()
+                            onDismiss()
+                        } else {
+                            multiplePermissionLauncher.launch(toRequest.toTypedArray())
+                        }
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(48.dp)
+                        .testTag("grant_all_permissions_btn"),
+                    colors = ButtonDefaults.buttonColors(containerColor = AnimeCyan),
+                    shape = RoundedCornerShape(12.dp)
                 ) {
                     Icon(
-                        imageVector = Icons.Default.Security,
+                        imageVector = if (locationGranted && micGranted) Icons.Default.CheckCircle else Icons.Default.Place,
                         contentDescription = null,
-                        tint = AnimeGold,
-                        modifier = Modifier.size(16.dp)
+                        tint = Color.Black,
+                        modifier = Modifier.size(18.dp)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = if (AppLocaleStrings.isHindi(language)) {
-                            "🔒 कोई कैमरा, लोकेशन या अनावश्यक परमिशन नहीं माँगी जाती।"
+                        text = if (locationGranted && micGranted) {
+                            if (AppLocaleStrings.isHindi(language)) "स्टूडियो में प्रवेश करें" else "Enter Studio"
                         } else {
-                            "🔒 No camera, location, or intrusive permissions ever requested."
+                            if (AppLocaleStrings.isHindi(language)) "गूगल मैप्स अनुमति दें व शुरू करें" else "Grant Maps Permission & Continue"
                         },
-                        color = AnimeGold,
-                        fontSize = 10.sp,
-                        fontWeight = FontWeight.Medium
+                        color = Color.Black,
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.Bold
                     )
-                }
-
-                Spacer(modifier = Modifier.height(20.dp))
-
-                if (!micGranted) {
-                    // Action Button: Grant Single Permission
-                    Button(
-                        onClick = {
-                            requestPermissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
-                        },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(48.dp)
-                            .testTag("grant_all_permissions_btn"),
-                        colors = ButtonDefaults.buttonColors(containerColor = AnimeCyan),
-                        shape = RoundedCornerShape(12.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Mic,
-                            contentDescription = null,
-                            tint = Color.Black,
-                            modifier = Modifier.size(18.dp)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = AppLocaleStrings.get("grant_permissions_btn", language),
-                            color = Color.Black,
-                            fontSize = 13.sp,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-                } else {
-                    // Already Granted -> Continue Button
-                    Button(
-                        onClick = {
-                            markPermissionHandled()
-                            onDismiss()
-                        },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(48.dp)
-                            .testTag("grant_all_permissions_btn"),
-                        colors = ButtonDefaults.buttonColors(containerColor = AnimeGreen),
-                        shape = RoundedCornerShape(12.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.CheckCircle,
-                            contentDescription = null,
-                            tint = Color.Black,
-                            modifier = Modifier.size(18.dp)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = AppLocaleStrings.get("permissions_skip", language),
-                            color = Color.Black,
-                            fontSize = 13.sp,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
                 }
 
                 Spacer(modifier = Modifier.height(8.dp))
@@ -352,22 +429,22 @@ fun AppPermissionsOnboardingDialog(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // Continue without mic
+                    // Skip / Continue
                     TextButton(
                         onClick = {
-                            markPermissionHandled()
+                            markHandled()
                             onDismiss()
                         },
                         modifier = Modifier.testTag("skip_permissions_btn")
                     ) {
                         Text(
-                            text = AppLocaleStrings.get("permissions_skip", language),
+                            text = if (AppLocaleStrings.isHindi(language)) "अंग्रेजी डिफॉल्ट से जारी रखें" else "Continue with English Default",
                             color = TextMuted,
-                            fontSize = 12.sp
+                            fontSize = 11.sp
                         )
                     }
 
-                    // Open App Settings button if user wants to change later
+                    // Open App Settings
                     TextButton(
                         onClick = {
                             try {

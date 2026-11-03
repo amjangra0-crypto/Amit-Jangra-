@@ -236,6 +236,102 @@ fun LanguageSettingsScreen(
                 }
             }
 
+            Spacer(modifier = Modifier.height(14.dp))
+
+            // Global Architecture Matrix Card (4 Unbreakable Laws)
+            com.example.ui.components.GlobalArchitectureMatrixCard(
+                uiState = state,
+                isOwner = state.isOwnerAdmin,
+                onResetToGps = { viewModel.resetToGpsLanguage() },
+                onChangeLanguage = {},
+                onOpenPermissions = {}
+            )
+
+            Spacer(modifier = Modifier.height(14.dp))
+
+            // App UI Interface Language Selection Card (Absolute Manual Override Freedom)
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag("app_interface_language_card"),
+                colors = CardDefaults.cardColors(containerColor = AnimeSurface),
+                shape = RoundedCornerShape(16.dp),
+                border = BorderStroke(1.5.dp, AnimeCyan.copy(alpha = 0.5f))
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column {
+                            Text(
+                                text = if (AppLocaleStrings.isHindi(lang)) "ऐप यूआई भाषा चयन (App UI Language)" else "App UI Language Selection",
+                                color = TextPrimary,
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Text(
+                                text = if (AppLocaleStrings.isHindi(lang)) "कानून 3: मैन्युअल चयन को सर्वोच्च प्राथमिकता प्राप्त है" else "Law 3: Absolute Manual Override Freedom",
+                                color = AnimeCyan,
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                        }
+
+                        if (state.isManualLanguageOverrideActive) {
+                            Button(
+                                onClick = { viewModel.resetToGpsLanguage() },
+                                colors = ButtonDefaults.buttonColors(containerColor = AnimeGreen),
+                                shape = RoundedCornerShape(8.dp),
+                                modifier = Modifier.height(30.dp)
+                            ) {
+                                Text(
+                                    text = if (AppLocaleStrings.isHindi(lang)) "GPS रिसेट" else "Reset GPS",
+                                    color = Color.Black,
+                                    fontSize = 10.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    // All 12 Global Languages
+                    val allGlobalLanguages = com.example.localization.AppLocaleStrings.supportedLanguages
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .horizontalScroll(rememberScrollState()),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        allGlobalLanguages.forEach { langName ->
+                            val isSelected = langName.equals(state.selectedLanguage, ignoreCase = true)
+                            FilterChip(
+                                selected = isSelected,
+                                onClick = {
+                                    viewModel.setAppLanguage(langName)
+                                },
+                                label = {
+                                    Text(
+                                        text = langName,
+                                        fontSize = 11.sp,
+                                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
+                                    )
+                                },
+                                colors = FilterChipDefaults.filterChipColors(
+                                    selectedContainerColor = AnimeCyan.copy(alpha = 0.35f),
+                                    selectedLabelColor = AnimeCyan,
+                                    containerColor = AnimeSurfaceVariant
+                                ),
+                                border = BorderStroke(1.dp, if (isSelected) AnimeCyan else Color.Transparent)
+                            )
+                        }
+                    }
+                }
+            }
+
             Spacer(modifier = Modifier.height(18.dp))
 
             // DROPDOWN MENU SECTION

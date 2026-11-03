@@ -103,6 +103,14 @@ data class AnimeStudioUiState(
     val appInterfaceLanguage: String = "English", // UI interface language (app menus, buttons, strings)
     val videoGenerationLanguage: String = "English", // Video / script / dubbing generation language (dialogue & TTS speech)
     val selectedLanguage: String = "English",
+    val activeGpsCountry: String = "Global (Auto-Detecting...)",
+    val activeCoordinates: Pair<Double, Double>? = null,
+    val manualLanguageSelection: String? = null,
+    val isManualLanguageOverrideActive: Boolean = false,
+    val regionalCurrencySymbol: String = "$",
+    val regionalCurrencyCode: String = "USD",
+    val mapsScoutedLocations: String = "",
+    val isScoutingMapsLocations: Boolean = false,
     val isOfflineMode: Boolean = false, // When true, restricts activity to local assets & Room DB
     val voiceoverLanguage: String = "English",
     val subtitleMode: SubtitleMode = SubtitleMode.TRANSLATED_ONLY,
@@ -219,6 +227,7 @@ class AnimeViewModel(application: Application) : AndroidViewModel(application) {
     private val db = AnimeDatabase.getInstance(application)
     private val geminiService = GeminiApiService()
     private val repository = AnimeRepository(application, db.animeDao(), geminiService)
+    val gpsLocationManager = com.example.localization.GpsLocationManager.getInstance(application)
 
     val voiceSyncEngine = VoiceSyncEngine(application)
     val musicSynthesizer = AnimeMusicSynthesizer()
@@ -1248,9 +1257,57 @@ class AnimeViewModel(application: Application) : AndroidViewModel(application) {
             isOfflineMode = savedOfflineMode,
             isDarkMode = com.example.ui.theme.AppThemeController.isDarkMode,
             vibrantTheme = com.example.ui.theme.AppThemeController.currentThemeKey,
-            isOwnerAdmin = savedUser.isOwner && savedUser.isLoggedIn
+            isOwnerAdmin = savedUser.isOwner && savedUser.isLoggedIn,
+            activeGpsCountry = gpsLocationManager.activeGpsCountry.value,
+            regionalCurrencySymbol = gpsLocationManager.currencySymbol.value,
+            regionalCurrencyCode = gpsLocationManager.currencyCode.value
         )
         startScriptAutosaveLoop()
+
+        // Core Global Architecture: Observe GPS and Localization Engine
+        viewModelScope.launch {
+            gpsLocationManager.effectiveLanguage.collect { effectiveLang ->
+                val normalized = com.example.localization.AppLocaleStrings.normalizeLanguage(effectiveLang)
+                val matchedCountry = CountryCodeProvider.findByLanguage(normalized)
+                    ?: CountryCodeProvider.countries.firstOrNull { it.primaryLanguage.equals(normalized, ignoreCase = true) }
+                    ?: _selectedCountry.value.copy(primaryLanguage = normalized)
+                _selectedCountry.value = matchedCountry
+                _uiState.value = _uiState.value.copy(
+                    appInterfaceLanguage = normalized,
+                    selectedLanguage = normalized
+                )
+                voiceSyncEngine.setLanguage(normalized)
+            }
+        }
+        viewModelScope.launch {
+            gpsLocationManager.activeGpsCountry.collect { country ->
+                _uiState.value = _uiState.value.copy(activeGpsCountry = country)
+            }
+        }
+        viewModelScope.launch {
+            gpsLocationManager.activeCoordinates.collect { coords ->
+                _uiState.value = _uiState.value.copy(activeCoordinates = coords)
+            }
+        }
+        viewModelScope.launch {
+            gpsLocationManager.manualLanguageSelection.collect { manualLang ->
+                _uiState.value = _uiState.value.copy(
+                    manualLanguageSelection = manualLang,
+                    isManualLanguageOverrideActive = !manualLang.isNullOrBlank()
+                )
+            }
+        }
+        viewModelScope.launch {
+            gpsLocationManager.currencySymbol.collect { symbol ->
+                _uiState.value = _uiState.value.copy(regionalCurrencySymbol = symbol)
+            }
+        }
+        viewModelScope.launch {
+            gpsLocationManager.currencyCode.collect { code ->
+                _uiState.value = _uiState.value.copy(regionalCurrencyCode = code)
+            }
+        }
+
         viewModelScope.launch {
             authAndWalletRepo.currentUser.collect { user ->
                 _uiState.value = _uiState.value.copy(
@@ -1871,7 +1928,7 @@ class AnimeViewModel(application: Application) : AndroidViewModel(application) {
 
     /**
      * Sets only the App UI Interface Language (menus, buttons, strings, settings).
-     * Strictly does NOT override or change video/dubbing generation language.
+     * Strictly executes Law 3: Absolute Manual Override Freedom, flushing translation cache.
      */
     fun setAppInterfaceLanguage(language: String) {
         val normalized = com.example.localization.AppLocaleStrings.normalizeLanguage(language)
@@ -1887,6 +1944,8 @@ class AnimeViewModel(application: Application) : AndroidViewModel(application) {
                 .putString("app_selected_language", normalized)
                 .commit()
         } catch (_: Exception) {}
+
+        gpsLocationManager.setManualLanguageOverride(normalized)
 
         _uiState.value = _uiState.value.copy(
             appInterfaceLanguage = normalized,
@@ -1918,6 +1977,51 @@ class AnimeViewModel(application: Application) : AndroidViewModel(application) {
         val normalized = com.example.localization.AppLocaleStrings.normalizeLanguage(language)
         setAppInterfaceLanguage(normalized)
         setVideoGenerationLanguage(normalized)
+    }
+
+    /**
+     * Resets manual override back to hardware GPS regional auto-detection (Law 2)
+     */
+    fun resetToGpsLanguage() {
+        gpsLocationManager.setManualLanguageOverride(null)
+        gpsLocationManager.refreshGpsLocation()
+        _uiState.value = _uiState.value.copy(
+            statusMessage = "📍 Reset to GPS Regional Auto-Detection (${_uiState.value.activeGpsCountry})"
+        )
+    }
+
+    fun refreshGpsLocation() {
+        gpsLocationManager.refreshGpsLocation()
+    }
+
+    /**
+     * Google Maps Grounded Location Scouting using Gemini 3.8 Flash
+     */
+    fun scoutLocationWithGoogleMaps(query: String) {
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(
+                isScoutingMapsLocations = true,
+                statusMessage = "🗺️ Google Maps Grounding: Scouting locations via Gemini 3.8 Flash..."
+            )
+            try {
+                val result = geminiService.scoutAnimeLocationsWithGoogleMaps(
+                    query = query,
+                    country = _uiState.value.activeGpsCountry,
+                    language = _uiState.value.appInterfaceLanguage,
+                    coordinates = _uiState.value.activeCoordinates
+                )
+                _uiState.value = _uiState.value.copy(
+                    mapsScoutedLocations = result,
+                    isScoutingMapsLocations = false,
+                    statusMessage = "✅ Google Maps Grounding complete!"
+                )
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(
+                    isScoutingMapsLocations = false,
+                    statusMessage = "❌ Maps Grounding error: ${e.message}"
+                )
+            }
+        }
     }
 
     /**

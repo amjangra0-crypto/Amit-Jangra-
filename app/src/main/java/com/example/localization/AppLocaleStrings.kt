@@ -218,14 +218,25 @@ object AppLocaleStrings {
             "mic_tap_to_speak" to "बोलकर कमांड दें (Voice Input)",
             "mic_listening" to "🎙️ सुन रहा हूँ... बोलिए (Listening...)",
             "mic_permission_needed" to "माइक्रोफ़ोन अनुमति आवश्यक है",
-            // Runtime Permissions Onboarding Dialog Keys
-            "permissions_title" to "ऐप अनुमति (केवल 1 अनुमति आवश्यक)",
-            "permissions_desc" to "इस ऐप के लिए इंस्टॉलेशन के बाद केवल 1 अनुमति आवश्यक है: AI वॉइस डबिंग और स्पीच-टू-टेक्स्ट के लिए माइक्रोफ़ोन।",
-            "perm_mic" to "माइक्रोफ़ोन अनुमति (Microphone)",
-            "perm_mic_desc" to "AI वॉइस डबिंग, डायलॉग स्पीच-टू-टेक्स्ट और वॉयस कमांड के लिए",
-            "grant_permissions_btn" to "माइक्रोफ़ोन अनुमति दें (Allow Microphone)",
-            "permissions_granted_toast" to "✓ माइक्रोफ़ोन अनुमति स्वीकृत!",
-            "permissions_skip" to "आगे बढ़ें (Continue)"
+            // Runtime Permissions & Google Maps Onboarding Keys
+            "permissions_title" to "गूगल मैप्स व ऐप अनुमतियाँ",
+            "permissions_desc" to "सटीक रीजनल ऑटो-डिटेक्शन, गूगल मैप्स आधारित एनिमे सीन लोकेशन स्काउटिंग व वॉइस डबिंग के लिए आवश्यक अनुमतियाँ।",
+            "perm_maps" to "गूगल मैप्स व जीपीएस ऑटो-डिटेक्शन",
+            "perm_maps_desc" to "रीजनल ट्रेंड्स, एनिमे सीन लैंडमार्क्स व विशुद्ध देशीय भाषा चयन के लिए",
+            "perm_mic" to "माइक्रोफ़ोन डबिंग अनुमति",
+            "perm_mic_desc" to "एआई वॉइस डबिंग, संवाद वाचन व वॉयस कमांड्स के लिए",
+            "grant_permissions_btn" to "अनुमतियाँ स्वीकृत करें व शुरू करें",
+            "permissions_granted_toast" to "✓ गूगल मैप्स व स्टूडियो अनुमतियाँ स्वीकृत!",
+            "permissions_skip" to "डिफ़ॉल्ट भाषा के साथ आगे बढ़ें",
+            "active_gps_country_label" to "सक्रिय जीपीएस देश",
+            "manual_language_override_label" to "मैन्युअल भाषा चयन",
+            "maps_grounded_scout_title" to "गूगल मैप्स ग्राउंडेड एनिमे लोकेशन स्काउट",
+            "maps_grounded_scout_desc" to "जेमिनी 3.8 फ़्लैश व गूगल मैप्स द्वारा वास्तविक स्थानों के आधार पर सिनेमैटिक एनिमे सीन्स और लाइटिंग ब्लूप्रिंट तैयार करें।",
+            "maps_grounded_scout_btn" to "मैप्स से रियल-वर्ल्ड लोकेशन स्काउट करें",
+            "financial_payout_title" to "सुरक्षित एस्क्रो वॉलेट व वित्तीय पेआउट",
+            "creative_blueprint_title" to "रचनात्मक उत्पादन ब्लूप्रिंट",
+            "global_ui_matrix_title" to "वैश्विक यूआई मैट्रिक्स",
+            "activated_components_title" to "सक्रिय घटक व रूटिंग सूची"
         ),
 
         "English" to mapOf(
@@ -431,14 +442,25 @@ object AppLocaleStrings {
             "mic_tap_to_speak" to "Voice Input (Speak)",
             "mic_listening" to "🎙️ Listening... Speak now",
             "mic_permission_needed" to "Microphone permission required for voice commands",
-            // Runtime Permissions Onboarding Dialog Keys
-            "permissions_title" to "App Permission (Only 1 Required)",
-            "permissions_desc" to "Only 1 permission is required for this app after installation: Microphone for AI Voice Dubbing & Speech-to-Text. No camera or location access is needed.",
-            "perm_mic" to "Microphone Permission",
-            "perm_mic_desc" to "For AI Voice Dubbing, Dialogue Narration, and Speech-to-Text Studio Prompts",
-            "grant_permissions_btn" to "Allow Microphone Access",
-            "permissions_granted_toast" to "✓ Microphone permission granted!",
-            "permissions_skip" to "Continue"
+            // Runtime Permissions & Google Maps Onboarding Keys
+            "permissions_title" to "Google Maps & Studio Permissions",
+            "permissions_desc" to "Enable hardware GPS regional auto-detection, Google Maps scene grounding, and voice dubbing.",
+            "perm_maps" to "Google Maps & GPS Auto-Detection",
+            "perm_maps_desc" to "For regional anime trends, scene landmarks, and native language auto-mapping",
+            "perm_mic" to "Microphone Dubbing Permission",
+            "perm_mic_desc" to "For AI voice dubbing, dialogue speech synthesis, and voice prompts",
+            "grant_permissions_btn" to "Grant Permissions & Enter Studio",
+            "permissions_granted_toast" to "✓ Google Maps & Studio permissions granted!",
+            "permissions_skip" to "Continue with Default English",
+            "active_gps_country_label" to "Active GPS Country",
+            "manual_language_override_label" to "Manual Language Selection",
+            "maps_grounded_scout_title" to "Google Maps Grounded Anime Location Scout",
+            "maps_grounded_scout_desc" to "Ground real-world landmarks into cinematic anime scenes and lighting blueprints via Gemini 3.8 Flash.",
+            "maps_grounded_scout_btn" to "Scout Real-World Locations with Maps",
+            "financial_payout_title" to "Secured Escrow Wallet & Financial Payouts",
+            "creative_blueprint_title" to "Creative Production Blueprint",
+            "global_ui_matrix_title" to "Global UI Matrix",
+            "activated_components_title" to "Activated Components & Routing List"
         ),
 
         "Japanese" to mapOf(

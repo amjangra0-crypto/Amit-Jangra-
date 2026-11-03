@@ -71,12 +71,20 @@ object PermissionPreferenceManager {
         if (hasRequestedOnInstall(context)) {
             return false
         }
-        val isGranted = ContextCompat.checkSelfPermission(
+        val isMicGranted = ContextCompat.checkSelfPermission(
             context,
             Manifest.permission.RECORD_AUDIO
         ) == PackageManager.PERMISSION_GRANTED
 
-        if (isGranted) {
+        val isLocGranted = ContextCompat.checkSelfPermission(
+            context,
+            Manifest.permission.ACCESS_FINE_LOCATION
+        ) == PackageManager.PERMISSION_GRANTED || ContextCompat.checkSelfPermission(
+            context,
+            Manifest.permission.ACCESS_COARSE_LOCATION
+        ) == PackageManager.PERMISSION_GRANTED
+
+        if (isMicGranted && isLocGranted) {
             markPermissionRequestedOnInstall(context)
             return false
         }

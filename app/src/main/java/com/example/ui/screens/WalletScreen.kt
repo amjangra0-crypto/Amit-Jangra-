@@ -57,6 +57,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
+import com.example.localization.AppLocaleStrings
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.TabRowDefaults
@@ -252,6 +253,53 @@ fun WalletScreen(
                     .verticalScroll(rememberScrollState())
                     .padding(16.dp)
             ) {
+                // [FINANCIAL_PAYOUT_ROUTING] Dynamic Block
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(AnimeGreen.copy(alpha = 0.12f))
+                        .border(1.dp, AnimeGreen.copy(alpha = 0.4f), RoundedCornerShape(12.dp))
+                        .padding(12.dp)
+                ) {
+                    Column {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(Icons.Default.Security, contentDescription = null, tint = AnimeGreen, modifier = Modifier.size(16.dp))
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text(
+                                    text = "[FINANCIAL_PAYOUT_ROUTING]",
+                                    color = AnimeGreen,
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                            Text(
+                                text = "Symbol: ${uiState.regionalCurrencySymbol} (${uiState.regionalCurrencyCode})",
+                                color = AnimeGold,
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = if (AppLocaleStrings.isHindi(uiState.selectedLanguage)) {
+                                "सुरक्षित आइसोलेटेड एस्क्रो वॉलेट सक्रिय है। सभी पेआउट व निकासी रसीदें क्षेत्रीय मुद्रा सिंबल (${uiState.regionalCurrencySymbol}) में ऑटो-फॉर्मेटेड हैं।"
+                            } else {
+                                "Secured isolated escrow wallet active. Payout routes and owner withdrawal receipts formatted with regional currency symbol (${uiState.regionalCurrencySymbol})."
+                            },
+                            color = TextSecondary,
+                            fontSize = 10.sp,
+                            lineHeight = 14.sp
+                        )
+                    }
+                }
+                Spacer(modifier = Modifier.height(12.dp))
+
                 // Section 1: Barcode for Receiving Subscription Payments
                 Text(
                     text = "📷 Barcode for Receiving Subscription Payments",

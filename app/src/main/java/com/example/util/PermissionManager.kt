@@ -32,11 +32,13 @@ class PermissionManager(private val context: Context) {
     companion object {
         // Keys for tracking whether the system prompt was already displayed once after install
         val KEY_INSTALL_PERMISSIONS_PROMPTED = booleanPreferencesKey("already_requested_on_install")
+        val KEY_REQUESTED_LOCATION = booleanPreferencesKey("already_requested_location")
         val KEY_REQUESTED_MICROPHONE = booleanPreferencesKey("already_requested_microphone")
         val KEY_REQUESTED_CAMERA = booleanPreferencesKey("already_requested_camera")
         val KEY_REQUESTED_STORAGE = booleanPreferencesKey("already_requested_storage")
 
         // Keys for user manual toggle states inside app settings (Allow / Deallow)
+        val KEY_USER_ALLOW_LOCATION = booleanPreferencesKey("user_allow_location")
         val KEY_USER_ALLOW_MICROPHONE = booleanPreferencesKey("user_allow_microphone")
         val KEY_USER_ALLOW_CAMERA = booleanPreferencesKey("user_allow_camera")
         val KEY_USER_ALLOW_STORAGE = booleanPreferencesKey("user_allow_storage")
@@ -61,6 +63,11 @@ class PermissionManager(private val context: Context) {
      */
     fun isPermissionGranted(permission: String): Boolean {
         return ContextCompat.checkSelfPermission(context, permission) == PackageManager.PERMISSION_GRANTED
+    }
+
+    fun isLocationGranted(): Boolean {
+        return isPermissionGranted(Manifest.permission.ACCESS_FINE_LOCATION) ||
+                isPermissionGranted(Manifest.permission.ACCESS_COARSE_LOCATION)
     }
 
     fun isMicrophoneGranted(): Boolean = isPermissionGranted(Manifest.permission.RECORD_AUDIO)
@@ -105,6 +112,7 @@ class PermissionManager(private val context: Context) {
     suspend fun markAlreadyRequestedOnInstall() {
         context.permissionDataStore.edit { prefs ->
             prefs[KEY_INSTALL_PERMISSIONS_PROMPTED] = true
+            prefs[KEY_REQUESTED_LOCATION] = true
             prefs[KEY_REQUESTED_MICROPHONE] = true
             prefs[KEY_REQUESTED_CAMERA] = true
             prefs[KEY_REQUESTED_STORAGE] = true
@@ -133,8 +141,8 @@ class PermissionManager(private val context: Context) {
             }
         } catch (_: Throwable) {}
 
-        // If microphone is already granted (e.g. system restored), mark as handled
-        if (isMicrophoneGranted()) {
+        // If location or microphone is already granted (e.g. system restored), mark as handled
+        if (isLocationGranted() && isMicrophoneGranted()) {
             markAlreadyRequestedOnInstall()
             return false
         }
@@ -145,6 +153,13 @@ class PermissionManager(private val context: Context) {
     // =========================================================================
     // DATASTORE: USER MANUAL TOGGLE CONTROLS (ALLOW / DEALLOW)
     // =========================================================================
+
+    /**
+     * Flow of user preference for Location / Google Maps permission.
+     */
+    val userLocationAllowedFlow: Flow<Boolean> = context.permissionDataStore.data.map { prefs ->
+        prefs[KEY_USER_ALLOW_LOCATION] ?: isLocationGranted()
+    }
 
     /**
      * Flow of user preference for Microphone permission (defaults to system granted state).
@@ -167,6 +182,12 @@ class PermissionManager(private val context: Context) {
         prefs[KEY_USER_ALLOW_STORAGE] ?: isStorageGranted()
     }
 
+    suspend fun setUserLocationAllowed(allowed: Boolean) {
+        context.permissionDataStore.edit { prefs ->
+            prefs[KEY_USER_ALLOW_LOCATION] = allowed
+        }
+    }
+
     /**
      * Allows or deallows Microphone at user preference level.
      */
@@ -174,6 +195,11 @@ class PermissionManager(private val context: Context) {
         context.permissionDataStore.edit { prefs ->
             prefs[KEY_USER_ALLOW_MICROPHONE] = allowed
         }
+    }
+
+    suspend fun canUseLocation(): Boolean {
+        val userAllowed = context.permissionDataStore.data.first()[KEY_USER_ALLOW_LOCATION] ?: true
+        return userAllowed && isLocationGranted()
     }
 
     /**

@@ -92,6 +92,7 @@ import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.PhotoLibrary
 import androidx.compose.material.icons.filled.OpenInNew
 import androidx.compose.material.icons.filled.Shield
+import androidx.compose.material.icons.filled.LocationOn
 import com.example.util.PermissionManager
 import com.example.localization.AppLocaleStrings
 import com.example.ui.AnimeViewModel
@@ -142,13 +143,31 @@ fun AppSettingsScreen(
     val resolutions = listOf("720p HD", "1080p Full HD", "4K Ultra HD (VIP)")
 
     val permissionManager = remember { PermissionManager.getInstance(context) }
+    val userLocationAllowed by permissionManager.userLocationAllowedFlow.collectAsState(initial = permissionManager.isLocationGranted())
     val userMicAllowed by permissionManager.userMicrophoneAllowedFlow.collectAsState(initial = permissionManager.isMicrophoneGranted())
     val userCameraAllowed by permissionManager.userCameraAllowedFlow.collectAsState(initial = permissionManager.isCameraGranted())
     val userStorageAllowed by permissionManager.userStorageAllowedFlow.collectAsState(initial = permissionManager.isStorageGranted())
 
+    var sysLocationGranted by remember { mutableStateOf(permissionManager.isLocationGranted()) }
     var sysMicGranted by remember { mutableStateOf(permissionManager.isMicrophoneGranted()) }
     var sysCameraGranted by remember { mutableStateOf(permissionManager.isCameraGranted()) }
     var sysStorageGranted by remember { mutableStateOf(permissionManager.isStorageGranted()) }
+
+    val locationLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestMultiplePermissions()
+    ) { res ->
+        val fine = res[Manifest.permission.ACCESS_FINE_LOCATION] ?: false
+        val coarse = res[Manifest.permission.ACCESS_COARSE_LOCATION] ?: false
+        val granted = fine || coarse
+        sysLocationGranted = granted
+        coroutineScope.launch {
+            permissionManager.setUserLocationAllowed(granted)
+            permissionManager.markAlreadyRequestedOnInstall()
+            if (granted) {
+                viewModel.refreshGpsLocation()
+            }
+        }
+    }
 
     val micLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
         sysMicGranted = granted
@@ -1228,6 +1247,75 @@ fun AppSettingsScreen(
                 }
 
                 Spacer(modifier = Modifier.height(14.dp))
+
+                // PERMISSION 0: GOOGLE MAPS & GPS REGIONAL AUTO-DETECTION
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(modifier = Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically) {
+                        Box(
+                            modifier = Modifier
+                                .size(32.dp)
+                                .clip(CircleShape)
+                                .background(AnimeCyan.copy(alpha = 0.15f)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(Icons.Default.LocationOn, contentDescription = null, tint = AnimeCyan, modifier = Modifier.size(16.dp))
+                        }
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Column {
+                            Text(
+                                text = if (AppLocaleStrings.isHindi(lang)) "गूगल मैप्स व जीपीएस ऑटो-डिटेक्शन" else "Google Maps & GPS Regional Auto-Detection",
+                                color = TextPrimary,
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                            Text(
+                                text = if (AppLocaleStrings.isHindi(lang)) "रीजनल ट्रेंड्स व मैप्स ग्राउंडेड एनिमे सीन्स (${state.activeGpsCountry})" else "Regional trends & Maps scene grounding (${state.activeGpsCountry})",
+                                color = TextSecondary,
+                                fontSize = 10.sp
+                            )
+                        }
+                    }
+
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        if (!sysLocationGranted) {
+                            OutlinedButton(
+                                onClick = {
+                                    locationLauncher.launch(
+                                        arrayOf(
+                                            Manifest.permission.ACCESS_FINE_LOCATION,
+                                            Manifest.permission.ACCESS_COARSE_LOCATION
+                                        )
+                                    )
+                                },
+                                modifier = Modifier.height(30.dp),
+                                shape = RoundedCornerShape(8.dp),
+                                border = BorderStroke(1.dp, AnimeCyan)
+                            ) {
+                                Text(
+                                    text = if (AppLocaleStrings.isHindi(lang)) "अनुमति दें" else "Grant",
+                                    color = AnimeCyan,
+                                    fontSize = 10.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                        } else {
+                            androidx.compose.material3.Switch(
+                                checked = userLocationAllowed,
+                                onCheckedChange = { allowed ->
+                                    coroutineScope.launch {
+                                        permissionManager.setUserLocationAllowed(allowed)
+                                    }
+                                }
+                            )
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(10.dp))
 
                 // PERMISSION 1: MICROPHONE
                 Row(
