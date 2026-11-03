@@ -602,6 +602,88 @@ class AnimeViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     // -----------------------------------------------------------------------------------------
+    // GLOBAL LANGUAGE ARCHITECTURE & LINGUISTIC FIREWALL
+    // -----------------------------------------------------------------------------------------
+    val languagePreferencesDataStore = com.example.data.storage.LanguagePreferencesDataStore(application)
+
+    val languageSystemState: StateFlow<com.example.localization.LanguageSystemState> =
+        languagePreferencesDataStore.languageSystemStateFlow
+            .stateIn(
+                viewModelScope,
+                SharingStarted.WhileSubscribed(5000),
+                com.example.localization.LanguageSystemManager.initialize(
+                    systemLocaleTag = java.util.Locale.getDefault().toLanguageTag(),
+                    selectedAppTag = _uiState.value.selectedLanguage,
+                    translationSourceTag = com.example.localization.TranslationLanguageConfig.AUTO_DETECT,
+                    translationTargetTag = "hi"
+                )
+            )
+
+    private val offlineTranslationProvider = com.example.localization.OfflineReferenceTranslationProvider()
+    val translationService = com.example.localization.TranslationService(offlineTranslationProvider)
+
+    /**
+     * Changes the application UI language only.
+     * Guaranteed never to modify translation source or target settings.
+     */
+    fun setGlobalAppLanguage(tagOrName: String) {
+        viewModelScope.launch {
+            val canonicalTag = com.example.localization.GlobalLanguageSystem.requireSupportedTag(tagOrName)
+            languagePreferencesDataStore.saveAppLanguage(canonicalTag)
+            val info = com.example.localization.GlobalLanguageSystem.findInfo(canonicalTag)
+            val langName = info?.englishName ?: tagOrName
+            setAppLanguage(langName)
+            _uiState.value = _uiState.value.copy(
+                statusMessage = "🌐 App UI Language set to ${info?.nativeName ?: langName} ($canonicalTag)"
+            )
+        }
+    }
+
+    /**
+     * Changes the translation source language or auto-detection.
+     * Guaranteed never to modify the app UI language.
+     */
+    fun setTranslationSource(sourceTag: String, autoDetect: Boolean) {
+        viewModelScope.launch {
+            val currentState = languageSystemState.value
+            languagePreferencesDataStore.saveTranslationSettings(
+                sourceTag = sourceTag,
+                targetTag = currentState.translationLanguage.targetTag,
+                autoDetect = autoDetect
+            )
+            _uiState.value = _uiState.value.copy(
+                statusMessage = "🔄 Translation Source set to: $sourceTag (Auto-Detect: $autoDetect)"
+            )
+        }
+    }
+
+    /**
+     * Changes the translation target language.
+     * Guaranteed never to modify the app UI language.
+     */
+    fun setTranslationTarget(targetTag: String) {
+        viewModelScope.launch {
+            val currentState = languageSystemState.value
+            languagePreferencesDataStore.saveTranslationSettings(
+                sourceTag = currentState.translationLanguage.sourceTag,
+                targetTag = targetTag,
+                autoDetect = currentState.translationLanguage.autoDetectSource
+            )
+            _uiState.value = _uiState.value.copy(
+                statusMessage = "🎯 Translation Target set to: $targetTag"
+            )
+        }
+    }
+
+    /**
+     * Executes real translation through the configured TranslationProvider SPI.
+     */
+    suspend fun executeTranslation(text: String): com.example.localization.TranslationResult {
+        val config = languageSystemState.value.translationLanguage
+        return translationService.translate(text, config)
+    }
+
+    // -----------------------------------------------------------------------------------------
     // JSON EXPORT & DOCUMENTFILE SUPPORT
     // -----------------------------------------------------------------------------------------
     fun exportProjectAsJson(context: Context, script: AnimeScript): java.io.File {

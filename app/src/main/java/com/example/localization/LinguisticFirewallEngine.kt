@@ -1,18 +1,30 @@
 package com.example.localization
 
 import com.example.data.model.CountryCode
-import com.example.data.model.CountryCodeProvider
 import java.util.Locale
 
 /**
- * Absolute Core Translation & Creative Engine
- * Enforces the Unbreakable Linguistic Firewall Laws:
- * 1. STRICT LANGUAGE PURITY: 100% pure target language output. Zero English/Hindi leakage when other languages are active.
- * 2. NO CROSS-CONTAMINATION: Authentic native scripts, character sets, and terminology.
- * 3. FEATURE ENVIRONMENT ISOLATION: Sub-features (TrendPlus, Motion Graphics, Character Making, Voice Generation) translated natively.
- * 4. METADATA EXCEPTION ONLY: Only bracket keys [ACTIVATED_COMPONENTS], [TRENDPLUS_FORECAST], [CREATIVE_PRODUCTION_BLUEPRINT], [FINANCIAL_PAYOUT_ROUTING] and exact URLs remain in English.
+ * 4. LINGUISTIC FIREWALL & CREATIVE ENGINE
+ *
+ * Enforces strict separation between App UI Locale and Translation Locale.
+ * Guarantees:
+ * 1. ZERO SUBSTRING-BASED DETECTION: Uses canonical BCP-47 tags from GlobalLanguageSystem.
+ * 2. METADATA EXCEPTION ONLY: The exact bracket headers:
+ *    [ACTIVATED_COMPONENTS]
+ *    [TRENDPLUS_FORECAST]
+ *    [CREATIVE_PRODUCTION_BLUEPRINT]
+ *    [FINANCIAL_PAYOUT_ROUTING]
+ *    and exact system URLs remain in English and untouched.
+ * 3. NO CROSS-CONTAMINATION: Authentic native scripts, character sets, and terminology.
+ * 4. COUNTRY IS NOT LANGUAGE: Language and Country are treated as independent dimensions.
  */
 object LinguisticFirewallEngine {
+
+    // Preserved internal metadata keys
+    const val KEY_ACTIVATED_COMPONENTS = "[ACTIVATED_COMPONENTS]"
+    const val KEY_TRENDPLUS_FORECAST = "[TRENDPLUS_FORECAST]"
+    const val KEY_CREATIVE_BLUEPRINT = "[CREATIVE_PRODUCTION_BLUEPRINT]"
+    const val KEY_FINANCIAL_ROUTING = "[FINANCIAL_PAYOUT_ROUTING]"
 
     data class EngineConfig(
         val selectedLanguage: String = "Japanese",
@@ -41,26 +53,31 @@ object LinguisticFirewallEngine {
         inrBalance: Double = 48500.0,
         usdBalance: Double = 620.0
     ): EngineConfig {
-        val lang = when {
-            !language.isNullOrBlank() && !language.contains("{{") -> language.trim()
-            countryCode != null -> countryCode.primaryLanguage
-            else -> "Japanese"
-        }
-        val country = countryCode?.name ?: when (lang.lowercase()) {
-            "japanese", "ja", "日本語" -> "Japan"
-            "spanish", "es", "español" -> "Spain"
-            "russian", "ru", "русский" -> "Russia"
-            "korean", "ko", "한국어" -> "South Korea"
-            "german", "de", "deutsch" -> "Germany"
-            "french", "fr", "français" -> "France"
-            "chinese", "zh", "中文" -> "China"
-            "arabic", "ar", "العربية" -> "Saudi Arabia"
-            "portuguese", "pt", "português" -> "Brazil"
-            "indonesian", "id" -> "Indonesia"
-            "hindi", "hi", "हिन्दी" -> "India"
+        val resolvedTag = language?.takeIf { it.isNotBlank() && !it.contains("{{") }
+            ?.let { GlobalLanguageSystem.resolveSupportedTag(it) }
+            ?: countryCode?.primaryLanguage?.let { GlobalLanguageSystem.resolveSupportedTag(it) }
+            ?: "ja"
+
+        val langInfo = GlobalLanguageSystem.findInfo(resolvedTag)
+        val langName = langInfo?.englishName ?: "Japanese"
+
+        val country = countryCode?.name ?: when (resolvedTag) {
+            "ja" -> "Japan"
+            "es" -> "Spain"
+            "ru" -> "Russia"
+            "ko" -> "South Korea"
+            "de" -> "Germany"
+            "fr" -> "France"
+            "zh-Hans", "zh-Hant" -> "China"
+            "ar" -> "Saudi Arabia"
+            "pt", "pt-BR" -> "Brazil"
+            "pt-PT" -> "Portugal"
+            "id" -> "Indonesia"
+            "hi", "hi-IN" -> "India"
             else -> "United States"
         }
-        val dial = countryCode?.dialCode ?: when (country.lowercase()) {
+
+        val dial = countryCode?.dialCode ?: when (country.lowercase(Locale.ROOT)) {
             "japan" -> "+81"
             "spain" -> "+34"
             "russia" -> "+7"
@@ -70,6 +87,7 @@ object LinguisticFirewallEngine {
             "china" -> "+86"
             "saudi arabia" -> "+966"
             "brazil" -> "+55"
+            "portugal" -> "+351"
             "indonesia" -> "+62"
             "india" -> "+91"
             else -> "+1"
@@ -77,7 +95,7 @@ object LinguisticFirewallEngine {
         val role = if (isOwner) "Owner" else "User"
 
         return EngineConfig(
-            selectedLanguage = lang,
+            selectedLanguage = langName,
             selectedCountry = country,
             dialingCode = dial,
             currentRole = role,
@@ -88,6 +106,7 @@ object LinguisticFirewallEngine {
 
     /**
      * Executes the Core Translation and Creative Engine under the 100% Pure Linguistic Firewall.
+     * Preserves exact bracket metadata headers without translation.
      */
     fun execute(config: EngineConfig): FirewallOutput {
         val norm = normalizeLanguage(config.selectedLanguage)
@@ -99,13 +118,13 @@ object LinguisticFirewallEngine {
         val financial = getFinancialPayoutRouting(norm, isOwner, config.liveInr, config.liveUsd)
 
         val fullOutput = buildString {
-            append("[ACTIVATED_COMPONENTS]\n")
+            append("$KEY_ACTIVATED_COMPONENTS\n")
             append(components)
-            append("\n\n[TRENDPLUS_FORECAST]\n")
+            append("\n\n$KEY_TRENDPLUS_FORECAST\n")
             append(forecast)
-            append("\n\n[CREATIVE_PRODUCTION_BLUEPRINT]\n")
+            append("\n\n$KEY_CREATIVE_BLUEPRINT\n")
             append(blueprint)
-            append("\n\n[FINANCIAL_PAYOUT_ROUTING]\n")
+            append("\n\n$KEY_FINANCIAL_ROUTING\n")
             append(financial)
         }
 
@@ -121,20 +140,24 @@ object LinguisticFirewallEngine {
         )
     }
 
-    private fun normalizeLanguage(raw: String): String {
-        val clean = raw.trim().lowercase()
-        return when {
-            clean.contains("japan") || clean.contains("ja") || clean.contains("日本") -> "Japanese"
-            clean.contains("span") || clean.contains("es") || clean.contains("español") -> "Spanish"
-            clean.contains("russ") || clean.contains("ru") || clean.contains("рус") -> "Russian"
-            clean.contains("korean") || clean.contains("ko") || clean.contains("한국") -> "Korean"
-            clean.contains("germ") || clean.contains("de") || clean.contains("deutsch") -> "German"
-            clean.contains("french") || clean.contains("fr") || clean.contains("français") -> "French"
-            clean.contains("chin") || clean.contains("zh") || clean.contains("中文") -> "Chinese"
-            clean.contains("arab") || clean.contains("ar") || clean.contains("عرب") -> "Arabic"
-            clean.contains("port") || clean.contains("pt") -> "Portuguese"
-            clean.contains("indon") || clean.contains("id") -> "Indonesian"
-            clean.contains("hind") || clean.contains("hi") || clean.contains("हिंदी") -> "Hindi"
+    /**
+     * Robust resolution powered by GlobalLanguageSystem BCP-47 registry.
+     * Replaces fragile substring contains() with standard canonical tag resolution.
+     */
+    fun normalizeLanguage(raw: String): String {
+        val resolvedTag = GlobalLanguageSystem.resolveSupportedTag(raw) ?: return "English"
+        return when (resolvedTag) {
+            "ja" -> "Japanese"
+            "es" -> "Spanish"
+            "ru" -> "Russian"
+            "ko" -> "Korean"
+            "de" -> "German"
+            "fr" -> "French"
+            "zh-Hans", "zh-Hant" -> "Chinese"
+            "ar" -> "Arabic"
+            "pt", "pt-BR", "pt-PT" -> "Portuguese"
+            "id" -> "Indonesian"
+            "hi", "hi-IN" -> "Hindi"
             else -> "English"
         }
     }
@@ -199,6 +222,54 @@ object LinguisticFirewallEngine {
                 ・डायनामिक बैकग्राउंड संगीत व साउंडट्रैक सिंथेसाइज़र
                 ・वितरित स्टोरेज वॉल्ट (इंटरनल मेमोरी, गूगल ड्राइव, SD कार्ड, हार्ड डिस्क)
                 ・सुरक्षित एस्क्रो भुगतान व वॉलेट प्रबंधन
+            """.trimIndent()
+
+            "French" -> """
+                ・Studio de Création Vidéo Anime Génératif (Texte, Liens Web et Scanner d'Images)
+                ・Radar Prédictif TrendPlus (Analyse de la Vélocité Virale en Temps Réel)
+                ・Studio de Personnages (Profils et Synchronisation Vocale)
+                ・Réalisateur IA Autonome (Direction des Prises de Vue et Cadrage)
+                ・Effets Graphiques Animés (Lignes de Vitesse et Particules d'Aura)
+                ・Moteur de Doublage Multilingue et Synchronisation Labiale
+                ・Synthétiseur de Bande Son Dynamique
+                ・Coffre de Stockage Distribué (Mémoire Locale, Google Drive, Carte SD, Disque Externe)
+                ・Système Sécurisé de Dépôt et Portefeuille
+            """.trimIndent()
+
+            "German" -> """
+                ・Generatives Anime-Videostudio (Text, Weblinks und Bildscanner)
+                ・TrendPlus Prognose-Radar (Echtzeit-Viralitätsanalyse)
+                ・Charakter-Studio (Bioprofile und Stimmsynchronisation)
+                ・Autonomer KI-Regisseur (Automatische Kamera- und Szenenführung)
+                ・Motion-Graphics-Effekte (Geschwindigkeitslinien und Aura-Partikel)
+                ・Mehrsprachiges Synchronisations- und Lippenbewegungs-Modul
+                ・Dynamischer Soundtrack-Synthesizer
+                ・Verteilter Speicher-Tresor (Interner Speicher, Google Drive, SD-Karte, Festplatte)
+                ・Sicheres Treuhand-Zahlungssystem
+            """.trimIndent()
+
+            "Chinese" -> """
+                ・生成式动画视频创作工作室（支持文本、网页链接与图像扫描）
+                ・TrendPlus 预测雷达（实时社交媒体病毒式传播速度分析）
+                ・角色工作室（生物特征设定与语音音调同步）
+                ・自主 AI 导演（全镜头机位与场景节奏自动控制）
+                ・动态图形特效（速度线、光环粒子与画面震颤）
+                ・多语言语音配音与唇形同步引擎
+                ・动态背景音乐与原声合成器
+                ・分布式存储保管库（机身存储、Google 云端硬盘、SD 卡与外置硬盘）
+                ・安全托管支付与虚拟钱包系统
+            """.trimIndent()
+
+            "Arabic" -> """
+                ・استوديو إنتاج فيديو الأنمي التوليدي (يدعم النصوص وروابط الويب ومسح الصور)
+                ・رادار التنبؤ TrendPlus (تحليل سرعة الانتشار في الوقت الفعلي)
+                ・استوديو الشخصيات (توليد السمات ومطابقة طبقات الصوت)
+                ・مخرج ذكاء اصطناعي مستقل (إخراج تلقائي للكاميرا والمشاهد)
+                ・مؤثرات الرسوم المتحركة الحركية (خطوط السرعة وجسيمات الهالة)
+                ・محرك الدبلجة متعدد اللغات ومزامنة الشفاه
+                ・مُركّب الموسيقى التصويرية الديناميكي
+                ・خزينة التخزين الموزع (الذاكرة الداخلية، جوجل درايف، بطاقة SD)
+                ・نظام المدفوعات والضمان الآمن
             """.trimIndent()
 
             else -> """
@@ -386,12 +457,9 @@ object LinguisticFirewallEngine {
                 ・【Motion Graphics Specifications】：
                   - Cut 1 (6 seconds): Radial speedlines, violet aura burst particles, rapid camera dolly-in.
                   - Cut 2 (6 seconds): Screen shake impact, black-and-white freeze frame flash, orchestral fortissimo.
-                ・【Fully Synchronized Dialogue Script】：
-                  - Cut 1:
+                  - Fully Synchronized Dialogue Script:
                     Ren: "This ends right here. Awaken, Astral Blade!"
                     Ayla: "His energy is off the charts! Shatter the barrier in one strike!"
-                  - Cut 2:
-                    Ren: "Final Impact! Astral Break!"
                     Poko: "Total victory! We did it!"
             """.trimIndent()
         }
@@ -506,9 +574,6 @@ object LinguisticFirewallEngine {
         }
     }
 
-    /**
-     * Helper to get quick suggestion chips strictly adhering to the linguistic firewall.
-     */
     fun getQuickSuggestions(language: String): List<String> {
         return when (normalizeLanguage(language)) {
             "Japanese" -> listOf("🎬 動画生成", "🎙️ 音声生成", "🖼️ 視覚コンテンツ", "🌐 翻訳")
